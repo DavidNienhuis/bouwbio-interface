@@ -5,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface BreeamCheckResult {
   product: string;
@@ -205,8 +207,10 @@ export const BreeamCertificateCheck = () => {
             {result.result && result.status === "success" && (
               <div className="mt-4 p-4 bg-muted/50 rounded-lg">
                 <h4 className="text-sm font-semibold text-foreground mb-2">Resultaat:</h4>
-                <div className="text-sm text-foreground whitespace-pre-wrap">
-                  {result.result}
+                <div className="prose prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-td:border-border prose-th:border-border prose-th:bg-muted prose-a:text-primary prose-code:text-foreground prose-pre:bg-card prose-li:text-foreground">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {result.result}
+                  </ReactMarkdown>
                 </div>
               </div>
             )}
