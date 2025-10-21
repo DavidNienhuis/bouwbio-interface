@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CheckCircle2, Loader2, ChevronDown, XCircle, AlertCircle, ExternalLink, FileText } from "lucide-react";
 import { toast } from "sonner";
@@ -168,15 +169,32 @@ export const BreeamCertificateCheck = () => {
 
           <div className="space-y-2">
             <Label htmlFor="productgroep">Productgroep</Label>
-            <Input
-              id="productgroep"
-              type="text"
+            <Select
               value={formData.productgroep}
-              onChange={(e) => setFormData({ ...formData, productgroep: e.target.value })}
-              placeholder="Bijv. Flooring materials"
+              onValueChange={(value) => setFormData({ ...formData, productgroep: value })}
               disabled={isLoading}
-              className="bg-card border-border"
-            />
+            >
+              <SelectTrigger className="bg-card border-border">
+                <SelectValue placeholder="Selecteer een productgroep" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="Binnenverf en vernissen">
+                  Binnenverf en vernissen
+                </SelectItem>
+                <SelectItem value="Houtachtige plaatmaterialen">
+                  Houtachtige plaatmaterialen
+                </SelectItem>
+                <SelectItem value="Vloerafwerkingen">
+                  Vloerafwerkingen
+                </SelectItem>
+                <SelectItem value="Plafonds, wanden en isolatiematerialen">
+                  Plafonds, wanden en isolatiematerialen
+                </SelectItem>
+                <SelectItem value="Lijmen en kitten">
+                  Lijmen en kitten
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
