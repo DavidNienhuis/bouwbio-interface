@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { ValidationInput } from "@/components/ValidationInput";
 import { ResultDisplay } from "@/components/ResultDisplay";
+import { BreeamCertificateCheck } from "@/components/BreeamCertificateCheck";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Leaf } from "lucide-react";
+import { Leaf, FileCheck, Search } from "lucide-react";
 
 interface ValidationResult {
   id: string;
@@ -99,38 +101,57 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <section className="mb-8">
-          <ValidationInput onSubmit={handleValidation} isLoading={isLoading} />
-        </section>
+        <Tabs defaultValue="quick" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 bg-muted">
+            <TabsTrigger value="quick" className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Snelle Validatie
+            </TabsTrigger>
+            <TabsTrigger value="breeam" className="flex items-center gap-2">
+              <FileCheck className="h-4 w-4" />
+              BREEAM Certificaat
+            </TabsTrigger>
+          </TabsList>
 
-        <section className="space-y-4">
-          {results.length > 0 ? (
-            <>
-              <h2 className="text-lg font-semibold text-foreground">Resultaten</h2>
-              {results.map((result) => (
-                <ResultDisplay
-                  key={result.id}
-                  query={result.query}
-                  result={result.result}
-                  status={result.status}
-                  timestamp={result.timestamp}
-                />
-              ))}
-            </>
-          ) : (
-            <div className="text-center py-16">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                <Leaf className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                Klaar om te valideren
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Voer een opdracht in om materialen te valideren volgens GN22, BREEAM HEA 02 of Red List criteria.
-              </p>
-            </div>
-          )}
-        </section>
+          <TabsContent value="quick" className="space-y-6">
+            <section>
+              <ValidationInput onSubmit={handleValidation} isLoading={isLoading} />
+            </section>
+
+            <section className="space-y-4">
+              {results.length > 0 ? (
+                <>
+                  <h2 className="text-lg font-semibold text-foreground">Resultaten</h2>
+                  {results.map((result) => (
+                    <ResultDisplay
+                      key={result.id}
+                      query={result.query}
+                      result={result.result}
+                      status={result.status}
+                      timestamp={result.timestamp}
+                    />
+                  ))}
+                </>
+              ) : (
+                <div className="text-center py-16">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                    <Search className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    Klaar om te valideren
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Voer een opdracht in om materialen te valideren volgens GN22, BREEAM HEA 02 of Red List criteria.
+                  </p>
+                </div>
+              )}
+            </section>
+          </TabsContent>
+
+          <TabsContent value="breeam">
+            <BreeamCertificateCheck />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
