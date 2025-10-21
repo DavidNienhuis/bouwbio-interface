@@ -42,12 +42,16 @@ export const BreeamCertificateCheck = () => {
     try {
       const webhookUrl = "https://n8n-zztf.onrender.com/webhook/2e502b8f-1030-4aaf-92c7-a85ee6e01e9f";
       
+      // Generate a unique session ID for each request
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          sessionId: sessionId,
           product: formData.product,
           productgroep: formData.productgroep,
           certificaat: formData.certificaat,
