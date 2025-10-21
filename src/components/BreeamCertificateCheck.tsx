@@ -66,9 +66,23 @@ export const BreeamCertificateCheck = () => {
 
       const data = await response.json();
 
+      // Parse response - handle array responses
+      let resultText = "";
+      if (Array.isArray(data) && data.length > 0) {
+        const firstItem = data[0];
+        resultText = firstItem.result || firstItem.output || firstItem.formatted_text || "";
+      } else {
+        resultText = data.result || data.output || data.formatted_text || "";
+      }
+
+      // Fallback to stringified JSON if no result found
+      if (!resultText) {
+        resultText = JSON.stringify(data);
+      }
+
       setResult({
         ...formData,
-        result: data.result || data.output || data.formatted_text || JSON.stringify(data),
+        result: resultText,
         status: "success",
         timestamp: new Date(),
       });
