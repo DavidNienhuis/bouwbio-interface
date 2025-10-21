@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { CheckCircle2, Loader2, ChevronDown, XCircle, AlertCircle, ExternalLink, FileText } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -16,6 +17,40 @@ interface BreeamCheckResult {
   status: "idle" | "loading" | "success" | "error";
   timestamp?: Date;
 }
+
+const parseResult = (resultText: string) => {
+  const sections = {
+    status: "",
+    niveaus: { general: "", exemplary: "" },
+    reden: "",
+    bewijs: "",
+    beperkingen: ""
+  };
+
+  // Extract hoofdstatus
+  const resultMatch = resultText.match(/Resultaat:\s*([^\n]+)/i);
+  if (resultMatch) sections.status = resultMatch[1].trim();
+
+  // Extract niveaus
+  const generalMatch = resultText.match(/General:\s*([^\n]+)/i);
+  const exemplaryMatch = resultText.match(/Exemplary:\s*([^\n]+)/i);
+  if (generalMatch) sections.niveaus.general = generalMatch[1].trim();
+  if (exemplaryMatch) sections.niveaus.exemplary = exemplaryMatch[1].trim();
+
+  // Extract reden (tekst tussen "Reden:" en "Bewijs:")
+  const redenMatch = resultText.match(/Reden:\s*([^]*?)(?=Bewijs:|Beperkingen:|$)/i);
+  if (redenMatch) sections.reden = redenMatch[1].trim();
+
+  // Extract bewijs (tekst tussen "Bewijs:" en "Beperkingen:")
+  const bewijsMatch = resultText.match(/Bewijs:\s*([^]*?)(?=Beperkingen:|$)/i);
+  if (bewijsMatch) sections.bewijs = bewijsMatch[1].trim();
+
+  // Extract beperkingen
+  const beperkingenMatch = resultText.match(/Beperkingen:\s*([^]*?)$/i);
+  if (beperkingenMatch) sections.beperkingen = beperkingenMatch[1].trim();
+
+  return sections;
+};
 
 export const BreeamCertificateCheck = () => {
   const [formData, setFormData] = useState({
@@ -218,16 +253,160 @@ export const BreeamCertificateCheck = () => {
               </div>
             </div>
 
-            {result.result && result.status === "success" && (
-              <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                <h4 className="text-sm font-semibold text-foreground mb-2">Resultaat:</h4>
-                <div className="prose prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-td:border-border prose-th:border-border prose-th:bg-muted prose-a:text-primary prose-code:text-foreground prose-pre:bg-card prose-li:text-foreground">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {result.result}
-                  </ReactMarkdown>
+            {result.result && result.status === "success" && (() => {
+              const parsed = parseResult(result.result);
+              const isSuccess = parsed.status.toLowerCase().includes("voldoet") && 
+                                !parsed.status.toLowerCase().includes("niet");
+              const isFailure = parsed.status.toLowerCase().includes("niet");
+              
+              return (
+                <div className="mt-4 space-y-4">
+                  {/* HOOFDRESULTAAT CARD */}
+                  <Card className={`p-6 ${
+                    isSuccess ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' :
+                    isFailure ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800' :
+                    'bg-orange-50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800'
+                  }`}>
+                    <div className="flex items-center gap-4">
+                      {isSuccess && <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400 flex-shrink-0" />}
+                      {isFailure && <XCircle className="h-10 w-10 text-red-600 dark:text-red-400 flex-shrink-0" />}
+                      {!isSuccess && !isFailure && <AlertCircle className="h-10 w-10 text-orange-600 dark:text-orange-400 flex-shrink-0" />}
+                      
+                      <div className="flex-1">
+                        <h4 className={`text-xl font-bold ${
+                          isSuccess ? 'text-green-700 dark:text-green-300' :
+                          isFailure ? 'text-red-700 dark:text-red-300' :
+                          'text-orange-700 dark:text-orange-300'
+                        }`}>
+                          {parsed.status}
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          BREEAM certificaat validatie resultaat
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* NIVEAUS - TWEE KOLOMMEN */}
+                  {(parsed.niveaus.general || parsed.niveaus.exemplary) && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Card className="p-4 bg-muted/50">
+                        <div className="text-xs font-medium text-muted-foreground mb-2">
+                          General Level
+                        </div>
+                        <div className={`text-base font-semibold ${
+                          parsed.niveaus.general.toLowerCase() === 'ja' ? 'text-green-600 dark:text-green-400' : 
+                          parsed.niveaus.general.toLowerCase() === 'nee' ? 'text-red-600 dark:text-red-400' : 
+                          'text-muted-foreground'
+                        }`}>
+                          {parsed.niveaus.general.toLowerCase() === 'ja' ? '✓ Ja' : 
+                           parsed.niveaus.general.toLowerCase() === 'nee' ? '✗ Nee' : 
+                           parsed.niveaus.general}
+                        </div>
+                      </Card>
+
+                      <Card className="p-4 bg-muted/50">
+                        <div className="text-xs font-medium text-muted-foreground mb-2">
+                          Exemplary Level
+                        </div>
+                        <div className={`text-base font-semibold ${
+                          parsed.niveaus.exemplary.toLowerCase() === 'ja' ? 'text-green-600 dark:text-green-400' : 
+                          parsed.niveaus.exemplary.toLowerCase() === 'nee' ? 'text-red-600 dark:text-red-400' : 
+                          'text-muted-foreground'
+                        }`}>
+                          {parsed.niveaus.exemplary.toLowerCase() === 'ja' ? '✓ Ja' : 
+                           parsed.niveaus.exemplary.toLowerCase() === 'nee' ? '✗ Nee' : 
+                           parsed.niveaus.exemplary}
+                        </div>
+                      </Card>
+                    </div>
+                  )}
+
+                  {/* REDEN - EXPANDABLE */}
+                  {parsed.reden && (
+                    <Collapsible defaultOpen>
+                      <Card className="overflow-hidden">
+                        <CollapsibleTrigger className="w-full p-4 hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-semibold text-sm text-foreground">Reden</h5>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="px-4 pb-4 text-sm border-t border-border pt-3">
+                            <div className="prose prose-sm max-w-none prose-p:text-muted-foreground">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {parsed.reden}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                        </CollapsibleContent>
+                      </Card>
+                    </Collapsible>
+                  )}
+
+                  {/* BEWIJS - EXPANDABLE */}
+                  {parsed.bewijs && (
+                    <Collapsible>
+                      <Card className="overflow-hidden">
+                        <CollapsibleTrigger className="w-full p-4 hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-semibold text-sm text-foreground">Bewijs</h5>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="px-4 pb-4 text-sm border-t border-border pt-3">
+                            <div className="prose prose-sm max-w-none prose-p:text-muted-foreground">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {parsed.bewijs}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                        </CollapsibleContent>
+                      </Card>
+                    </Collapsible>
+                  )}
+
+                  {/* BEPERKINGEN */}
+                  {parsed.beperkingen && (
+                    <Card className="p-4 bg-muted/30">
+                      <h5 className="font-semibold text-sm mb-2 text-foreground">Beperkingen</h5>
+                      <p className="text-sm text-muted-foreground">
+                        {parsed.beperkingen}
+                      </p>
+                    </Card>
+                  )}
+
+                  {/* BRONVERMELDING */}
+                  <Card className="p-4 bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800">
+                    <div className="flex items-start gap-3">
+                      <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <h5 className="font-semibold text-sm text-blue-900 dark:text-blue-100 mb-1">
+                          Bronvermelding
+                        </h5>
+                        <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                          Deze validatie is gebaseerd op officiële BREEAM documentatie:
+                        </p>
+                        <a 
+                          href="https://pmlnrlyptayhohmnuxte.supabase.co/storage/v1/object/sign/Bronnen/GN22-BREEAM-and-HQM-recognised-schemes-for-emissions-from-construction-products%20(1).pdf?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wZTg0ODcxMC01OTZmLTQxOGYtOTdmNS1lZTI5MTliZWUwNGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJCcm9ubmVuL0dOMjItQlJFRUFNLWFuZC1IUU0tcmVjb2duaXNlZC1zY2hlbWVzLWZvci1lbWlzc2lvbnMtZnJvbS1jb25zdHJ1Y3Rpb24tcHJvZHVjdHMgKDEpLnBkZiIsImlhdCI6MTc2MTAzOTE0NCwiZXhwIjoxNzYxNjQzOTQ0fQ.7X7SQb333bAFe0NIVqw9uM17QTyME0V96-JPqNCvX7Q"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors"
+                        >
+                          <span>GN22 - BREEAM and HQM recognised schemes for emissions from construction products</span>
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                          (PDF - Jan 2025 v3.0)
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {result.status === "error" && result.result && (
               <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
