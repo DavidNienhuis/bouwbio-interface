@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { CheckCircle2, Loader2, ChevronDown, XCircle, AlertCircle, ExternalLink, FileText } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -25,7 +26,9 @@ const parseResult = (resultText: string) => {
     niveaus: { general: "", exemplary: "" },
     reden: "",
     bewijs: "",
-    beperkingen: ""
+    beperkingen: "",
+    waarschuwingVereist: false,
+    waarschuwingsdetail: ""
   };
 
   // Extract hoofdstatus
@@ -38,12 +41,24 @@ const parseResult = (resultText: string) => {
   if (generalMatch) sections.niveaus.general = generalMatch[1].trim();
   if (exemplaryMatch) sections.niveaus.exemplary = exemplaryMatch[1].trim();
 
+  // Extract waarschuwing vereist
+  const waarschuwingMatch = resultText.match(/Waarschuwing_Vereist:\s*(WAAR|ONWAAR)/i);
+  if (waarschuwingMatch) {
+    sections.waarschuwingVereist = waarschuwingMatch[1].toUpperCase() === 'WAAR';
+  }
+
+  // Extract waarschuwingsdetail
+  const waarschuwingDetailMatch = resultText.match(/Waarschuwingsdetail:\s*([^]*?)(?=Reden:|Bewijs:|Beperkingen:|$)/i);
+  if (waarschuwingDetailMatch) {
+    sections.waarschuwingsdetail = waarschuwingDetailMatch[1].trim();
+  }
+
   // Extract reden (tekst tussen "Reden:" en "Bewijs:")
-  const redenMatch = resultText.match(/Reden:\s*([^]*?)(?=Bewijs:|Beperkingen:|$)/i);
+  const redenMatch = resultText.match(/Reden:\s*([^]*?)(?=Bewijs:|Beperkingen:|Waarschuwingsdetail:|$)/i);
   if (redenMatch) sections.reden = redenMatch[1].trim();
 
   // Extract bewijs (tekst tussen "Bewijs:" en "Beperkingen:")
-  const bewijsMatch = resultText.match(/Bewijs:\s*([^]*?)(?=Beperkingen:|$)/i);
+  const bewijsMatch = resultText.match(/Bewijs:\s*([^]*?)(?=Beperkingen:|Waarschuwingsdetail:|$)/i);
   if (bewijsMatch) sections.bewijs = bewijsMatch[1].trim();
 
   // Extract beperkingen
@@ -281,9 +296,13 @@ export const BreeamCertificateCheck = () => {
                 <div className="mt-4 space-y-4">
                   {/* HOOFDRESULTAAT CARD */}
                   <Card className={`p-6 ${
-                    isSuccess ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' :
-                    isFailure ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800' :
-                    'bg-orange-50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800'
+                    isSuccess && parsed.waarschuwingVereist 
+                      ? 'bg-green-50 border-2 border-orange-400 dark:bg-green-950/20 dark:border-orange-600' 
+                      : isSuccess 
+                      ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' 
+                      : isFailure 
+                      ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800' 
+                      : 'bg-orange-50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800'
                   }`}>
                     <div className="flex items-center gap-4">
                       {isSuccess && <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400 flex-shrink-0" />}
@@ -291,13 +310,58 @@ export const BreeamCertificateCheck = () => {
                       {!isSuccess && !isFailure && <AlertCircle className="h-10 w-10 text-orange-600 dark:text-orange-400 flex-shrink-0" />}
                       
                       <div className="flex-1">
-                        <h4 className={`text-xl font-bold ${
-                          isSuccess ? 'text-green-700 dark:text-green-300' :
-                          isFailure ? 'text-red-700 dark:text-red-300' :
-                          'text-orange-700 dark:text-orange-300'
-                        }`}>
-                          {parsed.status}
-                        </h4>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className={`text-xl font-bold ${
+                            isSuccess ? 'text-green-700 dark:text-green-300' :
+                            isFailure ? 'text-red-700 dark:text-red-300' :
+                            'text-orange-700 dark:text-orange-300'
+                          }`}>
+                            {parsed.status}
+                          </h4>
+                          
+                          {/* Waarschuwing Indicator */}
+                          {parsed.waarschuwingVereist && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <button 
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 dark:bg-orange-900/30 border-2 border-orange-400 dark:border-orange-600 rounded-full hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+                                  aria-label="Let op: extra verificatie vereist"
+                                >
+                                  <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                                  <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
+                                    Let op!
+                                  </span>
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="max-w-2xl">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="flex items-center gap-2">
+                                    <AlertCircle className="h-5 w-5 text-orange-600" />
+                                    Extra Verificatie Vereist
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription className="text-left space-y-3 pt-4">
+                                    <p className="font-medium text-foreground">
+                                      Dit product voldoet aan de basiscriteria, maar er zijn aanvullende eisen die u zelf moet verifiëren:
+                                    </p>
+                                    <div className="bg-muted/50 p-4 rounded-lg border border-border">
+                                      <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-wrap">
+                                        {parsed.waarschuwingsdetail}
+                                      </div>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground italic">
+                                      Raadpleeg de officiële BREEAM-documentatie of neem contact op met de fabrikant om deze waarden te verifiëren.
+                                    </p>
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogAction className="bg-primary">
+                                    Begrepen
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground mt-1">
                           BREEAM certificaat validatie resultaat
                         </p>
