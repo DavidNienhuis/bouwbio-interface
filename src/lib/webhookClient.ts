@@ -25,6 +25,12 @@ const extractCriteria = (data: any): ValidationResponse => {
   if (workingData?.output) {
     console.log('Found "output" key, extracting');
     workingData = workingData.output;
+    
+    // Parse als het een string is
+    if (typeof workingData === 'string') {
+      console.log('Output is string, parsing JSON');
+      workingData = JSON.parse(workingData);
+    }
   }
   
   // Check of er een criteria array is
