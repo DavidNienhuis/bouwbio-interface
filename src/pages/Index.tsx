@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { PDFUploadZone } from "@/components/PDFUploadZone";
-import { uploadPDFToWebhook, sendValidationRequest } from "@/lib/webhookClient";
+import { uploadPDFToWebhook, sendValidationRequest, ValidationResponse } from "@/lib/webhookClient";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ResultsTable } from "@/components/ResultsTable";
 
 const Index = () => {
   // Genereer unieke session ID bij component mount (nieuwe ID bij elke refresh)
@@ -13,6 +14,7 @@ const Index = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
 
   const handleUpload = async (files: File[]) => {
     setIsUploading(true);
@@ -35,8 +37,9 @@ const Index = () => {
     toast.info("Validatie verzenden...");
     
     try {
-      await sendValidationRequest(sessionId);
-      toast.success("Validatie verzonden!");
+      const response = await sendValidationRequest(sessionId);
+      setValidationData(response);
+      toast.success("Validatie ontvangen!");
     } catch (error) {
       console.error("Send error:", error);
       toast.error("Verzenden mislukt");
@@ -46,35 +49,42 @@ const Index = () => {
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#ffffff'
-    }}>
-      <div style={{ maxWidth: '400px', width: '100%', padding: '20px' }}>
-        <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
-        
-        {uploadedFiles.length > 0 && (
-          <div style={{ marginTop: '1rem' }}>
-            <div style={{ fontSize: '14px', color: '#666', marginBottom: '1rem' }}>
-              <p style={{ marginBottom: '0.5rem' }}>Geüpload:</p>
-              {uploadedFiles.map((filename, idx) => (
-                <div key={idx} style={{ padding: '0.25rem 0' }}>✓ {filename}</div>
-              ))}
+    <div style={{ minHeight: '100vh', padding: '2rem' }}>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        marginBottom: '2rem'
+      }}>
+        <div style={{ width: '100%', maxWidth: '600px' }}>
+          <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
+          
+          {uploadedFiles.length > 0 && (
+            <div style={{ marginTop: '1rem' }}>
+              <div style={{ fontSize: '14px', color: '#666', marginBottom: '1rem' }}>
+                <p style={{ marginBottom: '0.5rem' }}>Geüpload:</p>
+                {uploadedFiles.map((filename, idx) => (
+                  <div key={idx} style={{ padding: '0.25rem 0' }}>✓ {filename}</div>
+                ))}
+              </div>
+              
+              <Button 
+                onClick={handleSend} 
+                disabled={isSending || isUploading}
+                style={{ width: '100%' }}
+              >
+                {isSending ? "Verzenden..." : "Send"}
+              </Button>
             </div>
-            
-            <Button 
-              onClick={handleSend} 
-              disabled={isSending || isUploading}
-              style={{ width: '100%' }}
-            >
-              {isSending ? "Verzenden..." : "Send"}
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {validationData && (
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          <ResultsTable criteria={validationData.criteria} />
+        </div>
+      )}
     </div>
   );
 };

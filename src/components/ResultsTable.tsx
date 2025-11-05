@@ -1,33 +1,32 @@
 interface ValidationResult {
-  claim: string;
+  criterium: string;
+  status: string;
   evidence: string;
-  conclusion: string;
-  status: 'success' | 'warning' | 'error';
+  norm: string;
+  waarde: string | null;
 }
 
 interface ResultsTableProps {
-  results: ValidationResult[];
+  criteria: ValidationResult[];
 }
 
-export const ResultsTable = ({ results }: ResultsTableProps) => {
-  if (results.length === 0) return null;
+export const ResultsTable = ({ criteria }: ResultsTableProps) => {
+  if (criteria.length === 0) return null;
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'success': return 'hsl(var(--success))';
-      case 'warning': return 'hsl(var(--warning))';
-      case 'error': return 'hsl(var(--error))';
-      default: return 'hsl(var(--muted))';
-    }
+    const lowerStatus = status.toLowerCase();
+    if (lowerStatus.includes('voldoet') || lowerStatus.includes('success')) return 'hsl(var(--success))';
+    if (lowerStatus.includes('missende') || lowerStatus.includes('ontbreekt')) return 'hsl(var(--warning))';
+    if (lowerStatus.includes('voldoet niet') || lowerStatus.includes('error')) return 'hsl(var(--error))';
+    return 'hsl(var(--muted))';
   };
 
   const getStatusBg = (status: string) => {
-    switch (status) {
-      case 'success': return 'hsla(var(--success), 0.12)';
-      case 'warning': return 'hsla(var(--warning), 0.12)';
-      case 'error': return 'hsla(var(--error), 0.12)';
-      default: return 'transparent';
-    }
+    const lowerStatus = status.toLowerCase();
+    if (lowerStatus.includes('voldoet') || lowerStatus.includes('success')) return 'hsla(var(--success), 0.12)';
+    if (lowerStatus.includes('missende') || lowerStatus.includes('ontbreekt')) return 'hsla(var(--warning), 0.12)';
+    if (lowerStatus.includes('voldoet niet') || lowerStatus.includes('error')) return 'hsla(var(--error), 0.12)';
+    return 'transparent';
   };
 
   return (
@@ -83,7 +82,33 @@ export const ResultsTable = ({ results }: ResultsTableProps) => {
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase'
               }}>
-                CLAIM
+                CRITERIUM
+              </th>
+              <th style={{ 
+                borderBottom: `1px solid hsla(var(--accent), 0.15)`, 
+                padding: '1rem 1.5rem', 
+                textAlign: 'left', 
+                fontFamily: 'IBM Plex Mono', 
+                fontSize: '0.75rem', 
+                fontWeight: 600,
+                color: 'hsl(var(--accent))',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase'
+              }}>
+                NORM
+              </th>
+              <th style={{ 
+                borderBottom: `1px solid hsla(var(--accent), 0.15)`, 
+                padding: '1rem 1.5rem', 
+                textAlign: 'left', 
+                fontFamily: 'IBM Plex Mono', 
+                fontSize: '0.75rem', 
+                fontWeight: 600,
+                color: 'hsl(var(--accent))',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase'
+              }}>
+                WAARDE
               </th>
               <th style={{ 
                 borderBottom: `1px solid hsla(var(--accent), 0.15)`, 
@@ -114,7 +139,7 @@ export const ResultsTable = ({ results }: ResultsTableProps) => {
             </tr>
           </thead>
           <tbody>
-            {results.map((result, idx) => (
+            {criteria.map((item, idx) => (
               <tr 
                 key={idx} 
                 style={{ 
@@ -138,7 +163,7 @@ export const ResultsTable = ({ results }: ResultsTableProps) => {
                   fontWeight: 500,
                   lineHeight: '1.5'
                 }}>
-                  {result.claim}
+                  {item.criterium}
                 </td>
                 <td style={{ 
                   borderBottom: `1px solid hsla(var(--line), 0.3)`, 
@@ -148,7 +173,27 @@ export const ResultsTable = ({ results }: ResultsTableProps) => {
                   fontSize: '0.875rem',
                   lineHeight: '1.6'
                 }}>
-                  {result.evidence}
+                  {item.norm}
+                </td>
+                <td style={{ 
+                  borderBottom: `1px solid hsla(var(--line), 0.3)`, 
+                  padding: '1.25rem 1.5rem', 
+                  color: 'hsl(var(--ink))',
+                  fontFamily: 'IBM Plex Mono', 
+                  fontSize: '0.875rem',
+                  fontWeight: 500
+                }}>
+                  {item.waarde || '-'}
+                </td>
+                <td style={{ 
+                  borderBottom: `1px solid hsla(var(--line), 0.3)`, 
+                  padding: '1.25rem 1.5rem', 
+                  color: 'hsl(var(--muted))', 
+                  fontSize: '0.875rem',
+                  lineHeight: '1.6',
+                  maxWidth: '300px'
+                }}>
+                  {item.evidence}
                 </td>
                 <td style={{ 
                   borderBottom: `1px solid hsla(var(--line), 0.3)`, 
@@ -157,17 +202,17 @@ export const ResultsTable = ({ results }: ResultsTableProps) => {
                   <span 
                     className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md"
                     style={{ 
-                      color: getStatusColor(result.status),
-                      background: getStatusBg(result.status),
+                      color: getStatusColor(item.status),
+                      background: getStatusBg(item.status),
                       fontFamily: 'IBM Plex Mono',
                       fontSize: '0.875rem',
                       fontWeight: 600,
-                      border: `1px solid ${getStatusColor(result.status)}40`,
-                      boxShadow: `0 0 10px ${getStatusColor(result.status)}20`
+                      border: `1px solid ${getStatusColor(item.status)}40`,
+                      boxShadow: `0 0 10px ${getStatusColor(item.status)}20`
                     }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(result.status) }} />
-                    {result.conclusion}
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(item.status) }} />
+                    {item.status}
                   </span>
                 </td>
               </tr>
