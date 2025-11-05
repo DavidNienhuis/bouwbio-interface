@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { PDFUploadZone } from "@/components/PDFUploadZone";
-import { ResultsTable } from "@/components/ResultsTable";
-import { MissingEvidence } from "@/components/MissingEvidence";
 import { uploadPDFToWebhook, ValidationResponse } from "@/lib/webhookClient";
 import { toast } from "sonner";
 
@@ -13,6 +11,7 @@ const Index = () => {
   
   const [isUploading, setIsUploading] = useState(false);
   const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
   const handleUpload = async (files: File[]) => {
     setIsUploading(true);
@@ -21,10 +20,11 @@ const Index = () => {
     try {
       const response = await uploadPDFToWebhook(files, sessionId);
       setValidationData(response);
-      toast.success("AI-validatie voltooid");
+      setUploadedFiles(files.map(f => f.name));
+      toast.success("Upload gelukt!");
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Upload mislukt. Probeer opnieuw.");
+      toast.error("Upload mislukt");
     } finally {
       setIsUploading(false);
     }
@@ -41,10 +41,12 @@ const Index = () => {
       <div style={{ maxWidth: '400px', width: '100%', padding: '20px' }}>
         <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
         
-        {validationData && (
-          <div style={{ marginTop: '2rem' }}>
-            <ResultsTable results={validationData.results} />
-            <MissingEvidence missing={validationData.missing} />
+        {uploadedFiles.length > 0 && (
+          <div style={{ marginTop: '1rem', fontSize: '14px', color: '#666' }}>
+            <p style={{ marginBottom: '0.5rem' }}>Geüpload:</p>
+            {uploadedFiles.map((filename, idx) => (
+              <div key={idx} style={{ padding: '0.25rem 0' }}>✓ {filename}</div>
+            ))}
           </div>
         )}
       </div>
