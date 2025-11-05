@@ -14,7 +14,7 @@ const Index = () => {
 
   const handleUpload = async (files: File[]) => {
     setIsUploading(true);
-    toast.info(`Uploading ${files.length} bestand(en)...`);
+    toast.info(`${files.length} bestand${files.length > 1 ? 'en' : ''} uploaden...`);
     
     try {
       const response = await uploadPDFToWebhook(files);
@@ -31,42 +31,50 @@ const Index = () => {
   return (
     <div style={{ 
       minHeight: '100vh',
-      background: 'hsl(var(--bg))',
-      color: 'hsl(var(--ink))'
+      display: 'flex',
+      flexDirection: 'column'
     }}>
       <ValidationHeader />
       
-      <main className="container mx-auto px-6 py-12" style={{ maxWidth: '1200px' }}>
-        {/* Intro Sectie */}
-        <section className="intro" style={{ marginBottom: '3rem' }}>
-          <h2 style={{ 
-            fontFamily: 'IBM Plex Mono',
-            fontSize: '1.75rem',
-            marginBottom: '1rem',
-            color: 'hsl(var(--ink))'
-          }}>
-            Beperkte Validatie
-          </h2>
-          <p style={{ fontSize: '1.05rem', lineHeight: '1.7', color: 'hsl(var(--muted))' }}>
-            Upload een SDS- of productblad. Wij schatten de veiligheid en tonen wat we wél en niet kunnen bewijzen.
-          </p>
-        </section>
+      <main className="flex-1">
+        <div className="container mx-auto px-6 py-12 max-w-7xl">
+          {/* Intro Sectie */}
+          <section className="intro mb-12 max-w-3xl">
+            <h2 
+              className="text-3xl md:text-4xl mb-4"
+              style={{ 
+                fontFamily: 'IBM Plex Mono',
+                color: 'hsl(var(--ink))',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.2'
+              }}
+            >
+              Beperkte Validatie
+            </h2>
+            <p 
+              className="text-lg"
+              style={{ 
+                lineHeight: '1.75', 
+                color: 'hsl(var(--muted))',
+                maxWidth: '60ch'
+              }}
+            >
+              Upload een SDS- of productblad. Wij schatten de veiligheid en tonen wat we wél en niet kunnen bewijzen op basis van beschikbare gegevens.
+            </p>
+          </section>
 
-        {/* Upload Zone */}
-        <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
+          {/* Upload Zone */}
+          <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
 
-        {/* Resultaten - alleen tonen als data beschikbaar is */}
-        {validationData && (
-          <>
-            <div style={{ marginTop: '3rem' }}>
+          {/* Resultaten - alleen tonen als data beschikbaar is */}
+          {validationData && (
+            <div className="animate-fade-in" style={{ marginTop: '4rem' }}>
               <ResultsTable results={validationData.results} />
+              <MissingEvidence missing={validationData.missing} />
+              <KnowledgeBankStatus />
             </div>
-            
-            <MissingEvidence missing={validationData.missing} />
-            
-            <KnowledgeBankStatus />
-          </>
-        )}
+          )}
+        </div>
       </main>
       
       <ValidationFooter />

@@ -8,13 +8,13 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Anti-AI Color Scheme */
-    --bg: 217 32% 6%;
-    --panel: 217 27% 10%;
-    --ink: 210 20% 93%;
-    --accent: 80 61% 64%;
-    --muted: 215 14% 65%;
-    --line: 217 20% 14%;
+    /* Anti-AI Color Scheme - Verbeterd */
+    --bg: 220 28% 7%;
+    --panel: 220 25% 11%;
+    --ink: 210 17% 95%;
+    --accent: 80 65% 60%;
+    --muted: 215 13% 58%;
+    --line: 220 18% 16%;
     
     /* Keep these for component compatibility */
     --background: 217 32% 6%;
@@ -71,23 +71,27 @@ All colors MUST be HSL.
 
   body {
     @apply text-foreground;
-    background: hsl(var(--bg));
+    background: linear-gradient(to bottom, hsl(220 28% 7%), hsl(220 28% 5%));
     font-family: "Source Serif 4", "Source Serif Pro", Georgia, serif;
-    line-height: 1.6;
+    line-height: 1.65;
     min-height: 100vh;
     margin: 0;
     padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: "IBM Plex Mono", "Courier New", monospace;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     font-weight: 600;
+    line-height: 1.2;
   }
   
   .mono {
     font-family: "IBM Plex Mono", monospace;
     font-size: 0.9rem;
     color: hsl(var(--muted-foreground));
+    letter-spacing: 0.01em;
   }
 }
