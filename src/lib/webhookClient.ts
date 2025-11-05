@@ -1,4 +1,5 @@
 const WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/2ac96ace-b5fc-4633-91d9-368f5f0d3023';
+const SEND_WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/f4baeea1-2ab9-4141-bfdf-791b6b5877b7';
 
 export interface ValidationResponse {
   results: Array<{
@@ -55,4 +56,27 @@ export const uploadPDFToWebhook = async (files: File[], sessionId: string): Prom
   console.log('Upload successful, response:', result);
   
   return result;
+};
+
+export const sendValidationRequest = async (sessionId: string): Promise<void> => {
+  console.log('Sending validation request with session ID:', sessionId);
+  console.log('Sending request to:', SEND_WEBHOOK_URL);
+  
+  const response = await fetch(SEND_WEBHOOK_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sessionId }),
+  });
+  
+  console.log('Send response status:', response.status, response.statusText);
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Send failed:', errorText);
+    throw new Error(`Send failed: ${response.statusText}`);
+  }
+  
+  console.log('Validation request sent successfully');
 };
