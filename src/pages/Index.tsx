@@ -9,6 +9,11 @@ import { uploadPDFToWebhook, ValidationResponse } from "@/lib/webhookClient";
 import { toast } from "sonner";
 
 const Index = () => {
+  // Genereer unieke session ID bij component mount (nieuwe ID bij elke refresh)
+  const [sessionId] = useState(() => {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  });
+  
   const [isUploading, setIsUploading] = useState(false);
   const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
 
@@ -17,7 +22,7 @@ const Index = () => {
     toast.info(`${files.length} bestand${files.length > 1 ? 'en' : ''} uploaden...`);
     
     try {
-      const response = await uploadPDFToWebhook(files);
+      const response = await uploadPDFToWebhook(files, sessionId);
       setValidationData(response);
       toast.success("AI-validatie voltooid");
     } catch (error) {
