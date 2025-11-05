@@ -8,43 +8,45 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Anti-AI Color Scheme - Verbeterd */
-    --bg: 220 28% 7%;
-    --panel: 220 25% 11%;
-    --ink: 210 17% 95%;
-    --accent: 80 65% 60%;
-    --muted: 215 13% 58%;
-    --line: 220 18% 16%;
+    /* Wetenschappelijk AI Tool Color Scheme */
+    --bg: 222 47% 5%;
+    --panel: 222 40% 9%;
+    --ink: 210 40% 98%;
+    --accent: 180 100% 45%;
+    --accent-glow: 180 100% 55%;
+    --secondary: 265 85% 58%;
+    --muted: 215 20% 65%;
+    --line: 222 35% 15%;
     
     /* Keep these for component compatibility */
-    --background: 217 32% 6%;
-    --foreground: 210 20% 93%;
-    --card: 217 27% 10%;
-    --card-foreground: 210 20% 93%;
-    --popover: 217 27% 10%;
-    --popover-foreground: 210 20% 93%;
-    --primary: 80 61% 64%;
-    --primary-foreground: 217 32% 6%;
-    --secondary: 217 20% 15%;
-    --secondary-foreground: 210 20% 93%;
-    --muted: 217 20% 15%;
-    --muted-foreground: 215 14% 65%;
-    --accent: 80 61% 64%;
-    --accent-foreground: 217 32% 6%;
-    --destructive: 0 75% 55%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 217 20% 14%;
-    --input: 217 27% 10%;
-    --ring: 80 61% 64%;
-    --radius: 0.75rem;
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+    --card: 222 40% 9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 40% 9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 180 100% 45%;
+    --primary-foreground: 222 47% 5%;
+    --secondary: 265 85% 58%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 30% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 180 100% 45%;
+    --accent-foreground: 222 47% 5%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 222 35% 15%;
+    --input: 222 40% 9%;
+    --ring: 180 100% 45%;
+    --radius: 0.5rem;
     
-    /* Status colors */
-    --success: 80 61% 64%;
-    --success-foreground: 217 32% 6%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 217 32% 6%;
-    --error: 0 75% 55%;
-    --error-foreground: 0 0% 100%;
+    /* Status colors - AI/Scientific */
+    --success: 142 76% 45%;
+    --success-foreground: 210 40% 98%;
+    --warning: 38 100% 55%;
+    --warning-foreground: 222 47% 5%;
+    --error: 0 84% 60%;
+    --error-foreground: 210 40% 98%;
     
     /* Subtle shadows - no glossy effects */
     --shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
@@ -71,7 +73,7 @@ All colors MUST be HSL.
 
   body {
     @apply text-foreground;
-    background: linear-gradient(to bottom, hsl(220 28% 7%), hsl(220 28% 5%));
+    background: radial-gradient(ellipse at top, hsl(222 47% 8%), hsl(222 47% 4%));
     font-family: "Source Serif 4", "Source Serif Pro", Georgia, serif;
     line-height: 1.65;
     min-height: 100vh;

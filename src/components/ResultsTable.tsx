@@ -23,9 +23,9 @@ export const ResultsTable = ({ results }: ResultsTableProps) => {
 
   const getStatusBg = (status: string) => {
     switch (status) {
-      case 'success': return 'hsla(var(--success), 0.1)';
-      case 'warning': return 'hsla(var(--warning), 0.1)';
-      case 'error': return 'hsla(var(--error), 0.1)';
+      case 'success': return 'hsla(var(--success), 0.12)';
+      case 'warning': return 'hsla(var(--warning), 0.12)';
+      case 'error': return 'hsla(var(--error), 0.12)';
       default: return 'transparent';
     }
   };
@@ -34,69 +34,82 @@ export const ResultsTable = ({ results }: ResultsTableProps) => {
     <section 
       className="results rounded-lg overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, hsla(var(--panel), 0.5), hsla(var(--panel), 0.7))',
-        border: '1px solid hsl(var(--line))',
-        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2)'
+        background: 'linear-gradient(135deg, hsla(var(--panel), 0.7), hsla(var(--panel), 0.9))',
+        border: '1px solid hsla(var(--accent), 0.2)',
+        boxShadow: '0 4px 32px rgba(0, 0, 0, 0.3), 0 0 40px hsla(var(--accent), 0.08)'
       }}
     >
-      <div className="p-6 border-b" style={{ borderColor: 'hsl(var(--line))' }}>
-        <h3 
-          className="text-2xl"
-          style={{ 
-            fontFamily: 'IBM Plex Mono', 
-            color: 'hsl(var(--ink))',
-            letterSpacing: '-0.01em'
-          }}
-        >
-          Resultaten
-        </h3>
-        <p className="mono text-sm mt-2" style={{ color: 'hsl(var(--muted))' }}>
-          Validatiestatus per claim
-        </p>
+      <div className="p-6 border-b" style={{ borderColor: 'hsla(var(--line), 0.5)' }}>
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-10 h-10 rounded-md flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, hsla(var(--accent), 0.2), hsla(var(--secondary), 0.2))',
+              border: '1px solid hsla(var(--accent), 0.3)'
+            }}
+          >
+            <span style={{ fontSize: '1.25rem' }}>📊</span>
+          </div>
+          <div>
+            <h3 
+              className="text-2xl"
+              style={{ 
+                fontFamily: 'IBM Plex Mono', 
+                color: 'hsl(var(--ink))',
+                letterSpacing: '-0.01em'
+              }}
+            >
+              Validatieresultaten
+            </h3>
+            <p className="mono text-sm mt-1" style={{ color: 'hsl(var(--muted))' }}>
+              AI-analyse per claim
+            </p>
+          </div>
+        </div>
       </div>
       
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ background: 'hsla(var(--bg), 0.5)' }}>
+            <tr style={{ background: 'hsla(var(--bg), 0.6)' }}>
               <th style={{ 
-                borderBottom: `1px solid hsl(var(--line))`, 
+                borderBottom: `1px solid hsla(var(--accent), 0.15)`, 
                 padding: '1rem 1.5rem', 
                 textAlign: 'left', 
                 fontFamily: 'IBM Plex Mono', 
                 fontSize: '0.75rem', 
                 fontWeight: 600,
-                color: 'hsl(var(--muted))',
-                letterSpacing: '0.05em',
+                color: 'hsl(var(--accent))',
+                letterSpacing: '0.08em',
                 textTransform: 'uppercase'
               }}>
-                Claim
+                CLAIM
               </th>
               <th style={{ 
-                borderBottom: `1px solid hsl(var(--line))`, 
+                borderBottom: `1px solid hsla(var(--accent), 0.15)`, 
                 padding: '1rem 1.5rem', 
                 textAlign: 'left', 
                 fontFamily: 'IBM Plex Mono', 
                 fontSize: '0.75rem', 
                 fontWeight: 600,
-                color: 'hsl(var(--muted))',
-                letterSpacing: '0.05em',
+                color: 'hsl(var(--accent))',
+                letterSpacing: '0.08em',
                 textTransform: 'uppercase'
               }}>
-                Bewijsmateriaal
+                BEWIJSMATERIAAL
               </th>
               <th style={{ 
-                borderBottom: `1px solid hsl(var(--line))`, 
+                borderBottom: `1px solid hsla(var(--accent), 0.15)`, 
                 padding: '1rem 1.5rem', 
                 textAlign: 'left', 
                 fontFamily: 'IBM Plex Mono', 
                 fontSize: '0.75rem', 
                 fontWeight: 600,
-                color: 'hsl(var(--muted))',
-                letterSpacing: '0.05em',
+                color: 'hsl(var(--accent))',
+                letterSpacing: '0.08em',
                 textTransform: 'uppercase'
               }}>
-                Conclusie
+                STATUS
               </th>
             </tr>
           </thead>
@@ -105,46 +118,55 @@ export const ResultsTable = ({ results }: ResultsTableProps) => {
               <tr 
                 key={idx} 
                 style={{ 
-                  background: idx % 2 === 1 ? 'hsla(var(--bg), 0.3)' : 'transparent',
-                  transition: 'background 0.2s'
+                  background: idx % 2 === 1 ? 'hsla(var(--bg), 0.4)' : 'transparent',
+                  transition: 'all 0.2s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'hsla(var(--accent), 0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = idx % 2 === 1 ? 'hsla(var(--bg), 0.3)' : 'transparent'}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'hsla(var(--accent), 0.08)';
+                  e.currentTarget.style.borderLeft = '3px solid hsl(var(--accent))';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = idx % 2 === 1 ? 'hsla(var(--bg), 0.4)' : 'transparent';
+                  e.currentTarget.style.borderLeft = 'none';
+                }}
               >
                 <td style={{ 
-                  borderBottom: `1px solid hsl(var(--line))`, 
+                  borderBottom: `1px solid hsla(var(--line), 0.3)`, 
                   padding: '1.25rem 1.5rem', 
                   color: 'hsl(var(--ink))',
                   fontSize: '0.95rem',
+                  fontWeight: 500,
                   lineHeight: '1.5'
                 }}>
                   {result.claim}
                 </td>
                 <td style={{ 
-                  borderBottom: `1px solid hsl(var(--line))`, 
+                  borderBottom: `1px solid hsla(var(--line), 0.3)`, 
                   padding: '1.25rem 1.5rem', 
                   color: 'hsl(var(--muted))', 
                   fontFamily: 'IBM Plex Mono', 
                   fontSize: '0.875rem',
-                  lineHeight: '1.5'
+                  lineHeight: '1.6'
                 }}>
                   {result.evidence}
                 </td>
                 <td style={{ 
-                  borderBottom: `1px solid hsl(var(--line))`, 
+                  borderBottom: `1px solid hsla(var(--line), 0.3)`, 
                   padding: '1.25rem 1.5rem' 
                 }}>
                   <span 
-                    className="inline-block px-3 py-1 rounded-md"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md"
                     style={{ 
                       color: getStatusColor(result.status),
                       background: getStatusBg(result.status),
                       fontFamily: 'IBM Plex Mono',
                       fontSize: '0.875rem',
-                      fontWeight: 500,
-                      border: `1px solid ${getStatusColor(result.status)}33`
+                      fontWeight: 600,
+                      border: `1px solid ${getStatusColor(result.status)}40`,
+                      boxShadow: `0 0 10px ${getStatusColor(result.status)}20`
                     }}
                   >
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: getStatusColor(result.status) }} />
                     {result.conclusion}
                   </span>
                 </td>

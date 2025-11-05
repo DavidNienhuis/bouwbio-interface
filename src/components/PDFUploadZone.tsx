@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, Loader2, FileText } from "lucide-react";
+import { Upload, Loader2, FileText, Zap } from "lucide-react";
 
 interface PDFUploadZoneProps {
   onUpload: (files: File[]) => void;
@@ -26,7 +26,7 @@ export const PDFUploadZone = ({ onUpload, isUploading }: PDFUploadZoneProps) => 
   return (
     <section className="upload-zone">
       <div
-        className={`upload-area transition-all duration-200 ${isDragging ? 'dragging' : ''}`}
+        className={`upload-area transition-all duration-300 ${isDragging ? 'dragging' : ''}`}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
@@ -34,22 +34,22 @@ export const PDFUploadZone = ({ onUpload, isUploading }: PDFUploadZoneProps) => 
         style={{
           border: isDragging 
             ? `2px solid hsl(var(--accent))` 
-            : `2px dashed hsl(var(--line))`,
+            : `2px dashed hsla(var(--line), 0.6)`,
           borderRadius: 'var(--radius)',
           padding: '4rem 3rem',
           textAlign: 'center',
           cursor: isUploading ? 'not-allowed' : 'pointer',
           background: isDragging 
-            ? 'linear-gradient(135deg, hsla(var(--accent), 0.05), hsla(var(--accent), 0.1))' 
-            : 'linear-gradient(135deg, hsla(var(--panel), 0.4), hsla(var(--panel), 0.6))',
+            ? 'radial-gradient(circle at center, hsla(var(--accent), 0.15), hsla(var(--accent), 0.05))' 
+            : 'linear-gradient(135deg, hsla(var(--panel), 0.6), hsla(var(--panel), 0.8))',
           boxShadow: isDragging 
-            ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 40px hsla(var(--accent), 0.1)' 
-            : '0 2px 16px rgba(0, 0, 0, 0.2)',
+            ? '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 60px hsla(var(--accent), 0.15), 0 0 40px hsla(var(--accent), 0.2)' 
+            : '0 4px 24px rgba(0, 0, 0, 0.3)',
           position: 'relative',
           overflow: 'hidden'
         }}
       >
-        {/* Background Pattern */}
+        {/* Tech Grid Background */}
         <div 
           style={{
             position: 'absolute',
@@ -57,8 +57,12 @@ export const PDFUploadZone = ({ onUpload, isUploading }: PDFUploadZoneProps) => 
             left: 0,
             right: 0,
             bottom: 0,
-            opacity: 0.03,
-            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, hsl(var(--line)) 35px, hsl(var(--line)) 36px)`,
+            opacity: 0.04,
+            backgroundImage: `
+              linear-gradient(hsla(var(--accent), 0.3) 1px, transparent 1px),
+              linear-gradient(90deg, hsla(var(--accent), 0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px',
             pointerEvents: 'none'
           }}
         />
@@ -66,44 +70,64 @@ export const PDFUploadZone = ({ onUpload, isUploading }: PDFUploadZoneProps) => 
         <div style={{ position: 'relative', zIndex: 1 }}>
           {isUploading ? (
             <div className="space-y-4">
-              <Loader2 className="h-16 w-16 mx-auto animate-spin" style={{ color: 'hsl(var(--accent))' }} />
-              <p className="mono" style={{ color: 'hsl(var(--accent))' }}>
-                Analyseren...
+              <div className="relative">
+                <Loader2 className="h-16 w-16 mx-auto animate-spin" style={{ color: 'hsl(var(--accent))' }} />
+                <div 
+                  className="absolute inset-0 blur-xl"
+                  style={{
+                    background: 'radial-gradient(circle, hsla(var(--accent), 0.3), transparent)',
+                  }}
+                />
+              </div>
+              <p className="mono font-medium text-base" style={{ color: 'hsl(var(--accent))' }}>
+                AI ANALYSE LOPEND...
               </p>
             </div>
           ) : (
             <div className="space-y-6">
               <div 
-                className="inline-flex items-center justify-center rounded-full mx-auto"
+                className="inline-flex items-center justify-center rounded-lg mx-auto relative"
                 style={{
-                  width: '80px',
-                  height: '80px',
-                  background: 'linear-gradient(135deg, hsla(var(--accent), 0.15), hsla(var(--accent), 0.05))',
-                  border: '2px solid hsla(var(--accent), 0.2)'
+                  width: '96px',
+                  height: '96px',
+                  background: 'linear-gradient(135deg, hsla(var(--accent), 0.2), hsla(var(--secondary), 0.15))',
+                  border: '2px solid hsla(var(--accent), 0.3)',
+                  boxShadow: '0 0 30px hsla(var(--accent), 0.2)'
                 }}
               >
-                <Upload className="h-8 w-8" style={{ color: 'hsl(var(--accent))' }} />
+                <Upload className="h-10 w-10" style={{ color: 'hsl(var(--accent))' }} />
+                <Zap 
+                  className="h-4 w-4 absolute top-2 right-2" 
+                  style={{ color: 'hsl(var(--secondary))' }} 
+                />
               </div>
               
               <div className="space-y-3">
-                <p className="text-xl font-medium" style={{ color: 'hsl(var(--ink))', fontFamily: 'IBM Plex Mono' }}>
-                  Sleep SDS of productblad hier
+                <p 
+                  className="text-2xl font-medium" 
+                  style={{ 
+                    color: 'hsl(var(--ink))', 
+                    fontFamily: 'IBM Plex Mono',
+                    letterSpacing: '-0.01em'
+                  }}
+                >
+                  Sleep documenten hier
                 </p>
                 <p className="mono text-sm" style={{ color: 'hsl(var(--muted))' }}>
-                  Of klik om bestanden te selecteren
+                  SDS · EPD · Productbladen
                 </p>
               </div>
               
               <div 
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-md"
                 style={{
-                  background: 'hsla(var(--panel), 0.6)',
-                  border: '1px solid hsl(var(--line))'
+                  background: 'hsla(var(--accent), 0.08)',
+                  border: '1px solid hsla(var(--accent), 0.2)'
                 }}
               >
-                <FileText className="h-4 w-4" style={{ color: 'hsl(var(--muted))' }} />
-                <span className="mono text-xs" style={{ color: 'hsl(var(--muted))' }}>
-                  Alleen PDF-bestanden
+                <FileText className="h-4 w-4" style={{ color: 'hsl(var(--accent))' }} />
+                <span className="mono text-xs font-medium" style={{ color: 'hsl(var(--accent))' }}>
+                  PDF FORMAT
                 </span>
               </div>
             </div>
@@ -123,12 +147,12 @@ export const PDFUploadZone = ({ onUpload, isUploading }: PDFUploadZoneProps) => 
       <div 
         className="mt-4 p-4 rounded-md"
         style={{
-          background: 'hsla(var(--warning), 0.05)',
-          border: '1px solid hsla(var(--warning), 0.2)'
+          background: 'hsla(var(--warning), 0.08)',
+          border: '1px solid hsla(var(--warning), 0.25)'
         }}
       >
-        <p className="mono text-sm" style={{ color: 'hsl(var(--muted))', lineHeight: '1.6' }}>
-          ⚠️ Bestanden worden naar de webhook gestuurd voor analyse – geen automatisch contact met leveranciers
+        <p className="mono text-sm leading-relaxed" style={{ color: 'hsl(var(--ink))' }}>
+          <span style={{ color: 'hsl(var(--warning))', fontWeight: 600 }}>⚡ AI-GEDREVEN VALIDATIE</span> · Gegevens worden via beveiligde webhook verwerkt · Geen direct contact met leveranciers
         </p>
       </div>
     </section>
