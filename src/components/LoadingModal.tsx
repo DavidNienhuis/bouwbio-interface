@@ -41,78 +41,48 @@ export const LoadingModal = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
-        background: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(8px)'
+        background: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(4px)'
       }}
     >
       <div 
-        className="relative animate-scale-in"
+        className="relative"
         style={{
-          background: 'linear-gradient(135deg, hsla(var(--panel), 0.95), hsla(var(--panel), 0.85))',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid hsla(var(--accent), 0.3)',
-          borderRadius: '1rem',
-          padding: '3rem 2.5rem',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 80px hsla(var(--accent), 0.15)',
-          minWidth: '400px',
+          background: 'hsl(var(--panel))',
+          border: '1px solid hsla(var(--line), 0.3)',
+          borderRadius: '0.75rem',
+          padding: '2.5rem 2rem',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+          minWidth: '360px',
           maxWidth: '90vw'
         }}
       >
-        {/* Spinning loader */}
-        <div className="flex justify-center mb-6">
+        {/* Simple spinner */}
+        <div className="flex justify-center mb-5">
           <div 
             className="relative"
-            style={{ width: '80px', height: '80px' }}
+            style={{ width: '48px', height: '48px' }}
           >
-            {/* Outer ring */}
             <div 
               className="absolute inset-0 rounded-full"
               style={{
-                border: '3px solid hsla(var(--accent), 0.2)',
-                animation: 'spin 2s linear infinite'
+                border: '3px solid hsla(var(--line), 0.2)',
+                borderTopColor: 'hsl(var(--muted))',
+                animation: 'spin 1s linear infinite'
               }}
             />
-            {/* Gradient spinner */}
-            <div 
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: `conic-gradient(
-                  from 0deg,
-                  transparent 0deg,
-                  hsl(var(--accent)) 90deg,
-                  hsl(var(--secondary)) 180deg,
-                  transparent 270deg
-                )`,
-                mask: 'radial-gradient(circle, transparent 65%, black 66%)',
-                WebkitMask: 'radial-gradient(circle, transparent 65%, black 66%)',
-                animation: 'spin 1.5s linear infinite'
-              }}
-            />
-            {/* Center dot */}
-            <div 
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <div 
-                className="w-3 h-3 rounded-full"
-                style={{
-                  background: 'hsl(var(--accent))',
-                  boxShadow: '0 0 20px hsla(var(--accent), 0.6)',
-                  animation: 'pulse 2s ease-in-out infinite'
-                }}
-              />
-            </div>
           </div>
         </div>
 
         {/* Message */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-5">
           <h3 
             style={{ 
               fontFamily: 'IBM Plex Mono',
-              fontSize: '1.25rem',
-              fontWeight: 600,
+              fontSize: '1rem',
+              fontWeight: 500,
               color: 'hsl(var(--ink))',
               marginBottom: '0.5rem'
             }}
@@ -122,7 +92,7 @@ export const LoadingModal = ({
           <p 
             className="mono"
             style={{ 
-              fontSize: '0.875rem',
+              fontSize: '0.8rem',
               color: 'hsl(var(--muted))'
             }}
           >
@@ -134,8 +104,8 @@ export const LoadingModal = ({
         <div 
           style={{
             width: '100%',
-            height: '6px',
-            background: 'hsla(var(--line), 0.3)',
+            height: '4px',
+            background: 'hsla(var(--line), 0.2)',
             borderRadius: '999px',
             overflow: 'hidden',
             position: 'relative'
@@ -148,24 +118,20 @@ export const LoadingModal = ({
               left: 0,
               height: '100%',
               width: `${progress}%`,
-              background: `linear-gradient(90deg, 
-                hsl(var(--accent)), 
-                hsl(var(--secondary))
-              )`,
+              background: 'hsl(var(--muted))',
               borderRadius: '999px',
-              transition: 'width 0.1s linear',
-              boxShadow: `0 0 20px hsla(var(--accent), 0.5)`
+              transition: 'width 0.1s linear'
             }}
           />
         </div>
 
         {/* Progress percentage */}
         <div 
-          className="text-center mt-3 mono"
+          className="text-center mt-2 mono"
           style={{ 
-            fontSize: '0.75rem',
+            fontSize: '0.7rem',
             color: 'hsl(var(--muted))',
-            fontWeight: 600
+            fontWeight: 500
           }}
         >
           {Math.round(progress)}%
