@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Paperclip, Brain, ArrowRight } from "lucide-react";
+import { Paperclip, ArrowRight } from "lucide-react";
 
 export const ChatInput = ({ onSubmit }: { onSubmit: (message: string) => void }) => {
   const [message, setMessage] = useState("");
   const [attachEnabled, setAttachEnabled] = useState(false);
-  const [deepThinkingEnabled, setDeepThinkingEnabled] = useState(false);
 
   const handleSubmit = () => {
     if (message.trim()) {
@@ -54,17 +53,6 @@ export const ChatInput = ({ onSubmit }: { onSubmit: (message: string) => void })
             >
               <Paperclip className="h-4 w-4 mr-2" />
               Attach
-            </Button>
-            
-            {/* Deep Thinking Toggle */}
-            <Button
-              variant={deepThinkingEnabled ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-              className="rounded-full"
-            >
-              <Brain className="h-4 w-4 mr-2" />
-              Deep Thinking
             </Button>
           </div>
           

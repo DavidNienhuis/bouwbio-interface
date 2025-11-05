@@ -2,7 +2,6 @@ import { useState } from "react";
 import { ChatHeader } from "@/components/ChatHeader";
 import { WelcomeSection } from "@/components/WelcomeSection";
 import { ChatInput } from "@/components/ChatInput";
-import { SuggestionCards } from "@/components/SuggestionCards";
 import { ChatFooter } from "@/components/ChatFooter";
 
 const Index = () => {
@@ -12,10 +11,6 @@ const Index = () => {
     console.log("Submitted:", message);
     setChatMessages([...chatMessages, message]);
     // TODO: Hier later de BREEAM webhook integratie toevoegen
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    handleSubmit(suggestion);
   };
 
   return (
@@ -31,9 +26,6 @@ const Index = () => {
           
           {/* Chat Input */}
           <ChatInput onSubmit={handleSubmit} />
-          
-          {/* Suggestion Cards */}
-          <SuggestionCards onSuggestionClick={handleSuggestionClick} />
         </div>
       </main>
       

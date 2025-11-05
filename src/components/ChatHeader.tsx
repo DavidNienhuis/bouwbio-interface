@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Archive, Settings, Sparkles } from "lucide-react";
+import { MessageSquare, Archive, Settings } from "lucide-react";
 
 export const ChatHeader = () => {
   return (
@@ -7,7 +7,7 @@ export const ChatHeader = () => {
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
         <div className="text-2xl font-bold tracking-tight text-foreground">
-          LiLi
+          BB
         </div>
         
         {/* Navigation Buttons */}
@@ -25,12 +25,6 @@ export const ChatHeader = () => {
             Settings
           </Button>
         </div>
-        
-        {/* Upgrade Button */}
-        <Button className="rounded-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-          <Sparkles className="h-4 w-4 mr-2" />
-          Upgrade
-        </Button>
       </div>
     </header>
   );
