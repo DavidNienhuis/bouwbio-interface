@@ -1,27 +1,44 @@
-import { BreeamCertificateCheck } from "@/components/BreeamCertificateCheck";
-import { Leaf } from "lucide-react";
+import { useState } from "react";
+import { ChatHeader } from "@/components/ChatHeader";
+import { WelcomeSection } from "@/components/WelcomeSection";
+import { ChatInput } from "@/components/ChatInput";
+import { SuggestionCards } from "@/components/SuggestionCards";
+import { ChatFooter } from "@/components/ChatFooter";
 
 const Index = () => {
+  const [chatMessages, setChatMessages] = useState<string[]>([]);
+
+  const handleSubmit = (message: string) => {
+    console.log("Submitted:", message);
+    setChatMessages([...chatMessages, message]);
+    // TODO: Hier later de BREEAM webhook integratie toevoegen
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    handleSubmit(suggestion);
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card shadow-sm">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <Leaf className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Bouwbioloog</h1>
-              <p className="text-sm text-muted-foreground">AI Validatietool voor Duurzaam Bouwen</p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-background/95 relative">
+      {/* Header */}
+      <ChatHeader />
+      
+      {/* Main Content - Centered Vertically */}
+      <main className="container mx-auto px-6 pt-32 pb-24 min-h-screen flex flex-col items-center justify-center">
+        <div className="w-full max-w-6xl space-y-8">
+          {/* Welcome Section */}
+          <WelcomeSection />
+          
+          {/* Chat Input */}
+          <ChatInput onSubmit={handleSubmit} />
+          
+          {/* Suggestion Cards */}
+          <SuggestionCards onSuggestionClick={handleSuggestionClick} />
         </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <BreeamCertificateCheck />
       </main>
+      
+      {/* Footer */}
+      <ChatFooter />
     </div>
   );
 };
