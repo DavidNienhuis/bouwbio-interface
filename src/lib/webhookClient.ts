@@ -11,6 +11,33 @@ export interface ValidationResponse {
   }>;
 }
 
+// Helper functie om criteria uit verschillende response formaten te halen
+const extractCriteria = (data: any): ValidationResponse => {
+  let workingData = data;
+  
+  // Als het een array is, pak het eerste element
+  if (Array.isArray(workingData)) {
+    console.log('Response is array, taking first element');
+    workingData = workingData[0];
+  }
+  
+  // Als er een "output" key is, pak die
+  if (workingData?.output) {
+    console.log('Found "output" key, extracting');
+    workingData = workingData.output;
+  }
+  
+  // Check of er een criteria array is
+  if (workingData?.criteria && Array.isArray(workingData.criteria)) {
+    console.log('Found criteria array with', workingData.criteria.length, 'items');
+    return { criteria: workingData.criteria };
+  }
+  
+  // Als we hier komen, is het formaat onbekend
+  console.error('Could not extract criteria from response:', data);
+  throw new Error('Invalid response format: no criteria array found');
+};
+
 export const uploadPDFToWebhook = async (files: File[], sessionId: string): Promise<ValidationResponse> => {
   const formData = new FormData();
   
@@ -74,8 +101,12 @@ export const sendValidationRequest = async (sessionId: string): Promise<Validati
     throw new Error(`Send failed: ${response.statusText}`);
   }
   
-  const result = await response.json();
-  console.log('Validation response:', result);
+  const rawResult = await response.json();
+  console.log('Raw validation response:', rawResult);
+  
+  // Gebruik de helper functie om criteria te extraheren
+  const result = extractCriteria(rawResult);
+  console.log('Extracted criteria:', result);
   
   return result;
 };
