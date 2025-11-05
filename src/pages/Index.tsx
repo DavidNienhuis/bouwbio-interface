@@ -4,6 +4,7 @@ import { uploadPDFToWebhook, sendValidationRequest, ValidationResponse } from "@
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ResultsTable } from "@/components/ResultsTable";
+import { LoadingModal } from "@/components/LoadingModal";
 
 const Index = () => {
   // Genereer unieke session ID bij component mount (nieuwe ID bij elke refresh)
@@ -50,7 +51,13 @@ const Index = () => {
 
   return (
     <div style={{ minHeight: '100vh', padding: '2rem' }}>
-      <div style={{ 
+      <LoadingModal 
+        isOpen={isSending} 
+        message="Validatie uitvoeren..."
+        estimatedTime={15}
+      />
+      
+      <div style={{
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',

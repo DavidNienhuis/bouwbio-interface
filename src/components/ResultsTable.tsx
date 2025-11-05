@@ -78,7 +78,7 @@ export const ResultsTable = ({ criteria }: ResultsTableProps) => {
                 fontFamily: 'IBM Plex Mono', 
                 fontSize: '0.75rem', 
                 fontWeight: 600,
-                color: 'hsl(var(--accent))',
+                color: 'hsl(var(--ink))',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase'
               }}>
@@ -91,7 +91,7 @@ export const ResultsTable = ({ criteria }: ResultsTableProps) => {
                 fontFamily: 'IBM Plex Mono', 
                 fontSize: '0.75rem', 
                 fontWeight: 600,
-                color: 'hsl(var(--accent))',
+                color: 'hsl(var(--ink))',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase'
               }}>
@@ -104,7 +104,7 @@ export const ResultsTable = ({ criteria }: ResultsTableProps) => {
                 fontFamily: 'IBM Plex Mono', 
                 fontSize: '0.75rem', 
                 fontWeight: 600,
-                color: 'hsl(var(--accent))',
+                color: 'hsl(var(--ink))',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase'
               }}>
@@ -117,7 +117,7 @@ export const ResultsTable = ({ criteria }: ResultsTableProps) => {
                 fontFamily: 'IBM Plex Mono', 
                 fontSize: '0.75rem', 
                 fontWeight: 600,
-                color: 'hsl(var(--accent))',
+                color: 'hsl(var(--ink))',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase'
               }}>
@@ -130,7 +130,7 @@ export const ResultsTable = ({ criteria }: ResultsTableProps) => {
                 fontFamily: 'IBM Plex Mono', 
                 fontSize: '0.75rem', 
                 fontWeight: 600,
-                color: 'hsl(var(--accent))',
+                color: 'hsl(var(--ink))',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase'
               }}>
@@ -188,7 +188,7 @@ export const ResultsTable = ({ criteria }: ResultsTableProps) => {
                 <td style={{ 
                   borderBottom: `1px solid hsla(var(--line), 0.3)`, 
                   padding: '1.25rem 1.5rem', 
-                  color: 'hsl(var(--muted))', 
+                  color: 'hsl(var(--ink))', 
                   fontSize: '0.875rem',
                   lineHeight: '1.6',
                   maxWidth: '300px'
