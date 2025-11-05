@@ -168,7 +168,7 @@ export const ResultsTable = ({ criteria }: ResultsTableProps) => {
                 <td style={{ 
                   borderBottom: `1px solid hsla(var(--line), 0.3)`, 
                   padding: '1.25rem 1.5rem', 
-                  color: 'hsl(var(--muted))', 
+                  color: 'hsl(var(--ink))', 
                   fontFamily: 'IBM Plex Mono', 
                   fontSize: '0.875rem',
                   lineHeight: '1.6'

@@ -93,7 +93,7 @@ export const LoadingModal = ({
             className="mono"
             style={{ 
               fontSize: '0.8rem',
-              color: 'hsl(var(--muted))'
+              color: 'hsla(var(--ink), 0.65)'
             }}
           >
             Dit duurt ongeveer {estimatedTime} seconden
@@ -130,7 +130,7 @@ export const LoadingModal = ({
           className="text-center mt-2 mono"
           style={{ 
             fontSize: '0.7rem',
-            color: 'hsl(var(--muted))',
+            color: 'hsla(var(--ink), 0.75)',
             fontWeight: 500
           }}
         >
