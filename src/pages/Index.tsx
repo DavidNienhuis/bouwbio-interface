@@ -4,6 +4,7 @@ import { uploadPDFToWebhook, sendValidationRequest, ValidationResponse } from "@
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ResultsTable } from "@/components/ResultsTable";
+import { ClassificationResults } from "@/components/ClassificationResults";
 import { LoadingModal } from "@/components/LoadingModal";
 
 const Index = () => {
@@ -89,7 +90,11 @@ const Index = () => {
 
       {validationData && (
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <ResultsTable criteria={validationData.criteria} />
+          {validationData.type === 'table' ? (
+            <ResultsTable criteria={validationData.criteria} />
+          ) : (
+            <ClassificationResults data={validationData.data} />
+          )}
         </div>
       )}
     </div>

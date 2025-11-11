@@ -1,18 +1,28 @@
 const WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/2ac96ace-b5fc-4633-91d9-368f5f0d3023';
 const SEND_WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/f4baeea1-2ab9-4141-bfdf-791b6b5877b7';
 
-export interface ValidationResponse {
-  criteria: Array<{
-    criterium: string;
-    status: string;
-    evidence: string;
-    norm: string;
-    waarde: string | null;
-  }>;
+export interface CriteriaData {
+  criterium: string;
+  status: string;
+  evidence: string;
+  norm: string;
+  waarde: string | null;
 }
 
-// Helper functie om criteria uit verschillende response formaten te halen
-const extractCriteria = (data: any): ValidationResponse => {
+export interface ClassificationData {
+  classification: string;
+  confidence: number;
+  reasoning: string;
+  evidence_quotes: string[];
+  recommended_action: string;
+}
+
+export type ValidationResponse = 
+  | { type: 'table'; criteria: CriteriaData[] }
+  | { type: 'classification'; data: ClassificationData };
+
+// Helper functie om validation data uit verschillende response formaten te halen
+const extractValidationData = (data: any): ValidationResponse => {
   let workingData = data;
   
   // Als het een array is, pak het eerste element
@@ -33,18 +43,36 @@ const extractCriteria = (data: any): ValidationResponse => {
     }
   }
   
-  // Check of er een criteria array is
+  // Detecteer format: Classification format
+  if (workingData?.classification && workingData?.reasoning) {
+    console.log('Found classification format');
+    return {
+      type: 'classification',
+      data: {
+        classification: workingData.classification,
+        confidence: workingData.confidence || 0,
+        reasoning: workingData.reasoning,
+        evidence_quotes: workingData.evidence_quotes || [],
+        recommended_action: workingData.recommended_action || ''
+      }
+    };
+  }
+  
+  // Detecteer format: Table format
   if (workingData?.criteria && Array.isArray(workingData.criteria)) {
     console.log('Found criteria array with', workingData.criteria.length, 'items');
-    return { criteria: workingData.criteria };
+    return { 
+      type: 'table',
+      criteria: workingData.criteria 
+    };
   }
   
   // Als we hier komen, is het formaat onbekend
-  console.error('Could not extract criteria from response:', data);
-  throw new Error('Invalid response format: no criteria array found');
+  console.error('Could not extract validation data from response:', data);
+  throw new Error('Invalid response format: no criteria array or classification found');
 };
 
-export const uploadPDFToWebhook = async (files: File[], sessionId: string): Promise<ValidationResponse> => {
+export const uploadPDFToWebhook = async (files: File[], sessionId: string): Promise<void> => {
   const formData = new FormData();
   
   // Voeg session ID toe als tekst veld
@@ -81,10 +109,15 @@ export const uploadPDFToWebhook = async (files: File[], sessionId: string): Prom
     throw new Error(`Upload failed: ${response.statusText}`);
   }
   
-  const result = await response.json();
-  console.log('Upload successful, response:', result);
-  
-  return result;
+  // Check content-type voordat we JSON parsen
+  const contentType = response.headers.get('content-type');
+  if (contentType?.includes('application/json')) {
+    const result = await response.json();
+    console.log('Upload successful, response:', result);
+  } else {
+    // Geen JSON response - dat is OK voor upload webhook
+    console.log('Upload successful (no JSON response)');
+  }
 };
 
 export const sendValidationRequest = async (sessionId: string): Promise<ValidationResponse> => {
@@ -110,9 +143,9 @@ export const sendValidationRequest = async (sessionId: string): Promise<Validati
   const rawResult = await response.json();
   console.log('Raw validation response:', rawResult);
   
-  // Gebruik de helper functie om criteria te extraheren
-  const result = extractCriteria(rawResult);
-  console.log('Extracted criteria:', result);
+  // Gebruik de helper functie om validation data te extraheren
+  const result = extractValidationData(rawResult);
+  console.log('Extracted validation data:', result);
   
   return result;
 };
