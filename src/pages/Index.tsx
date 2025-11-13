@@ -17,6 +17,7 @@ const Index = () => {
   const [isSending, setIsSending] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
+  const [errorData, setErrorData] = useState<{ message: string; rawResponse?: any } | null>(null);
 
   const handleUpload = async (files: File[]) => {
     setIsUploading(true);
@@ -36,15 +37,22 @@ const Index = () => {
 
   const handleSend = async () => {
     setIsSending(true);
+    setErrorData(null); // Reset error state
     toast.info("Validatie verzenden...");
     
     try {
       const response = await sendValidationRequest(sessionId);
       setValidationData(response);
+      setErrorData(null);
       toast.success("Validatie ontvangen!");
     } catch (error) {
-      console.error("Send error:", error);
-      toast.error("Verzenden mislukt");
+      console.error("❌ [UI] Send error:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
+      setErrorData({
+        message: errorMessage,
+        rawResponse: (error as any).rawResponse
+      });
+      toast.error("Verzenden mislukt - check console voor details");
     } finally {
       setIsSending(false);
     }
@@ -87,6 +95,47 @@ const Index = () => {
           )}
         </div>
       </div>
+
+      {errorData && (
+        <div style={{ 
+          maxWidth: '1400px', 
+          margin: '2rem auto',
+          padding: '1.5rem',
+          border: '2px solid #ef4444',
+          borderRadius: '8px',
+          backgroundColor: '#fef2f2'
+        }}>
+          <h3 style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
+            ❌ Fout bij validatie
+          </h3>
+          <p style={{ color: '#991b1b', marginBottom: '1rem' }}>
+            <strong>Error:</strong> {errorData.message}
+          </p>
+          <details style={{ marginTop: '1rem' }}>
+            <summary style={{ 
+              cursor: 'pointer', 
+              color: '#991b1b', 
+              fontWeight: 'bold',
+              marginBottom: '0.5rem'
+            }}>
+              🔍 Raw Response Data (klik om te bekijken)
+            </summary>
+            <pre style={{ 
+              backgroundColor: '#fff',
+              padding: '1rem',
+              borderRadius: '4px',
+              overflow: 'auto',
+              fontSize: '0.875rem',
+              border: '1px solid #fecaca'
+            }}>
+              {errorData.rawResponse ? JSON.stringify(errorData.rawResponse, null, 2) : 'Geen raw response beschikbaar'}
+            </pre>
+          </details>
+          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#991b1b' }}>
+            💡 <strong>Tip:</strong> Open de browser console (F12) voor gedetailleerde debugging logs
+          </p>
+        </div>
+      )}
 
       {validationData && (
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>

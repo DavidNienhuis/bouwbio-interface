@@ -121,8 +121,8 @@ export const uploadPDFToWebhook = async (files: File[], sessionId: string): Prom
 };
 
 export const sendValidationRequest = async (sessionId: string): Promise<ValidationResponse> => {
-  console.log('Sending validation request with session ID:', sessionId);
-  console.log('Sending request to:', SEND_WEBHOOK_URL);
+  console.log('🚀 [DEBUG] Sending validation request with session ID:', sessionId);
+  console.log('🚀 [DEBUG] Sending request to:', SEND_WEBHOOK_URL);
   
   const response = await fetch(SEND_WEBHOOK_URL, {
     method: 'POST',
@@ -132,20 +132,41 @@ export const sendValidationRequest = async (sessionId: string): Promise<Validati
     body: JSON.stringify({ sessionId }),
   });
   
-  console.log('Send response status:', response.status, response.statusText);
+  console.log('📡 [DEBUG] Response status:', response.status, response.statusText);
+  console.log('📡 [DEBUG] Response headers:', Object.fromEntries(response.headers.entries()));
   
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Send failed:', errorText);
-    throw new Error(`Send failed: ${response.statusText}`);
+    console.error('❌ [DEBUG] Send failed with status', response.status, ':', errorText);
+    throw new Error(`Send failed: ${response.statusText} - ${errorText}`);
   }
   
-  const rawResult = await response.json();
-  console.log('Raw validation response:', rawResult);
+  // Lees response text eerst om te kunnen loggen
+  const responseText = await response.text();
+  console.log('📦 [DEBUG] Raw response text:', responseText);
+  console.log('📦 [DEBUG] Response text length:', responseText.length);
+  
+  // Parse JSON
+  let rawResult;
+  try {
+    rawResult = JSON.parse(responseText);
+    console.log('✅ [DEBUG] Parsed JSON successfully');
+    console.log('📋 [DEBUG] Raw validation response:', JSON.stringify(rawResult, null, 2));
+  } catch (parseError) {
+    console.error('❌ [DEBUG] JSON parse error:', parseError);
+    console.error('❌ [DEBUG] Failed to parse text:', responseText.substring(0, 500));
+    throw new Error(`Invalid JSON response from n8n: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+  }
   
   // Gebruik de helper functie om validation data te extraheren
-  const result = extractValidationData(rawResult);
-  console.log('Extracted validation data:', result);
-  
-  return result;
+  try {
+    const result = extractValidationData(rawResult);
+    console.log('✅ [DEBUG] Extracted validation data successfully:', result.type);
+    console.log('📊 [DEBUG] Validation data:', JSON.stringify(result, null, 2));
+    return result;
+  } catch (extractError) {
+    console.error('❌ [DEBUG] Failed to extract validation data:', extractError);
+    console.error('❌ [DEBUG] Raw data that failed extraction:', JSON.stringify(rawResult, null, 2));
+    throw extractError;
+  }
 };
