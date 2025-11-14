@@ -93,7 +93,7 @@ const Index = () => {
       <LoadingModal 
         isOpen={isSending} 
         message="Validatie uitvoeren..."
-        estimatedTime={15}
+        estimatedTime={60}
       />
       
       <div className="max-w-4xl mx-auto space-y-6">
