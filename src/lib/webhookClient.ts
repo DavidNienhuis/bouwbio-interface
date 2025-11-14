@@ -17,9 +17,39 @@ export interface ClassificationData {
   recommended_action: string;
 }
 
+export interface HEA02VerdictData {
+  product: {
+    inhoudstoffen: Array<{
+      type: string;
+      waarde: string;
+      bron: string;
+    }>;
+    certificaten: Array<{
+      type: string;
+      waarde: string;
+      bron: string;
+    }>;
+    emissiewaardes: Array<{
+      type: string;
+      waarde: string;
+      bron: string;
+    }>;
+  };
+  hea02_verdict: {
+    status: string;
+    reden: string;
+    audit_proof: Array<{
+      type: string;
+      waarde: string;
+      bron: string;
+    }>;
+  };
+}
+
 export type ValidationResponse = 
   | { type: 'table'; criteria: CriteriaData[] }
-  | { type: 'classification'; data: ClassificationData };
+  | { type: 'classification'; data: ClassificationData }
+  | { type: 'hea02_verdict'; data: HEA02VerdictData };
 
 // Helper functie om markdown code block markers te verwijderen
 const stripMarkdownCodeBlock = (text: string): string => {
@@ -52,6 +82,15 @@ const extractValidationData = (data: any): ValidationResponse => {
       const cleanedData = stripMarkdownCodeBlock(workingData);
       workingData = JSON.parse(cleanedData);
     }
+  }
+  
+  // Detecteer format: HEA02 Verdict format
+  if (workingData?.product && workingData?.hea02_verdict) {
+    console.log('Found HEA02 verdict format');
+    return {
+      type: 'hea02_verdict',
+      data: workingData as HEA02VerdictData
+    };
   }
   
   // Detecteer format: Classification format
