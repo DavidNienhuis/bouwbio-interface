@@ -6,6 +6,18 @@ import { Button } from "@/components/ui/button";
 import { ResultsTable } from "@/components/ResultsTable";
 import { ClassificationResults } from "@/components/ClassificationResults";
 import { LoadingModal } from "@/components/LoadingModal";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+
+const productTypes = [
+  { id: "1", name: "Binnenverf en vernissen", description: "Binnenverf en vernissen" },
+  { id: "2", name: "Houtachtige plaatmaterialen", description: "Houtachtige plaatmaterialen, inclusief spaanplaat, houtvezelplaat, MDF, OSB, cementgebonden vezelplaat, triplex, massief houten panelen en akoestische platen. Ook houten vloeren, zoals parket vallen hieronder, alsmede houtconstructies zoals gelamineerd hout." },
+  { id: "3", name: "Vloerafwerking", description: "Vloerafwerking, inclusief vinyl, linoleum, kurk, rubber, tapijt en houten laminaatvloeren. Ook gietvloeren." },
+  { id: "4", name: "Verlaagde plafonds en tussenwanden", description: "Verlaagde plafonds, tussenwanden plus akoestisch en isolatie technische materialen." },
+  { id: "5", name: "Lijmen en kitten", description: "Lijmen en kitten, inclusief vloerlijmen." },
+];
 
 const Index = () => {
   // Genereer unieke session ID bij component mount (nieuwe ID bij elke refresh)
@@ -13,6 +25,8 @@ const Index = () => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   });
   
+  const [selectedCertification, setSelectedCertification] = useState<string>("");
+  const [selectedProductType, setSelectedProductType] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
@@ -24,7 +38,7 @@ const Index = () => {
     toast.info(`${files.length} bestand${files.length > 1 ? 'en' : ''} uploaden...`);
     
     try {
-      await uploadPDFToWebhook(files, sessionId);
+      await uploadPDFToWebhook(files, sessionId, selectedCertification, selectedProductType);
       setUploadedFiles(files.map(f => f.name));
       toast.success("Upload gelukt!");
     } catch (error) {
@@ -41,7 +55,7 @@ const Index = () => {
     toast.info("Validatie verzenden...");
     
     try {
-      const response = await sendValidationRequest(sessionId);
+      const response = await sendValidationRequest(sessionId, selectedCertification, selectedProductType);
       setValidationData(response);
       setErrorData(null);
       toast.success("Validatie ontvangen!");
@@ -58,94 +72,164 @@ const Index = () => {
     }
   };
 
+  const canShowUpload = selectedCertification === "BREEAM_HEA02" && selectedProductType !== "";
+
   return (
-    <div style={{ minHeight: '100vh', padding: '2rem' }}>
+    <div className="min-h-screen p-8 bg-background">
       <LoadingModal 
         isOpen={isSending} 
         message="Validatie uitvoeren..."
         estimatedTime={15}
       />
       
-      <div style={{
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        marginBottom: '2rem'
-      }}>
-        <div style={{ width: '100%', maxWidth: '600px' }}>
-          <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
-          
-          {uploadedFiles.length > 0 && (
-            <div style={{ marginTop: '1rem' }}>
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '1rem' }}>
-                <p style={{ marginBottom: '0.5rem' }}>Geüpload:</p>
-                {uploadedFiles.map((filename, idx) => (
-                  <div key={idx} style={{ padding: '0.25rem 0' }}>✓ {filename}</div>
-                ))}
-              </div>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Stap 1: Certificeringssysteem */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                1
+              </span>
+              Kies certificeringssysteem
+            </CardTitle>
+            <CardDescription>
+              Selecteer het certificeringssysteem waarmee u wilt valideren
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedCertification} onValueChange={setSelectedCertification}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecteer certificeringssysteem..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BREEAM_HEA02">BREEAM HEA02</SelectItem>
+                <SelectItem value="EU_TAXONOMY" disabled>
+                  EU Taxonomy 🔒 (Binnenkort beschikbaar)
+                </SelectItem>
+                <SelectItem value="WELL" disabled>
+                  WELL 🔒 (Binnenkort beschikbaar)
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
+        {/* Stap 2: Productgroep */}
+        {selectedCertification === "BREEAM_HEA02" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                  2
+                </span>
+                Kies productgroep
+              </CardTitle>
+              <CardDescription>
+                Selecteer de productgroep die van toepassing is
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup value={selectedProductType} onValueChange={setSelectedProductType}>
+                <div className="space-y-4">
+                  {productTypes.map((product) => (
+                    <div key={product.id} className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                      <RadioGroupItem value={product.id} id={product.id} className="mt-1" />
+                      <Label htmlFor={product.id} className="flex-1 cursor-pointer">
+                        <div className="font-semibold mb-1">{product.id}. {product.name}</div>
+                        <div className="text-sm text-muted-foreground">{product.description}</div>
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Stap 3: Upload PDF */}
+        {canShowUpload && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                  3
+                </span>
+                Upload PDF
+              </CardTitle>
+              <CardDescription>
+                Upload uw PDF bestanden voor validatie
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
               
-              <Button 
-                onClick={handleSend} 
-                disabled={isSending || isUploading}
-                style={{ width: '100%' }}
-              >
-                {isSending ? "Verzenden..." : "Send"}
-              </Button>
-            </div>
-          )}
-        </div>
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-4">
+                  <div className="text-sm">
+                    <p className="font-semibold mb-2">Geüploade bestanden:</p>
+                    {uploadedFiles.map((filename, idx) => (
+                      <div key={idx} className="flex items-center gap-2 py-1 text-muted-foreground">
+                        <span className="text-green-600">✓</span>
+                        {filename}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <Button 
+                    onClick={handleSend} 
+                    disabled={isSending || isUploading}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {isSending ? "Verzenden..." : "Validatie starten"}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Error display */}
+        {errorData && (
+          <Card className="border-destructive">
+            <CardHeader>
+              <CardTitle className="text-destructive">❌ Fout bij validatie</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm">
+                <strong>Error:</strong> {errorData.message}
+              </p>
+              <details>
+                <summary className="cursor-pointer font-semibold text-sm hover:underline">
+                  🔍 Raw Response Data
+                </summary>
+                <pre className="mt-2 p-4 bg-muted rounded-md overflow-auto text-xs">
+                  {errorData.rawResponse ? JSON.stringify(errorData.rawResponse, null, 2) : 'Geen raw response beschikbaar'}
+                </pre>
+              </details>
+              <p className="text-xs text-muted-foreground">
+                💡 <strong>Tip:</strong> Open de browser console (F12) voor gedetailleerde debugging logs
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Results display */}
+        {validationData && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Validatie resultaten</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {validationData.type === 'table' ? (
+                <ResultsTable criteria={validationData.criteria} />
+              ) : (
+                <ClassificationResults data={validationData.data} />
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
-
-      {errorData && (
-        <div style={{ 
-          maxWidth: '1400px', 
-          margin: '2rem auto',
-          padding: '1.5rem',
-          border: '2px solid #ef4444',
-          borderRadius: '8px',
-          backgroundColor: '#fef2f2'
-        }}>
-          <h3 style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
-            ❌ Fout bij validatie
-          </h3>
-          <p style={{ color: '#991b1b', marginBottom: '1rem' }}>
-            <strong>Error:</strong> {errorData.message}
-          </p>
-          <details style={{ marginTop: '1rem' }}>
-            <summary style={{ 
-              cursor: 'pointer', 
-              color: '#991b1b', 
-              fontWeight: 'bold',
-              marginBottom: '0.5rem'
-            }}>
-              🔍 Raw Response Data (klik om te bekijken)
-            </summary>
-            <pre style={{ 
-              backgroundColor: '#fff',
-              padding: '1rem',
-              borderRadius: '4px',
-              overflow: 'auto',
-              fontSize: '0.875rem',
-              border: '1px solid #fecaca'
-            }}>
-              {errorData.rawResponse ? JSON.stringify(errorData.rawResponse, null, 2) : 'Geen raw response beschikbaar'}
-            </pre>
-          </details>
-          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#991b1b' }}>
-            💡 <strong>Tip:</strong> Open de browser console (F12) voor gedetailleerde debugging logs
-          </p>
-        </div>
-      )}
-
-      {validationData && (
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          {validationData.type === 'table' ? (
-            <ResultsTable criteria={validationData.criteria} />
-          ) : (
-            <ClassificationResults data={validationData.data} />
-          )}
-        </div>
-      )}
     </div>
   );
 };

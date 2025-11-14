@@ -83,11 +83,18 @@ const extractValidationData = (data: any): ValidationResponse => {
   throw new Error('Invalid response format: no criteria array or classification found');
 };
 
-export const uploadPDFToWebhook = async (files: File[], sessionId: string): Promise<void> => {
+export const uploadPDFToWebhook = async (
+  files: File[], 
+  sessionId: string,
+  certification: string,
+  productType: string
+): Promise<void> => {
   const formData = new FormData();
   
   // Voeg session ID toe als tekst veld
   formData.append('sessionId', sessionId);
+  formData.append('certification', certification);
+  formData.append('productType', productType);
   
   // Use 'file' as field name for each file (n8n webhook expects this)
   files.forEach((file) => {
@@ -131,7 +138,11 @@ export const uploadPDFToWebhook = async (files: File[], sessionId: string): Prom
   }
 };
 
-export const sendValidationRequest = async (sessionId: string): Promise<ValidationResponse> => {
+export const sendValidationRequest = async (
+  sessionId: string,
+  certification: string,
+  productType: string
+): Promise<ValidationResponse> => {
   console.log('🚀 [DEBUG] Sending validation request with session ID:', sessionId);
   console.log('🚀 [DEBUG] Sending request to:', SEND_WEBHOOK_URL);
   
@@ -140,7 +151,11 @@ export const sendValidationRequest = async (sessionId: string): Promise<Validati
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ sessionId }),
+    body: JSON.stringify({ 
+      sessionId,
+      certification,
+      productType
+    }),
   });
   
   console.log('📡 [DEBUG] Response status:', response.status, response.statusText);
