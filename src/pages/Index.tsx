@@ -39,8 +39,11 @@ const Index = () => {
     toast.info(`${files.length} bestand${files.length > 1 ? 'en' : ''} uploaden...`);
     
     try {
-      await uploadPDFToWebhook(files, sessionId, selectedCertification, selectedProductType);
-      setUploadedFiles(files.map(f => f.name));
+      const selectedProduct = productTypes.find(p => p.id === selectedProductType);
+      if (!selectedProduct) throw new Error("Product type not found");
+      
+      await uploadPDFToWebhook(files, sessionId, selectedCertification, selectedProduct);
+      setUploadedFiles(prev => [...prev, ...files.map(f => f.name)]);
       toast.success("Upload gelukt!");
     } catch (error) {
       console.error("Upload error:", error);
@@ -52,11 +55,14 @@ const Index = () => {
 
   const handleSend = async () => {
     setIsSending(true);
-    setErrorData(null); // Reset error state
+    setErrorData(null);
     toast.info("Validatie verzenden...");
     
     try {
-      const response = await sendValidationRequest(sessionId, selectedCertification, selectedProductType);
+      const selectedProduct = productTypes.find(p => p.id === selectedProductType);
+      if (!selectedProduct) throw new Error("Product type not found");
+      
+      const response = await sendValidationRequest(sessionId, selectedCertification, selectedProduct);
       setValidationData(response);
       setErrorData(null);
       toast.success("Validatie ontvangen!");
@@ -71,6 +77,13 @@ const Index = () => {
     } finally {
       setIsSending(false);
     }
+  };
+
+  const handleReset = () => {
+    setUploadedFiles([]);
+    setValidationData(null);
+    setErrorData(null);
+    toast.info("Sessie gereset");
   };
 
   const canShowUpload = selectedCertification === "BREEAM_HEA02" && selectedProductType !== "";
@@ -167,7 +180,7 @@ const Index = () => {
               {uploadedFiles.length > 0 && (
                 <div className="space-y-4">
                   <div className="text-sm">
-                    <p className="font-semibold mb-2">Geüploade bestanden:</p>
+                    <p className="font-semibold mb-2">Geüploade bestanden ({uploadedFiles.length}):</p>
                     {uploadedFiles.map((filename, idx) => (
                       <div key={idx} className="flex items-center gap-2 py-1 text-muted-foreground">
                         <span className="text-green-600">✓</span>
@@ -176,14 +189,22 @@ const Index = () => {
                     ))}
                   </div>
                   
-                  <Button 
-                    onClick={handleSend} 
-                    disabled={isSending || isUploading}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {isSending ? "Verzenden..." : "Validatie starten"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleSend} 
+                      className="flex-1"
+                      disabled={isSending}
+                    >
+                      Verstuur naar validatie
+                    </Button>
+                    <Button 
+                      onClick={handleReset} 
+                      variant="outline"
+                      disabled={isSending || isUploading}
+                    >
+                      Opnieuw beginnen
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
