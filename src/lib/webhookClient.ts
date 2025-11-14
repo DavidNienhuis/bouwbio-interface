@@ -46,10 +46,45 @@ export interface HEA02VerdictData {
   };
 }
 
+export interface ExtendedHEA02VerdictData {
+  product: {
+    inhoudstoffen_cas: Array<{
+      type: string;
+      waarde: string;
+      bron: string;
+    }>;
+    bedrijfsclaims: Array<{
+      claim_type: string;
+      waarde: string;
+      bron: string;
+    }>;
+    certificaten: Array<{
+      type: string;
+      waarde: string;
+      erkend_door_lightrag: string;
+      niveau: string;
+      bron: string;
+    }>;
+    emissiewaardes: Array<{
+      type: string;
+      waarde: string;
+      testmethode?: string;
+      bron: string;
+    }>;
+  };
+  verificatie_audit: {
+    status: string;
+    reden: string;
+    advies_opmerkingen?: string[];
+    audit_proof: string[];
+  };
+}
+
 export type ValidationResponse = 
   | { type: 'table'; criteria: CriteriaData[] }
   | { type: 'classification'; data: ClassificationData }
-  | { type: 'hea02_verdict'; data: HEA02VerdictData };
+  | { type: 'hea02_verdict'; data: HEA02VerdictData }
+  | { type: 'extended_hea02_verdict'; data: ExtendedHEA02VerdictData };
 
 // Helper functie om markdown code block markers te verwijderen
 const stripMarkdownCodeBlock = (text: string): string => {
@@ -82,6 +117,15 @@ const extractValidationData = (data: any): ValidationResponse => {
       const cleanedData = stripMarkdownCodeBlock(workingData);
       workingData = JSON.parse(cleanedData);
     }
+  }
+  
+  // Detecteer extended format eerst (hoogste prioriteit)
+  if (workingData?.product && workingData?.verificatie_audit) {
+    console.log('Found extended HEA02 verification audit format');
+    return {
+      type: 'extended_hea02_verdict',
+      data: workingData as ExtendedHEA02VerdictData
+    };
   }
   
   // Detecteer format: HEA02 Verdict format
