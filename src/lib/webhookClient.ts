@@ -21,6 +21,15 @@ export type ValidationResponse =
   | { type: 'table'; criteria: CriteriaData[] }
   | { type: 'classification'; data: ClassificationData };
 
+// Helper functie om markdown code block markers te verwijderen
+const stripMarkdownCodeBlock = (text: string): string => {
+  // Verwijder ```json of ``` aan het begin en einde
+  return text
+    .replace(/^```(?:json)?\s*\n?/i, '')
+    .replace(/\n?```\s*$/i, '')
+    .trim();
+};
+
 // Helper functie om validation data uit verschillende response formaten te halen
 const extractValidationData = (data: any): ValidationResponse => {
   let workingData = data;
@@ -38,8 +47,10 @@ const extractValidationData = (data: any): ValidationResponse => {
     
     // Parse als het een string is
     if (typeof workingData === 'string') {
-      console.log('Output is string, parsing JSON');
-      workingData = JSON.parse(workingData);
+      console.log('Output is string, stripping markdown and parsing JSON');
+      // Strip markdown code block markers voordat we parsen
+      const cleanedData = stripMarkdownCodeBlock(workingData);
+      workingData = JSON.parse(cleanedData);
     }
   }
   
