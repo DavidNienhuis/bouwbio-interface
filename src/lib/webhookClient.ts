@@ -126,14 +126,16 @@ export const uploadPDFToWebhook = async (
   files: File[], 
   sessionId: string,
   certification: string,
-  productType: string
+  productType: { id: string; name: string; description: string }
 ): Promise<void> => {
   const formData = new FormData();
   
   // Voeg session ID toe als tekst veld
   formData.append('sessionId', sessionId);
   formData.append('certification', certification);
-  formData.append('productType', productType);
+  formData.append('productTypeId', productType.id);
+  formData.append('productTypeName', productType.name);
+  formData.append('productTypeDescription', productType.description);
   
   // Use 'file' as field name for each file (n8n webhook expects this)
   files.forEach((file) => {
@@ -180,7 +182,7 @@ export const uploadPDFToWebhook = async (
 export const sendValidationRequest = async (
   sessionId: string,
   certification: string,
-  productType: string
+  productType: { id: string; name: string; description: string }
 ): Promise<ValidationResponse> => {
   console.log('🚀 [DEBUG] Sending validation request with session ID:', sessionId);
   console.log('🚀 [DEBUG] Sending request to:', SEND_WEBHOOK_URL);
@@ -193,7 +195,11 @@ export const sendValidationRequest = async (
     body: JSON.stringify({ 
       sessionId,
       certification,
-      productType
+      productType: {
+        id: productType.id,
+        name: productType.name,
+        description: productType.description
+      }
     }),
   });
   
