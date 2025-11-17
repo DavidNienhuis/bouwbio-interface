@@ -83,63 +83,28 @@ export interface ExtendedHEA02VerdictData {
 export interface Hea02Result {
   samenvatting: {
     status: 'voldoet' | 'voldoet_niet' | 'onduidelijk' | 'risico_bij_hoeveelheid';
-    korte_toelichting: string;
-    belangrijkste_risicos: string[];
+    reden: string;
+    opmerkingen: string[];
   };
-  certificaten: {
-    feiten: Array<{
-      type: string;
-      waarde: string;
-      bron_bestand: string;
-      bron_citaat: string;
-    }>;
-    claims: Array<{
-      waarde: string;
-      bron_bestand: string;
-    }>;
-    normatief: Array<{
-      schema: string;
-      credit: string;
-      niveau: string;
-      erkend: boolean;
-      reden: string;
-      source_pdf: string;
-      source_locatie: string;
-      source_citaat: string;
-    }>;
-  };
-  emissies: {
-    feiten: Array<{
-      parameter: string;
-      waarde: string;
-      tijdstip: string;
-      testmethode: string;
-      bron_bestand: string;
-      bron_citaat: string;
-    }>;
-    claims: Array<{
-      waarde: string;
-      bron_bestand: string;
-    }>;
-    normatief: Array<{
-      parameter: string;
-      grenswaarde: string;
-      schema: string;
-      source_pdf: string;
-      source_locatie: string;
-      source_citaat: string;
-    }>;
-  };
-  stoffen: {
-    inhoudstoffen_cas: Array<{
-      stof: string;
-      cas: string;
-      rol: string;
-      gevaren: string[];
-      bron_bestand: string;
-      bron_citaat: string;
-    }>;
-  };
+  certificaten: Array<{
+    schema: string;
+    status: string;
+    bewijs: string;
+    bron: string;
+  }>;
+  emissies: Array<{
+    component: string;
+    waarde: number | null;
+    grens: number;
+    status: string;
+    bron: string;
+  }>;
+  stoffen: Array<{
+    naam: string;
+    cas: string;
+    functie: string;
+    bron: string;
+  }>;
 }
 
 export type ValidationResponse = 
@@ -183,8 +148,21 @@ const extractValidationData = (data: any): ValidationResponse => {
   }
   
   // Detecteer nieuwe Hea02Result format (hoogste prioriteit)
+  // Data komt binnen als array met 1 element
+  if (Array.isArray(workingData) && workingData.length > 0) {
+    const firstItem = workingData[0];
+    if (firstItem?.samenvatting && firstItem?.certificaten && firstItem?.emissies && firstItem?.stoffen) {
+      console.log('Found new Hea02Result format (array structure)');
+      return {
+        type: 'hea02_result',
+        data: firstItem as Hea02Result
+      };
+    }
+  }
+  
+  // Fallback: check if workingData itself has the structure
   if (workingData?.samenvatting && workingData?.certificaten && workingData?.emissies && workingData?.stoffen) {
-    console.log('Found new Hea02Result format with feiten/claims/normatief structure');
+    console.log('Found new Hea02Result format (object structure)');
     return {
       type: 'hea02_result',
       data: workingData as Hea02Result
