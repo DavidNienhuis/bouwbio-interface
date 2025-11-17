@@ -84,22 +84,22 @@ export interface Hea02Result {
   samenvatting: {
     status: 'voldoet' | 'voldoet_niet' | 'onduidelijk' | 'risico_bij_hoeveelheid';
     reden: string;
-    opmerkingen: string[];
+    opmerkingen?: string[];
   };
-  certificaten: Array<{
+  certificaten?: Array<{
     schema: string;
     status: string;
     bewijs: string;
     bron: string;
   }>;
-  emissies: Array<{
+  emissies?: Array<{
     component: string;
     waarde: number | null;
     grens: number;
     status: string;
     bron: string;
   }>;
-  stoffen: Array<{
+  stoffen?: Array<{
     naam: string;
     cas: string;
     functie: string;
@@ -151,21 +151,43 @@ const extractValidationData = (data: any): ValidationResponse => {
   // Data komt binnen als array met 1 element
   if (Array.isArray(workingData) && workingData.length > 0) {
     const firstItem = workingData[0];
-    if (firstItem?.samenvatting && firstItem?.certificaten && firstItem?.emissies && firstItem?.stoffen) {
-      console.log('Found new Hea02Result format (array structure)');
+    if (
+      firstItem?.samenvatting?.status && 
+      firstItem?.samenvatting?.reden &&
+      (firstItem.certificaten || firstItem.emissies || firstItem.stoffen)
+    ) {
+      console.log('✅ Detected Hea02Result format (array structure)');
       return {
         type: 'hea02_result',
-        data: firstItem as Hea02Result
+        data: {
+          samenvatting: firstItem.samenvatting,
+          certificaten: firstItem.certificaten || [],
+          emissies: firstItem.emissies || [],
+          stoffen: firstItem.stoffen || []
+        } as Hea02Result
       };
     }
   }
   
-  // Fallback: check if workingData itself has the structure
-  if (workingData?.samenvatting && workingData?.certificaten && workingData?.emissies && workingData?.stoffen) {
-    console.log('Found new Hea02Result format (object structure)');
+  // Fallback: check if workingData itself has the structure (with required fields only)
+  if (
+    workingData?.samenvatting?.status && 
+    workingData?.samenvatting?.reden &&
+    (workingData.certificaten || workingData.emissies || workingData.stoffen)
+  ) {
+    console.log('✅ Detected Hea02Result format');
+    console.log('🔍 Debug - samenvatting:', workingData.samenvatting);
+    console.log('🔍 Debug - certificaten:', workingData.certificaten);
+    console.log('🔍 Debug - emissies:', workingData.emissies);
+    console.log('🔍 Debug - stoffen:', workingData.stoffen);
     return {
       type: 'hea02_result',
-      data: workingData as Hea02Result
+      data: {
+        samenvatting: workingData.samenvatting,
+        certificaten: workingData.certificaten || [],
+        emissies: workingData.emissies || [],
+        stoffen: workingData.stoffen || []
+      } as Hea02Result
     };
   }
   

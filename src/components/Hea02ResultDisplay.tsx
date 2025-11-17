@@ -24,9 +24,15 @@ interface Hea02ResultDisplayProps {
 }
 
 export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
+  // Defensive defaults
+  const certificaten = data.certificaten || [];
+  const emissies = data.emissies || [];
+  const stoffen = data.stoffen || [];
+  const opmerkingen = data.samenvatting.opmerkingen || [];
+  
   const [showDetails, setShowDetails] = useState(false);
-  const [selectedCert, setSelectedCert] = useState<typeof data.certificaten[0] | null>(null);
-  const [selectedEmissie, setSelectedEmissie] = useState<typeof data.emissies[0] | null>(null);
+  const [selectedCert, setSelectedCert] = useState<typeof certificaten[0] | null>(null);
+  const [selectedEmissie, setSelectedEmissie] = useState<typeof emissies[0] | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   const getStatusConfig = (status: Hea02Result['samenvatting']['status']) => {
@@ -78,7 +84,7 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
           <CardTitle className="text-2xl">{data.samenvatting.reden}</CardTitle>
         </CardHeader>
         
-        {data.samenvatting.opmerkingen.length > 0 && (
+        {opmerkingen.length > 0 && (
           <CardContent>
             <div className="space-y-3">
               <h4 className="font-semibold flex items-center gap-2">
@@ -86,7 +92,7 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
                 Opmerkingen:
               </h4>
               <ul className="space-y-2">
-                {data.samenvatting.opmerkingen.map((opmerking, idx) => (
+                {opmerkingen.map((opmerking, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
                     <span className="text-sm">{opmerking}</span>
@@ -126,7 +132,7 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
                 Certificaten
               </CardTitle>
               <CardDescription>
-                {data.certificaten.length} certificaten gevonden
+                {certificaten.length} certificaten gevonden
               </CardDescription>
             </CardHeader>
             
@@ -141,7 +147,7 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.certificaten.map((cert, idx) => {
+                  {certificaten.map((cert, idx) => {
                     const isErkend = cert.status.toLowerCase().includes('ja');
                     
                     return (
@@ -203,7 +209,7 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.emissies.map((emissie, idx) => {
+                  {emissies.map((emissie, idx) => {
                     const isNvt = emissie.status.toLowerCase() === 'nvt';
                     const isOk = emissie.waarde !== null && emissie.waarde <= emissie.grens;
                     
@@ -274,7 +280,7 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
                 Stoffen
               </CardTitle>
               <CardDescription>
-                {data.stoffen.length} stoffen geïdentificeerd
+                {stoffen.length} stoffen geïdentificeerd
               </CardDescription>
             </CardHeader>
             
@@ -288,8 +294,8 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
               </div>
               
               <div className="space-y-3">
-                {data.stoffen
-                  .filter(stof => 
+                {stoffen
+                  .filter(stof =>
                     stof.naam.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     stof.cas.toLowerCase().includes(searchTerm.toLowerCase())
                   )
