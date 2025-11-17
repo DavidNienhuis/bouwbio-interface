@@ -80,11 +80,74 @@ export interface ExtendedHEA02VerdictData {
   };
 }
 
+export interface Hea02Result {
+  samenvatting: {
+    status: 'voldoet' | 'voldoet_niet' | 'onduidelijk' | 'risico_bij_hoeveelheid';
+    korte_toelichting: string;
+    belangrijkste_risicos: string[];
+  };
+  certificaten: {
+    feiten: Array<{
+      type: string;
+      waarde: string;
+      bron_bestand: string;
+      bron_citaat: string;
+    }>;
+    claims: Array<{
+      waarde: string;
+      bron_bestand: string;
+    }>;
+    normatief: Array<{
+      schema: string;
+      credit: string;
+      niveau: string;
+      erkend: boolean;
+      reden: string;
+      source_pdf: string;
+      source_locatie: string;
+      source_citaat: string;
+    }>;
+  };
+  emissies: {
+    feiten: Array<{
+      parameter: string;
+      waarde: string;
+      tijdstip: string;
+      testmethode: string;
+      bron_bestand: string;
+      bron_citaat: string;
+    }>;
+    claims: Array<{
+      waarde: string;
+      bron_bestand: string;
+    }>;
+    normatief: Array<{
+      parameter: string;
+      grenswaarde: string;
+      schema: string;
+      source_pdf: string;
+      source_locatie: string;
+      source_citaat: string;
+    }>;
+  };
+  stoffen: {
+    inhoudstoffen_cas: Array<{
+      stof: string;
+      cas: string;
+      rol: string;
+      gevaren: string[];
+      bron_bestand: string;
+      bron_citaat: string;
+    }>;
+  };
+}
+
 export type ValidationResponse = 
   | { type: 'table'; criteria: CriteriaData[] }
   | { type: 'classification'; data: ClassificationData }
   | { type: 'hea02_verdict'; data: HEA02VerdictData }
-  | { type: 'extended_hea02_verdict'; data: ExtendedHEA02VerdictData };
+  | { type: 'extended_hea02_verdict'; data: ExtendedHEA02VerdictData }
+  | { type: 'hea02_result'; data: Hea02Result };
 
 // Helper functie om markdown code block markers te verwijderen
 const stripMarkdownCodeBlock = (text: string): string => {
@@ -119,7 +182,16 @@ const extractValidationData = (data: any): ValidationResponse => {
     }
   }
   
-  // Detecteer extended format eerst (hoogste prioriteit)
+  // Detecteer nieuwe Hea02Result format (hoogste prioriteit)
+  if (workingData?.samenvatting && workingData?.certificaten && workingData?.emissies && workingData?.stoffen) {
+    console.log('Found new Hea02Result format with feiten/claims/normatief structure');
+    return {
+      type: 'hea02_result',
+      data: workingData as Hea02Result
+    };
+  }
+  
+  // Detecteer extended format (tweede prioriteit)
   if (workingData?.product && workingData?.verificatie_audit) {
     console.log('Found extended HEA02 verification audit format');
     return {

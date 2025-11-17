@@ -7,6 +7,7 @@ import { ResultsTable } from "@/components/ResultsTable";
 import { ClassificationResults } from "@/components/ClassificationResults";
 import { HEA02VerdictResults } from "@/components/HEA02VerdictResults";
 import { ExtendedHEA02Results } from "@/components/ExtendedHEA02Results";
+import { Hea02ResultDisplay } from "@/components/Hea02ResultDisplay";
 import { LoadingModal } from "@/components/LoadingModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -244,13 +245,19 @@ const Index = () => {
               <CardTitle>Validatie resultaten</CardTitle>
             </CardHeader>
             <CardContent>
-              {validationData.type === 'table' ? (
+              {validationData.type === 'table' && (
                 <ResultsTable criteria={validationData.criteria} />
-              ) : validationData.type === 'extended_hea02_verdict' ? (
+              )}
+              {validationData.type === 'hea02_result' && (
+                <Hea02ResultDisplay data={validationData.data} />
+              )}
+              {validationData.type === 'extended_hea02_verdict' && (
                 <ExtendedHEA02Results data={validationData.data} />
-              ) : validationData.type === 'hea02_verdict' ? (
+              )}
+              {validationData.type === 'hea02_verdict' && (
                 <HEA02VerdictResults data={validationData.data} />
-              ) : (
+              )}
+              {validationData.type === 'classification' && (
                 <ClassificationResults data={validationData.data} />
               )}
             </CardContent>
