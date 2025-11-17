@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { 
   CheckCircle2, 
@@ -15,8 +15,7 @@ import {
   TestTube,
   Beaker,
   ChevronDown,
-  ChevronUp,
-  ExternalLink
+  ChevronUp
 } from "lucide-react";
 import type { Hea02Result } from "@/lib/webhookClient";
 
@@ -26,14 +25,8 @@ interface Hea02ResultDisplayProps {
 
 export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const [selectedCert, setSelectedCert] = useState<{
-    feit: Hea02Result['certificaten']['feiten'][0];
-    norm?: Hea02Result['certificaten']['normatief'][0];
-  } | null>(null);
-  const [selectedEmissie, setSelectedEmissie] = useState<{
-    feit: Hea02Result['emissies']['feiten'][0];
-    norm?: Hea02Result['emissies']['normatief'][0];
-  } | null>(null);
+  const [selectedCert, setSelectedCert] = useState<typeof data.certificaten[0] | null>(null);
+  const [selectedEmissie, setSelectedEmissie] = useState<typeof data.emissies[0] | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   const getStatusConfig = (status: Hea02Result['samenvatting']['status']) => {
@@ -82,21 +75,21 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
               <span className="ml-2">{data.samenvatting.status.replace(/_/g, ' ').toUpperCase()}</span>
             </Badge>
           </div>
-          <CardTitle className="text-2xl">{data.samenvatting.korte_toelichting}</CardTitle>
+          <CardTitle className="text-2xl">{data.samenvatting.reden}</CardTitle>
         </CardHeader>
         
-        {data.samenvatting.belangrijkste_risicos.length > 0 && (
+        {data.samenvatting.opmerkingen.length > 0 && (
           <CardContent>
             <div className="space-y-3">
               <h4 className="font-semibold flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-orange-500" />
-                Belangrijkste Risico's:
+                Opmerkingen:
               </h4>
               <ul className="space-y-2">
-                {data.samenvatting.belangrijkste_risicos.map((risico, idx) => (
+                {data.samenvatting.opmerkingen.map((opmerking, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">{risico}</span>
+                    <span className="text-sm">{opmerking}</span>
                   </li>
                 ))}
               </ul>
@@ -133,7 +126,7 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
                 Certificaten
               </CardTitle>
               <CardDescription>
-                {data.certificaten.feiten.length} certificaten gevonden
+                {data.certificaten.length} certificaten gevonden
               </CardDescription>
             </CardHeader>
             
@@ -141,62 +134,45 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Waarde</TableHead>
+                    <TableHead>Schema</TableHead>
+                    <TableHead>Bewijs</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Bron</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.certificaten.feiten.map((feit, idx) => {
-                    const norm = data.certificaten.normatief.find(n => 
-                      n.schema.toLowerCase().includes(feit.waarde.toLowerCase()) ||
-                      feit.waarde.toLowerCase().includes(n.schema.toLowerCase())
-                    );
+                  {data.certificaten.map((cert, idx) => {
+                    const isErkend = cert.status.toLowerCase().includes('ja');
                     
                     return (
                       <TableRow 
                         key={idx} 
                         className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => setSelectedCert({ feit, norm })}
+                        onClick={() => setSelectedCert(cert)}
                       >
-                        <TableCell className="font-medium">{feit.type}</TableCell>
-                        <TableCell>{feit.waarde}</TableCell>
+                        <TableCell className="font-medium">{cert.schema}</TableCell>
+                        <TableCell>{cert.bewijs}</TableCell>
                         <TableCell>
-                          {norm?.erkend ? (
+                          {isErkend ? (
                             <Badge className="bg-green-500 hover:bg-green-600">
                               <ShieldCheck className="w-3 h-3 mr-1" />
-                              Erkend via LightRAG
+                              Erkend
                             </Badge>
                           ) : (
                             <Badge variant="secondary">
                               <ShieldX className="w-3 h-3 mr-1" />
-                              Niet erkend
+                              {cert.status}
                             </Badge>
                           )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {cert.bron}
                         </TableCell>
                       </TableRow>
                     );
                   })}
                 </TableBody>
               </Table>
-              
-              {data.certificaten.claims.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    💬 Bedrijfsclaims
-                  </h4>
-                  <div className="space-y-2">
-                    {data.certificaten.claims.map((claim, idx) => (
-                      <Card key={idx} className="p-3 bg-muted/30">
-                        <p className="text-sm">{claim.waarde}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Bron: {claim.bron_bestand}
-                        </p>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
         </CollapsibleContent>
@@ -220,46 +196,42 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Parameter</TableHead>
-                    <TableHead>Waarde (product)</TableHead>
-                    <TableHead>Grenswaarde (norm)</TableHead>
-                    <TableHead>Resultaat</TableHead>
+                    <TableHead>Component</TableHead>
+                    <TableHead>Waarde</TableHead>
+                    <TableHead>Grenswaarde</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.emissies.feiten.map((feit, idx) => {
-                    const norm = data.emissies.normatief.find(n => 
-                      n.parameter === feit.parameter
-                    );
-                    
-                    const withinLimit = norm && feit.waarde.includes('≤');
+                  {data.emissies.map((emissie, idx) => {
+                    const isNvt = emissie.status.toLowerCase() === 'nvt';
+                    const isOk = emissie.waarde !== null && emissie.waarde <= emissie.grens;
                     
                     return (
                       <TableRow 
                         key={idx}
                         className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => setSelectedEmissie({ feit, norm })}
+                        onClick={() => setSelectedEmissie(emissie)}
                       >
-                        <TableCell className="font-medium">{feit.parameter}</TableCell>
+                        <TableCell className="font-medium">{emissie.component}</TableCell>
                         <TableCell>
-                          <div>
-                            {feit.waarde}
-                            <p className="text-xs text-muted-foreground">
-                              {feit.tijdstip}
-                            </p>
-                          </div>
+                          {emissie.waarde !== null ? emissie.waarde : '-'}
                         </TableCell>
                         <TableCell>
-                          {norm ? norm.grenswaarde : '-'}
+                          ≤ {emissie.grens}
                         </TableCell>
                         <TableCell>
-                          {withinLimit ? (
+                          {isNvt ? (
+                            <Badge variant="outline">
+                              N.v.t.
+                            </Badge>
+                          ) : isOk ? (
                             <Badge className="bg-green-500 hover:bg-green-600">
                               <CheckCircle2 className="w-3 h-3 mr-1" />
                               OK
                             </Badge>
                           ) : (
-                            <Badge variant="secondary">
+                            <Badge variant="destructive">
                               <AlertTriangle className="w-3 h-3 mr-1" />
                               Check
                             </Badge>
@@ -273,44 +245,19 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
               
               {selectedEmissie && (
                 <Card className="mt-4 p-4 bg-muted/30">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-semibold mb-2">📄 Productcitaat</h4>
-                      <blockquote className="text-sm italic border-l-4 border-blue-500 pl-3 py-2">
-                        "{selectedEmissie.feit.bron_citaat}"
-                      </blockquote>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Testmethode: {selectedEmissie.feit.testmethode}
-                      </p>
-                    </div>
-                    {selectedEmissie.norm && (
-                      <div>
-                        <h4 className="font-semibold mb-2">📋 Normcitaat</h4>
-                        <blockquote className="text-sm italic border-l-4 border-green-500 pl-3 py-2">
-                          "{selectedEmissie.norm.source_citaat}"
-                        </blockquote>
-                      </div>
-                    )}
+                  <div className="space-y-2">
+                    <h4 className="font-semibold">📋 Details</h4>
+                    <p className="text-sm">
+                      <span className="font-medium">Component:</span> {selectedEmissie.component}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">Status:</span> {selectedEmissie.status}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium">Bron:</span> {selectedEmissie.bron}
+                    </p>
                   </div>
                 </Card>
-              )}
-              
-              {data.emissies.claims.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    💬 Emissie Claims
-                  </h4>
-                  <div className="space-y-2">
-                    {data.emissies.claims.map((claim, idx) => (
-                      <Card key={idx} className="p-3 bg-muted/30">
-                        <p className="text-sm">{claim.waarde}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Bron: {claim.bron_bestand}
-                        </p>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
               )}
             </CardContent>
           </Card>
@@ -327,7 +274,7 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
                 Stoffen
               </CardTitle>
               <CardDescription>
-                {data.stoffen.inhoudstoffen_cas.length} stoffen geïdentificeerd
+                {data.stoffen.length} stoffen geïdentificeerd
               </CardDescription>
             </CardHeader>
             
@@ -341,71 +288,39 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
               </div>
               
               <div className="space-y-3">
-                {data.stoffen.inhoudstoffen_cas
+                {data.stoffen
                   .filter(stof => 
-                    stof.stof.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    stof.cas.includes(searchTerm)
+                    stof.naam.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    stof.cas.toLowerCase().includes(searchTerm.toLowerCase())
                   )
                   .map((stof, idx) => (
                     <Card 
                       key={idx} 
-                      className={`p-4 transition-all hover:shadow-md ${
-                        stof.gevaren.length > 0 
-                          ? 'border-l-4 border-l-orange-500' 
-                          : 'border-l-4 border-l-green-500'
-                      }`}
+                      className="p-4 transition-all hover:shadow-md border-l-4 border-l-blue-500"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <h4 className="font-semibold text-lg">
-                            {stof.cas} – {stof.stof}
+                            {stof.naam}
                           </h4>
                           
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Rol: {stof.rol}
-                          </p>
-                          
-                          {stof.gevaren.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mb-2">
-                              {stof.gevaren.map((gevaar, gIdx) => (
-                                <Badge 
-                                  key={gIdx} 
-                                  variant="destructive"
-                                  className="text-xs"
-                                >
-                                  <AlertTriangle className="w-3 h-3 mr-1" />
-                                  {gevaar}
-                                </Badge>
-                              ))}
-                            </div>
+                          {stof.cas && (
+                            <p className="text-sm text-muted-foreground">
+                              CAS: {stof.cas}
+                            </p>
                           )}
                           
-                          <Button 
-                            variant="link" 
-                            size="sm"
-                            className="p-0 h-auto"
-                            onClick={() => window.open(stof.bron_bestand, '_blank')}
-                          >
-                            <ExternalLink className="w-3 h-3 mr-1" />
-                            Bron: {stof.bron_bestand.split('/').pop()}
-                          </Button>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Functie: {stof.functie}
+                          </p>
                           
-                          <details className="mt-2">
-                            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-                              Citaat tonen
-                            </summary>
-                            <blockquote className="mt-2 text-sm italic border-l-4 border-muted-foreground pl-3 py-1">
-                              "{stof.bron_citaat}"
-                            </blockquote>
-                          </details>
+                          <p className="text-xs text-muted-foreground">
+                            Bron: {stof.bron}
+                          </p>
                         </div>
                         
                         <div>
-                          {stof.gevaren.length > 0 ? (
-                            <AlertTriangle className="w-8 h-8 text-orange-500" />
-                          ) : (
-                            <CheckCircle2 className="w-8 h-8 text-green-500" />
-                          )}
+                          <CheckCircle2 className="w-8 h-8 text-green-500" />
                         </div>
                       </div>
                     </Card>
@@ -418,65 +333,36 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
 
       {/* Certificate Detail Dialog */}
       <Dialog open={!!selectedCert} onOpenChange={() => setSelectedCert(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           {selectedCert && (
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               <div>
-                <h3 className="font-bold mb-3 flex items-center gap-2">
-                  📄 Productinformatie
+                <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5" />
+                  Certificaat Details
                 </h3>
                 <Card className="p-4 bg-blue-50/50 dark:bg-blue-950/20">
-                  <div className="mb-2">
-                    <Badge variant="outline">{selectedCert.feit.type}</Badge>
-                  </div>
-                  <p className="font-semibold mb-2">{selectedCert.feit.waarde}</p>
-                  <blockquote className="text-sm italic border-l-4 border-blue-500 pl-3 py-2">
-                    "{selectedCert.feit.bron_citaat}"
-                  </blockquote>
-                  <Button 
-                    variant="link" 
-                    className="mt-3 p-0"
-                    onClick={() => window.open(selectedCert.feit.bron_bestand, '_blank')}
-                  >
-                    <ExternalLink className="w-4 h-4 mr-1" />
-                    Open bronbestand
-                  </Button>
-                </Card>
-              </div>
-              
-              <div>
-                <h3 className="font-bold mb-3 flex items-center gap-2">
-                  📋 BREEAM Norm
-                </h3>
-                {selectedCert.norm ? (
-                  <Card className="p-4 bg-green-50/50 dark:bg-green-950/20">
-                    <div className="flex gap-2 mb-3">
-                      <Badge>{selectedCert.norm.schema}</Badge>
-                      <Badge variant="outline">{selectedCert.norm.credit}</Badge>
-                      <Badge variant="outline">{selectedCert.norm.niveau}</Badge>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Schema</p>
+                      <p className="font-semibold">{selectedCert.schema}</p>
                     </div>
-                    {selectedCert.norm.erkend && (
-                      <Badge className="bg-green-500 hover:bg-green-600 mb-3">
-                        <ShieldCheck className="w-3 h-3 mr-1" />
-                        Erkend via LightRAG
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Status</p>
+                      <Badge variant={selectedCert.status.toLowerCase().includes('ja') ? 'default' : 'secondary'}>
+                        {selectedCert.status}
                       </Badge>
-                    )}
-                    <p className="text-sm font-medium mb-2">{selectedCert.norm.reden}</p>
-                    <blockquote className="text-sm italic border-l-4 border-green-500 pl-3 py-2">
-                      "{selectedCert.norm.source_citaat}"
-                    </blockquote>
-                    <Button 
-                      variant="link"
-                      className="mt-3 p-0"
-                      onClick={() => window.open(selectedCert.norm!.source_pdf, '_blank')}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-1" />
-                      Open normdocument ({selectedCert.norm.source_locatie})
-                    </Button>
-                  </Card>
-                ) : (
-                  <p className="text-muted-foreground">Geen normatieve referentie gevonden</p>
-                )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Bewijs</p>
+                      <p className="text-sm">{selectedCert.bewijs}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Bron</p>
+                      <p className="text-sm">{selectedCert.bron}</p>
+                    </div>
+                  </div>
+                </Card>
               </div>
             </div>
           )}
