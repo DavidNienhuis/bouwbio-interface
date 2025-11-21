@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle2, XCircle, AlertTriangle, Info, Shield, FlaskConical, FileText } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Info, Shield, FlaskConical, FileText, Award } from "lucide-react";
 import { VerificatieAuditData } from "@/lib/webhookClient";
 
 interface VerificatieAuditDisplayProps {
@@ -125,25 +125,34 @@ export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) 
                       <div className="space-y-2">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <h4 className="font-medium">{stof.naam}</h4>
+                            <h4 className="font-medium">{stof.stofnaam || stof.naam}</h4>
                             <p className="text-sm text-muted-foreground">CAS: {stof.waarde}</p>
                           </div>
-                          <Badge 
-                            variant={getRedListBadgeConfig(stof.red_list_check).variant}
-                            className={getRedListBadgeConfig(stof.red_list_check).className}
-                          >
-                            {stof.red_list_check === 'clean' ? 'Clean' :
-                             stof.red_list_check === 'hit_banned' ? 'Banned' :
-                             stof.red_list_check === 'hit_priority' ? 'Priority' :
-                             stof.red_list_check === 'hit_watch' ? 'Watch' :
-                             stof.red_list_check}
-                          </Badge>
+                          <div className="flex flex-col gap-1 items-end">
+                            <Badge 
+                              variant={getRedListBadgeConfig(stof.red_list_check).variant}
+                              className={getRedListBadgeConfig(stof.red_list_check).className}
+                            >
+                              {stof.red_list_check === 'clean' ? 'Clean' :
+                               stof.red_list_check === 'hit_banned' ? 'Banned' :
+                               stof.red_list_check === 'hit_priority' ? 'Priority' :
+                               stof.red_list_check === 'hit_watch' ? 'Watch' :
+                               stof.red_list_check}
+                            </Badge>
+                            {stof.red_list_groep && (
+                              <Badge variant="destructive" className="text-xs">
+                                {stof.red_list_groep}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Concentratie:</span>
-                            <span className="ml-2 font-medium">{stof.concentratie}</span>
-                          </div>
+                          {stof.concentratie && (
+                            <div>
+                              <span className="text-muted-foreground">Concentratie:</span>
+                              <span className="ml-2 font-medium">{stof.concentratie}</span>
+                            </div>
+                          )}
                           <div>
                             <span className="text-muted-foreground">Type:</span>
                             <span className="ml-2 font-medium">{stof.type}</span>
@@ -153,6 +162,16 @@ export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) 
                           <Info className="inline h-3 w-3 mr-1" />
                           Bron: {stof.bron}
                         </div>
+                        {stof.opmerking && (
+                          <Alert 
+                            variant={stof.red_list_check === 'clean' ? 'default' : 'destructive'} 
+                            className="mt-3"
+                          >
+                            <AlertDescription className="text-sm">
+                              {stof.opmerking}
+                            </AlertDescription>
+                          </Alert>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -162,17 +181,64 @@ export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) 
           </AccordionItem>
         )}
 
-        {/* Emissiewaardes */}
-        {data.product.emissiewaardes && data.product.emissiewaardes.length > 0 && (
-          <AccordionItem value="emissies" className="border rounded-lg px-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Emissiewaardes</span>
-                <Badge variant="outline">{data.product.emissiewaardes.length} componenten</Badge>
+        {/* Certificaten - ALTIJD TONEN */}
+        <AccordionItem value="certificaten" className="border rounded-lg px-4">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-primary" />
+              <span className="font-semibold">Certificaten</span>
+              <Badge variant={data.product.certificaten.length > 0 ? "outline" : "secondary"}>
+                {data.product.certificaten.length > 0 
+                  ? `${data.product.certificaten.length} certificaten` 
+                  : 'Geen data'}
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            {data.product.certificaten.length > 0 ? (
+              <div className="space-y-3 pt-2">
+                {data.product.certificaten.map((cert, idx) => (
+                  <Card key={idx} className="bg-muted/50">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium">{cert.naam}</h4>
+                          <p className="text-xs text-muted-foreground mt-1">{cert.bron}</p>
+                        </div>
+                        <Badge variant={cert.status === 'erkend' ? 'default' : 'secondary'}>
+                          {cert.status}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </AccordionTrigger>
-            <AccordionContent>
+            ) : (
+              <Alert variant="default" className="bg-muted/30">
+                <AlertDescription>
+                  <Info className="inline h-4 w-4 mr-2" />
+                  Geen certificaten gevonden in de documentatie
+                </AlertDescription>
+              </Alert>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Emissiewaardes - ALTIJD TONEN */}
+        <AccordionItem value="emissies" className="border rounded-lg px-4">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              <span className="font-semibold">Emissiewaardes</span>
+              <Badge variant={data.product.emissiewaardes.length > 0 ? "outline" : "secondary"}>
+                {data.product.emissiewaardes.length > 0 
+                  ? `${data.product.emissiewaardes.length} componenten` 
+                  : 'Geen data'}
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            {data.product.emissiewaardes.length > 0 ? (
               <div className="space-y-3 pt-2">
                 {data.product.emissiewaardes.map((emissie, idx) => (
                   <Card key={idx} className="bg-muted/50">
@@ -200,21 +266,32 @@ export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) 
                   </Card>
                 ))}
               </div>
-            </AccordionContent>
-          </AccordionItem>
-        )}
+            ) : (
+              <Alert variant="default" className="bg-muted/30">
+                <AlertDescription>
+                  <Info className="inline h-4 w-4 mr-2" />
+                  Geen emissiewaarden gevonden
+                </AlertDescription>
+              </Alert>
+            )}
+          </AccordionContent>
+        </AccordionItem>
 
-        {/* Normatieve Grenswaarden */}
-        {data.product.normatieve_grenswaarden && data.product.normatieve_grenswaarden.length > 0 && (
-          <AccordionItem value="grenswaarden" className="border rounded-lg px-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Normatieve Grenswaarden</span>
-                <Badge variant="outline">{data.product.normatieve_grenswaarden.length} limieten</Badge>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
+        {/* Normatieve Grenswaarden - ALTIJD TONEN */}
+        <AccordionItem value="grenswaarden" className="border rounded-lg px-4">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              <span className="font-semibold">Normatieve Grenswaarden</span>
+              <Badge variant={data.product.normatieve_grenswaarden.length > 0 ? "outline" : "secondary"}>
+                {data.product.normatieve_grenswaarden.length > 0 
+                  ? `${data.product.normatieve_grenswaarden.length} limieten` 
+                  : 'Geen data'}
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            {data.product.normatieve_grenswaarden.length > 0 ? (
               <div className="space-y-3 pt-2">
                 {data.product.normatieve_grenswaarden.map((grens, idx) => (
                   <Card key={idx} className="bg-muted/50">
@@ -222,11 +299,11 @@ export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) 
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
                           <h4 className="font-medium">{grens.component}</h4>
-                          <Badge variant="outline">{grens.norm}</Badge>
+                          {grens.norm && <Badge variant="outline">{grens.norm}</Badge>}
                         </div>
                         <div className="flex items-baseline gap-2">
                           <span className="text-sm text-muted-foreground">Limiet:</span>
-                          <span className="text-xl font-bold">{grens.limiet}</span>
+                          <span className="text-xl font-bold">{grens.waarde || grens.limiet}</span>
                           <span className="text-sm text-muted-foreground">{grens.eenheid}</span>
                         </div>
                         <p className="text-xs text-muted-foreground">{grens.bron}</p>
@@ -235,9 +312,16 @@ export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) 
                   </Card>
                 ))}
               </div>
-            </AccordionContent>
-          </AccordionItem>
-        )}
+            ) : (
+              <Alert variant="default" className="bg-muted/30">
+                <AlertDescription>
+                  <Info className="inline h-4 w-4 mr-2" />
+                  Geen normatieve grenswaarden gevonden
+                </AlertDescription>
+              </Alert>
+            )}
+          </AccordionContent>
+        </AccordionItem>
 
         {/* Advies & Opmerkingen */}
         {data.verificatie_audit.advies_opmerkingen && data.verificatie_audit.advies_opmerkingen.length > 0 && (
