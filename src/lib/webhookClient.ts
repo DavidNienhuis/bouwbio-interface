@@ -107,12 +107,52 @@ export interface Hea02Result {
   }>;
 }
 
+export interface DetailedProductAnalysis {
+  norm: string;
+  productnaam: string;
+  productgroep: string;
+  fabrikant: string;
+  product: {
+    inhoudsstoffen: Array<{
+      naam: string;
+      cas_nummer: string;
+      concentratie: string;
+      h_zinnen: string[];
+      clp_classificatie: string;
+    }>;
+    vos_gehalte?: {
+      waarde: number;
+      eenheid: string;
+      grenswaarde: number;
+      voldoet: boolean;
+    };
+    clp_classificatie: string;
+    certificaten: string[];
+    claims: string[];
+  };
+  emissies: {
+    methode: string;
+    testrapport_aanwezig: boolean;
+    parameters: any[];
+  };
+  beoordeling: {
+    route: string;
+    compliance_status: string;
+    reden: string;
+  };
+  lightrag_vragen?: {
+    certificaten: string[];
+    emissienormen: string[];
+  };
+}
+
 export type ValidationResponse = 
   | { type: 'table'; criteria: CriteriaData[] }
   | { type: 'classification'; data: ClassificationData }
   | { type: 'hea02_verdict'; data: HEA02VerdictData }
   | { type: 'extended_hea02_verdict'; data: ExtendedHEA02VerdictData }
-  | { type: 'hea02_result'; data: Hea02Result };
+  | { type: 'hea02_result'; data: Hea02Result }
+  | { type: 'detailed_product_analysis'; data: DetailedProductAnalysis };
 
 // Helper functie om markdown code block markers te verwijderen
 const stripMarkdownCodeBlock = (text: string): string => {
@@ -147,7 +187,16 @@ const extractValidationData = (data: any): ValidationResponse => {
     }
   }
   
-  // Detecteer nieuwe Hea02Result format (hoogste prioriteit)
+  // Detecteer Detailed Product Analysis format (hoogste prioriteit)
+  if (workingData?.norm && workingData?.productnaam && workingData?.beoordeling) {
+    console.log('✅ Detected DetailedProductAnalysis format');
+    return {
+      type: 'detailed_product_analysis',
+      data: workingData as DetailedProductAnalysis
+    };
+  }
+
+  // Detecteer nieuwe Hea02Result format
   // Data komt binnen als array met 1 element
   if (Array.isArray(workingData) && workingData.length > 0) {
     const firstItem = workingData[0];

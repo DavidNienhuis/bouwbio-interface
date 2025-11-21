@@ -8,6 +8,7 @@ import { ClassificationResults } from "@/components/ClassificationResults";
 import { HEA02VerdictResults } from "@/components/HEA02VerdictResults";
 import { ExtendedHEA02Results } from "@/components/ExtendedHEA02Results";
 import { Hea02ResultDisplay } from "@/components/Hea02ResultDisplay";
+import { DetailedProductAnalysis } from "@/components/DetailedProductAnalysis";
 import { LoadingModal } from "@/components/LoadingModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -250,6 +251,9 @@ const Index = () => {
               )}
               {validationData.type === 'hea02_result' && (
                 <Hea02ResultDisplay data={validationData.data} />
+              )}
+              {validationData.type === 'detailed_product_analysis' && (
+                <DetailedProductAnalysis data={validationData.data} />
               )}
               {validationData.type === 'extended_hea02_verdict' && (
                 <ExtendedHEA02Results data={validationData.data} />
