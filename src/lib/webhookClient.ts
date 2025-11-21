@@ -198,6 +198,38 @@ export interface VerificatieAuditData {
   };
 }
 
+export interface BouwbiologischAdviesData {
+  product: {
+    identificatie: {
+      naam: string;
+      productgroep: string;
+      norm: string;
+    };
+  };
+  scores: {
+    emissies: {
+      status: 'voldoet' | 'voldoet_niet' | 'risico' | 'risico_bij_grote_hoeveelheden' | 'missende_informatie';
+      details: any[];
+    };
+    toxicologie: {
+      tox_status: 'banned' | 'priority' | 'watch' | 'clean' | 'onbekend';
+      samenvatting: string;
+    };
+    certificaten: {
+      status: 'erkend' | 'niet_erkend' | 'geen_certificaten';
+      gevonden_certificaten: any[];
+    };
+    informatie_dekking: 'voldoende' | 'onvoldoende';
+  };
+  advies: {
+    niveau: number;
+    kleur: 'rood' | 'oranje' | 'geel' | 'groen';
+    label: string;
+    route: string;
+    bouwbioloog_toelichting: string;
+  };
+}
+
 export type ValidationResponse = 
   | { type: 'table'; criteria: CriteriaData[] }
   | { type: 'classification'; data: ClassificationData }
@@ -205,7 +237,8 @@ export type ValidationResponse =
   | { type: 'extended_hea02_verdict'; data: ExtendedHEA02VerdictData }
   | { type: 'hea02_result'; data: Hea02Result }
   | { type: 'detailed_product_analysis'; data: DetailedProductAnalysis }
-  | { type: 'verificatie_audit'; data: VerificatieAuditData };
+  | { type: 'verificatie_audit'; data: VerificatieAuditData }
+  | { type: 'bouwbiologisch_advies'; data: BouwbiologischAdviesData };
 
 // Helper functie om markdown code block markers te verwijderen
 const stripMarkdownCodeBlock = (text: string): string => {
@@ -240,7 +273,16 @@ const extractValidationData = (data: any): ValidationResponse => {
     }
   }
   
-  // Detecteer VerificatieAuditData format (hoogste prioriteit - met red list checking)
+  // Detecteer BouwbiologischAdviesData format (hoogste prioriteit - nieuwe format met advies)
+  if (workingData?.scores && workingData?.advies && workingData?.product?.identificatie) {
+    console.log('✅ Detected BouwbiologischAdviesData format');
+    return {
+      type: 'bouwbiologisch_advies',
+      data: workingData as BouwbiologischAdviesData
+    };
+  }
+
+  // Detecteer VerificatieAuditData format (met red list checking)
   if (workingData?.verificatie_audit && workingData?.product?.identificatie && workingData?.product?.inhoudstoffen_cas) {
     console.log('✅ Detected VerificatieAuditData format');
     return {
