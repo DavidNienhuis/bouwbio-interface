@@ -10,6 +10,7 @@ import { ExtendedHEA02Results } from "@/components/ExtendedHEA02Results";
 import { Hea02ResultDisplay } from "@/components/Hea02ResultDisplay";
 import { DetailedProductAnalysis } from "@/components/DetailedProductAnalysis";
 import { VerificatieAuditDisplay } from "@/components/VerificatieAuditDisplay";
+import { BouwbiologischAdviesDisplay } from "@/components/BouwbiologischAdviesDisplay";
 import { LoadingModal } from "@/components/LoadingModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -247,6 +248,9 @@ const Index = () => {
               <CardTitle>Validatie resultaten</CardTitle>
             </CardHeader>
             <CardContent>
+              {validationData.type === 'bouwbiologisch_advies' && (
+                <BouwbiologischAdviesDisplay data={validationData.data} />
+              )}
               {validationData.type === 'verificatie_audit' && (
                 <VerificatieAuditDisplay data={validationData.data} />
               )}
