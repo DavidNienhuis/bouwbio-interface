@@ -160,10 +160,10 @@ export interface VerificatieAuditData {
     inhoudstoffen_cas: Array<{
       type: string;
       waarde: string;
-      naam: string;
-      concentratie: string;
+      naam?: string;
+      concentratie?: string;
       bron: string;
-      red_list_check: string;
+      red_list_check: 'clean' | 'hit_banned' | 'hit_priority' | 'hit_watch';
     }>;
     certificaten: any[];
     emissiewaardes: Array<{
@@ -182,7 +182,7 @@ export interface VerificatieAuditData {
     }>;
   };
   verificatie_audit: {
-    status: string;
+    status: 'conform' | 'niet_conform' | 'waarschuwing' | 'onduidelijk';
     route: string;
     reden: string;
     advies_opmerkingen: string[];

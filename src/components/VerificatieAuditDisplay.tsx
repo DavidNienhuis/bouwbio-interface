@@ -12,7 +12,7 @@ interface VerificatieAuditDisplayProps {
 const getStatusConfig = (status: string) => {
   const statusLower = status.toLowerCase();
   
-  if (statusLower.includes("conform") || statusLower.includes("goedgekeurd")) {
+  if (statusLower === "conform" || statusLower.includes("goedgekeurd")) {
     return {
       icon: CheckCircle2,
       variant: "default" as const,
@@ -22,13 +22,23 @@ const getStatusConfig = (status: string) => {
     };
   }
   
-  if (statusLower.includes("niet") || statusLower.includes("fail") || statusLower.includes("afgekeurd")) {
+  if (statusLower === "niet_conform" || statusLower.includes("fail") || statusLower.includes("afgekeurd")) {
     return {
       icon: XCircle,
       variant: "destructive" as const,
       bgColor: "bg-red-50 dark:bg-red-950/30",
       borderColor: "border-red-200 dark:border-red-800",
       textColor: "text-red-700 dark:text-red-300"
+    };
+  }
+  
+  if (statusLower === "waarschuwing") {
+    return {
+      icon: AlertTriangle,
+      variant: "secondary" as const,
+      bgColor: "bg-yellow-50 dark:bg-yellow-950/30",
+      borderColor: "border-yellow-200 dark:border-yellow-800",
+      textColor: "text-yellow-700 dark:text-yellow-300"
     };
   }
   
@@ -41,14 +51,19 @@ const getStatusConfig = (status: string) => {
   };
 };
 
-const getRedListBadgeVariant = (check: string) => {
-  if (check.toLowerCase().includes("clean")) {
-    return "default";
+const getRedListBadgeConfig = (check: string) => {
+  switch (check) {
+    case 'clean':
+      return { variant: "default" as const, className: "bg-green-500/10 text-green-700 border-green-500/20" };
+    case 'hit_banned':
+      return { variant: "destructive" as const, className: "bg-red-600 text-white" };
+    case 'hit_priority':
+      return { variant: "destructive" as const, className: "" };
+    case 'hit_watch':
+      return { variant: "secondary" as const, className: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20" };
+    default:
+      return { variant: "outline" as const, className: "" };
   }
-  if (check.toLowerCase().includes("hit") || check.toLowerCase().includes("priority")) {
-    return "destructive";
-  }
-  return "secondary";
 };
 
 export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) => {
@@ -113,8 +128,15 @@ export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) 
                             <h4 className="font-medium">{stof.naam}</h4>
                             <p className="text-sm text-muted-foreground">CAS: {stof.waarde}</p>
                           </div>
-                          <Badge variant={getRedListBadgeVariant(stof.red_list_check)}>
-                            {stof.red_list_check}
+                          <Badge 
+                            variant={getRedListBadgeConfig(stof.red_list_check).variant}
+                            className={getRedListBadgeConfig(stof.red_list_check).className}
+                          >
+                            {stof.red_list_check === 'clean' ? 'Clean' :
+                             stof.red_list_check === 'hit_banned' ? 'Banned' :
+                             stof.red_list_check === 'hit_priority' ? 'Priority' :
+                             stof.red_list_check === 'hit_watch' ? 'Watch' :
+                             stof.red_list_check}
                           </Badge>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm">
