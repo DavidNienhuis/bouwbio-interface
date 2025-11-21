@@ -146,13 +146,58 @@ export interface DetailedProductAnalysis {
   };
 }
 
+export interface VerificatieAuditData {
+  lightrag_vragen?: {
+    certificaten?: string[];
+    emissienormen?: string[];
+  };
+  product: {
+    identificatie: {
+      naam: string;
+      productgroep: string;
+      norm: string;
+    };
+    inhoudstoffen_cas: Array<{
+      type: string;
+      waarde: string;
+      naam: string;
+      concentratie: string;
+      bron: string;
+      red_list_check: string;
+    }>;
+    certificaten: any[];
+    emissiewaardes: Array<{
+      component: string;
+      waarde: number | null;
+      eenheid: string;
+      status: string;
+      bron: string;
+    }>;
+    normatieve_grenswaarden: Array<{
+      component: string;
+      limiet: number;
+      eenheid: string;
+      norm: string;
+      bron: string;
+    }>;
+  };
+  verificatie_audit: {
+    status: string;
+    route: string;
+    reden: string;
+    advies_opmerkingen: string[];
+    audit_proof: string[];
+  };
+}
+
 export type ValidationResponse = 
   | { type: 'table'; criteria: CriteriaData[] }
   | { type: 'classification'; data: ClassificationData }
   | { type: 'hea02_verdict'; data: HEA02VerdictData }
   | { type: 'extended_hea02_verdict'; data: ExtendedHEA02VerdictData }
   | { type: 'hea02_result'; data: Hea02Result }
-  | { type: 'detailed_product_analysis'; data: DetailedProductAnalysis };
+  | { type: 'detailed_product_analysis'; data: DetailedProductAnalysis }
+  | { type: 'verificatie_audit'; data: VerificatieAuditData };
 
 // Helper functie om markdown code block markers te verwijderen
 const stripMarkdownCodeBlock = (text: string): string => {
@@ -187,7 +232,16 @@ const extractValidationData = (data: any): ValidationResponse => {
     }
   }
   
-  // Detecteer Detailed Product Analysis format (hoogste prioriteit)
+  // Detecteer VerificatieAuditData format (hoogste prioriteit - met red list checking)
+  if (workingData?.verificatie_audit && workingData?.product?.identificatie && workingData?.product?.inhoudstoffen_cas) {
+    console.log('✅ Detected VerificatieAuditData format');
+    return {
+      type: 'verificatie_audit',
+      data: workingData as VerificatieAuditData
+    };
+  }
+
+  // Detecteer Detailed Product Analysis format
   if (workingData?.norm && workingData?.productnaam && workingData?.beoordeling) {
     console.log('✅ Detected DetailedProductAnalysis format');
     return {
