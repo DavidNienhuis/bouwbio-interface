@@ -161,11 +161,18 @@ export interface VerificatieAuditData {
       type: string;
       waarde: string;
       naam?: string;
+      stofnaam?: string;
       concentratie?: string;
       bron: string;
       red_list_check: 'clean' | 'hit_banned' | 'hit_priority' | 'hit_watch';
+      opmerking?: string;
+      red_list_groep?: string;
     }>;
-    certificaten: any[];
+    certificaten: Array<{
+      naam: string;
+      status: string;
+      bron: string;
+    }>;
     emissiewaardes: Array<{
       component: string;
       waarde: number | null;
@@ -175,9 +182,10 @@ export interface VerificatieAuditData {
     }>;
     normatieve_grenswaarden: Array<{
       component: string;
-      limiet: number;
+      waarde?: number;
+      limiet?: number;
       eenheid: string;
-      norm: string;
+      norm?: string;
       bron: string;
     }>;
   };
