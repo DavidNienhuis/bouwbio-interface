@@ -213,7 +213,13 @@ export interface BouwbiologischAdviesData {
     };
     toxicologie: {
       tox_status: 'banned' | 'priority' | 'watch' | 'clean' | 'onbekend';
-      samenvatting: string;
+      samenvatting?: string;
+      gecheckte_stoffen?: Array<{
+        cas: string;
+        naam: string;
+        lijst: string;
+        status: string;
+      }>;
     };
     certificaten: {
       status: 'erkend' | 'niet_erkend' | 'geen_certificaten';
