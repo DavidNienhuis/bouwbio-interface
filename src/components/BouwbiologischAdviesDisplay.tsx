@@ -84,6 +84,30 @@ const getCertificaatStatusBadge = (status: string) => {
   }
 };
 
+const getStofLijstBadge = (lijst: string) => {
+  switch (lijst.toLowerCase()) {
+    case 'clean':
+      return <Badge className="bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200">Clean</Badge>;
+    case 'watch':
+      return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200">Watch</Badge>;
+    case 'priority':
+      return <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200">Priority</Badge>;
+    case 'banned':
+      return <Badge className="bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200">Banned</Badge>;
+    default:
+      return <Badge variant="outline">{lijst}</Badge>;
+  }
+};
+
+const getStofStatusBadge = (status: string) => {
+  if (status === 'HIT') {
+    return <Badge variant="destructive" className="ml-2">🚨 HIT</Badge>;
+  } else if (status === 'OK') {
+    return <Badge className="bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200 ml-2">✓ OK</Badge>;
+  }
+  return <Badge variant="outline" className="ml-2">{status}</Badge>;
+};
+
 export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDisplayProps) => {
   return (
     <div className="space-y-6 w-full max-w-5xl mx-auto">
@@ -188,20 +212,57 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <div className="pt-2">
-                  {data.scores.toxicologie.samenvatting ? (
+                <div className="pt-2 space-y-4">
+                  {data.scores.toxicologie.samenvatting && (
                     <Alert>
                       <AlertDescription className="whitespace-pre-wrap">
                         {data.scores.toxicologie.samenvatting}
                       </AlertDescription>
                     </Alert>
+                  )}
+                  
+                  {data.scores.toxicologie.gecheckte_stoffen && data.scores.toxicologie.gecheckte_stoffen.length > 0 ? (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold text-muted-foreground">
+                        Gecontroleerde Stoffen ({data.scores.toxicologie.gecheckte_stoffen.length})
+                      </h4>
+                      <div className="space-y-2">
+                        {data.scores.toxicologie.gecheckte_stoffen.map((stof, idx) => (
+                          <Card 
+                            key={idx} 
+                            className={`${
+                              stof.status === 'HIT' 
+                                ? 'border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20' 
+                                : 'bg-muted/30'
+                            }`}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start gap-3">
+                                <div className="flex-1">
+                                  <div className="font-medium">{stof.naam}</div>
+                                  <div className="text-sm text-muted-foreground mt-1">
+                                    CAS: {stof.cas}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  {getStofLijstBadge(stof.lijst)}
+                                  {getStofStatusBadge(stof.status)}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
                   ) : (
-                    <Alert className="bg-muted/30">
-                      <AlertDescription>
-                        <Info className="inline h-4 w-4 mr-2" />
-                        Geen toxicologische samenvatting beschikbaar
-                      </AlertDescription>
-                    </Alert>
+                    !data.scores.toxicologie.samenvatting && (
+                      <Alert className="bg-muted/30">
+                        <AlertDescription>
+                          <Info className="inline h-4 w-4 mr-2" />
+                          Geen toxicologische informatie beschikbaar
+                        </AlertDescription>
+                      </Alert>
+                    )
                   )}
                 </div>
               </AccordionContent>
