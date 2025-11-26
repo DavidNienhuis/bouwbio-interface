@@ -479,25 +479,30 @@ export const uploadPDFToWebhook = async (
 export const sendValidationRequest = async (
   sessionId: string,
   certification: string,
-  productType: { id: string; name: string; description: string }
+  productType: { id: string; name: string; description: string },
+  files: File[]
 ): Promise<ValidationResponse> => {
-  console.log('🚀 [DEBUG] Sending validation request with session ID:', sessionId);
+  console.log('🚀 [DEBUG] Sending validation request with', files.length, 'files');
   console.log('🚀 [DEBUG] Sending request to:', SEND_WEBHOOK_URL);
+  
+  const formData = new FormData();
+  
+  // Metadata toevoegen
+  formData.append('sessionId', sessionId);
+  formData.append('certification', certification);
+  formData.append('productTypeId', productType.id);
+  formData.append('productTypeName', productType.name);
+  formData.append('productTypeDescription', productType.description);
+  
+  // PDF files toevoegen
+  files.forEach((file) => {
+    formData.append('file', file);
+    console.log('📎 Appending file to validation:', file.name);
+  });
   
   const response = await fetch(SEND_WEBHOOK_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ 
-      sessionId,
-      certification,
-      productType: {
-        id: productType.id,
-        name: productType.name,
-        description: productType.description
-      }
-    }),
+    body: formData,
   });
   
   console.log('📡 [DEBUG] Response status:', response.status, response.statusText);
