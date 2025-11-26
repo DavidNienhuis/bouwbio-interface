@@ -102,6 +102,12 @@ const Index = () => {
       />
       
       <div className="max-w-4xl mx-auto space-y-6">
+        {/* Test page link */}
+        <div className="flex justify-end">
+          <a href="/test" className="text-xs text-muted-foreground hover:underline flex items-center gap-1">
+            🧪 Test pagina
+          </a>
+        </div>
         {/* Stap 1: Certificeringssysteem */}
         <Card>
           <CardHeader>
