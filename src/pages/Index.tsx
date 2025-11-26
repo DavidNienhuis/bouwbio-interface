@@ -35,7 +35,7 @@ const Index = () => {
   const [selectedProductType, setSelectedProductType] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
   const [errorData, setErrorData] = useState<{ message: string; rawResponse?: any } | null>(null);
 
@@ -48,7 +48,7 @@ const Index = () => {
       if (!selectedProduct) throw new Error("Product type not found");
       
       await uploadPDFToWebhook(files, sessionId, selectedCertification, selectedProduct);
-      setUploadedFiles(prev => [...prev, ...files.map(f => f.name)]);
+      setUploadedFiles(prev => [...prev, ...files]);
       toast.success("Upload gelukt!");
     } catch (error) {
       console.error("Upload error:", error);
@@ -67,7 +67,7 @@ const Index = () => {
       const selectedProduct = productTypes.find(p => p.id === selectedProductType);
       if (!selectedProduct) throw new Error("Product type not found");
       
-      const response = await sendValidationRequest(sessionId, selectedCertification, selectedProduct);
+      const response = await sendValidationRequest(sessionId, selectedCertification, selectedProduct, uploadedFiles);
       setValidationData(response);
       setErrorData(null);
       toast.success("Validatie ontvangen!");
@@ -186,10 +186,10 @@ const Index = () => {
                 <div className="space-y-4">
                   <div className="text-sm">
                     <p className="font-semibold mb-2">Geüploade bestanden ({uploadedFiles.length}):</p>
-                    {uploadedFiles.map((filename, idx) => (
+                    {uploadedFiles.map((file, idx) => (
                       <div key={idx} className="flex items-center gap-2 py-1 text-muted-foreground">
                         <span className="text-green-600">✓</span>
-                        {filename}
+                        {file.name}
                       </div>
                     ))}
                   </div>
