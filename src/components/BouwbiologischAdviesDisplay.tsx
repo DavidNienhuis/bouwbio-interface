@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle2, XCircle, AlertTriangle, Info, Leaf, FlaskConical, Award, Database } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Info, Leaf, FlaskConical, Award, Database, FileText, Shield, Quote } from "lucide-react";
 import type { BouwbiologischAdviesData } from "@/lib/webhookClient";
 
 interface BouwbiologischAdviesDisplayProps {
@@ -111,6 +111,67 @@ const getStofStatusBadge = (status: string) => {
 export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDisplayProps) => {
   return (
     <div className="space-y-6 w-full max-w-5xl mx-auto">
+      {/* Hero Advies Card */}
+      <Card className={`border-2 ${getAdviesColor(data.advies.kleur)} shadow-lg`}>
+        <CardContent className="p-8">
+          <div className="flex items-start gap-6">
+            <div className="flex-shrink-0">
+              <div className="relative">
+                {getAdviesIcon(data.advies.kleur)}
+                <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-background border-2 border-current flex items-center justify-center text-xs font-bold">
+                  {data.advies.niveau}
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 space-y-4">
+              <div>
+                <h2 className="text-3xl font-bold mb-2">{data.advies.label}</h2>
+                <Badge variant="outline" className="text-sm">
+                  Route: {data.advies.route}
+                </Badge>
+              </div>
+              <p className="text-lg leading-relaxed">
+                {data.advies.bouwbioloog_toelichting}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Score Overview Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="text-center">
+          <CardContent className="p-4">
+            <FlaskConical className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+            <div className="text-sm font-semibold mb-1">Emissies</div>
+            {getEmissieStatusBadge(data.scores.emissies.status)}
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="p-4">
+            <Shield className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+            <div className="text-sm font-semibold mb-1">Toxicologie</div>
+            {getToxStatusBadge(data.scores.toxicologie.tox_status)}
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="p-4">
+            <Award className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+            <div className="text-sm font-semibold mb-1">Certificaten</div>
+            {getCertificaatStatusBadge(data.scores.certificaten.status)}
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="p-4">
+            <Database className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+            <div className="text-sm font-semibold mb-1">Info Dekking</div>
+            <Badge variant={data.scores.informatie_dekking === 'voldoende' ? 'default' : 'secondary'}>
+              {data.scores.informatie_dekking === 'voldoende' ? 'Voldoende' : 'Onvoldoende'}
+            </Badge>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Product Identificatie */}
       <Card>
         <CardHeader>
@@ -122,43 +183,18 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
         <CardContent className="space-y-2">
           <div>
             <span className="font-semibold">Product: </span>
-            <span>{data.product.identificatie.naam}</span>
+            <span>{data.product.identificatie.naam || 'Niet gespecificeerd'}</span>
           </div>
           <div>
             <span className="font-semibold">Productgroep: </span>
-            <span>{data.product.identificatie.productgroep}</span>
+            <span>{data.product.identificatie.productgroep || 'Niet gespecificeerd'}</span>
           </div>
-          <div>
-            <span className="font-semibold">Norm: </span>
-            <Badge variant="outline">{data.product.identificatie.norm}</Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Bouwbiologisch Advies - Prominent */}
-      <Card className={`border-2 ${getAdviesColor(data.advies.kleur)}`}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            {getAdviesIcon(data.advies.kleur)}
+          {data.product.identificatie.norm && (
             <div>
-              <div className="text-xl">Bouwbiologisch Advies</div>
-              <div className="text-sm font-normal text-muted-foreground mt-1">
-                Niveau {data.advies.niveau} • Route: {data.advies.route}
-              </div>
+              <span className="font-semibold">Norm: </span>
+              <Badge variant="outline">{data.product.identificatie.norm}</Badge>
             </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Badge variant="outline" className="text-base px-4 py-1">
-              {data.advies.label}
-            </Badge>
-          </div>
-          <Alert className="bg-background/50">
-            <AlertDescription className="text-base leading-relaxed">
-              {data.advies.bouwbioloog_toelichting}
-            </AlertDescription>
-          </Alert>
+          )}
         </CardContent>
       </Card>
 
@@ -179,26 +215,55 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                {data.scores.emissies.details && data.scores.emissies.details.length > 0 ? (
-                  <div className="space-y-2 pt-2">
-                    {data.scores.emissies.details.map((detail, idx) => (
-                      <Card key={idx} className="bg-muted/30">
-                        <CardContent className="p-3">
-                          <pre className="text-sm whitespace-pre-wrap">
-                            {JSON.stringify(detail, null, 2)}
-                          </pre>
-                        </CardContent>
-                      </Card>
-                    ))}
+                <div className="space-y-4 pt-2">
+                  {/* Conclusie Badge */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Conclusie:</span>
+                    <Badge variant="outline">{data.scores.emissies.details.conclusie}</Badge>
                   </div>
-                ) : (
-                  <Alert className="bg-muted/30">
-                    <AlertDescription>
-                      <Info className="inline h-4 w-4 mr-2" />
-                      Geen gedetailleerde emissie-informatie beschikbaar
-                    </AlertDescription>
-                  </Alert>
-                )}
+                  
+                  {/* Toelichting */}
+                  {data.scores.emissies.details.toelichting && (
+                    <Alert className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                      <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <AlertDescription className="text-sm">
+                        {data.scores.emissies.details.toelichting}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  {/* Gevonden Waarnemingen/Waarden */}
+                  {((data.scores.emissies.details.gevonden_waarnemingen && data.scores.emissies.details.gevonden_waarnemingen.length > 0) ||
+                    (data.scores.emissies.details.gevonden_waarden && data.scores.emissies.details.gevonden_waarden.length > 0)) ? (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold">Gevonden Emissiewaarden:</h4>
+                      <div className="space-y-2">
+                        {(data.scores.emissies.details.gevonden_waarnemingen || data.scores.emissies.details.gevonden_waarden || []).map((waarde, idx) => (
+                          <Card key={idx} className="bg-muted/30">
+                            <CardContent className="p-3">
+                              <div className="flex justify-between items-center">
+                                <span className="font-medium">{waarde.component || 'Onbekend'}</span>
+                                <span className="font-mono text-sm">
+                                  {waarde.waarde !== undefined ? `${waarde.waarde} ${waarde.eenheid || ''}` : 'Geen waarde'}
+                                </span>
+                              </div>
+                              {waarde.bron && (
+                                <div className="text-xs text-muted-foreground mt-1">Bron: {waarde.bron}</div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <Alert className="bg-muted/30">
+                      <Info className="h-4 w-4" />
+                      <AlertDescription>
+                        Geen emissiewaarden gevonden
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
               </AccordionContent>
             </AccordionItem>
 
@@ -206,13 +271,21 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
             <AccordionItem value="toxicologie" className="border rounded-lg px-4">
               <AccordionTrigger>
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-primary" />
+                  <Shield className="h-5 w-5 text-primary" />
                   <span className="font-semibold">Toxicologie</span>
                   {getToxStatusBadge(data.scores.toxicologie.tox_status)}
                 </div>
               </AccordionTrigger>
               <AccordionContent>
                 <div className="pt-2 space-y-4">
+                  {/* Conclusie */}
+                  {data.scores.toxicologie.conclusie && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Conclusie:</span>
+                      <Badge variant="outline">{data.scores.toxicologie.conclusie}</Badge>
+                    </div>
+                  )}
+                  
                   {data.scores.toxicologie.samenvatting && (
                     <Alert>
                       <AlertDescription className="whitespace-pre-wrap">
@@ -255,7 +328,7 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
                       </div>
                     </div>
                   ) : (
-                    !data.scores.toxicologie.samenvatting && (
+                    !data.scores.toxicologie.samenvatting && !data.scores.toxicologie.conclusie && (
                       <Alert className="bg-muted/30">
                         <AlertDescription>
                           <Info className="inline h-4 w-4 mr-2" />
@@ -278,26 +351,70 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                {data.scores.certificaten.gevonden_certificaten && data.scores.certificaten.gevonden_certificaten.length > 0 ? (
-                  <div className="space-y-2 pt-2">
-                    {data.scores.certificaten.gevonden_certificaten.map((cert, idx) => (
-                      <Card key={idx} className="bg-muted/30">
-                        <CardContent className="p-3">
-                          <pre className="text-sm whitespace-pre-wrap">
-                            {JSON.stringify(cert, null, 2)}
-                          </pre>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Alert className="bg-muted/30">
-                    <AlertDescription>
-                      <Info className="inline h-4 w-4 mr-2" />
-                      Geen certificaten gevonden
-                    </AlertDescription>
-                  </Alert>
-                )}
+                <div className="space-y-4 pt-2">
+                  {/* Conclusie */}
+                  {data.scores.certificaten.conclusie && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Conclusie:</span>
+                      <Badge variant="outline">{data.scores.certificaten.conclusie}</Badge>
+                    </div>
+                  )}
+                  
+                  {data.scores.certificaten.gevonden_certificaten && data.scores.certificaten.gevonden_certificaten.length > 0 ? (
+                    <div className="space-y-3">
+                      {data.scores.certificaten.gevonden_certificaten.map((cert, idx) => (
+                        <Card key={idx} className="border-2 bg-gradient-to-br from-background to-muted/30">
+                          <CardContent className="p-4 space-y-3">
+                            {/* Certificaat Header */}
+                            <div className="flex justify-between items-start gap-3">
+                              <div className="flex items-start gap-2">
+                                <Award className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                                <h4 className="font-semibold text-lg">{cert.naam}</h4>
+                              </div>
+                              {cert.status_gn22_general && (
+                                <Badge 
+                                  variant={cert.status_gn22_general === 'Ja' ? 'default' : 'secondary'}
+                                  className={cert.status_gn22_general === 'Ja' 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200' 
+                                    : ''}
+                                >
+                                  GN22: {cert.status_gn22_general}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {/* Bewijs uit PDF */}
+                            {cert.bewijs_uit_pdf && (
+                              <div className="pl-7">
+                                <div className="flex items-start gap-2 text-sm text-muted-foreground italic border-l-2 border-muted-foreground/20 pl-3 py-1">
+                                  <Quote className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                                  <span>"{cert.bewijs_uit_pdf}"</span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Toelichting Norm */}
+                            {cert.toelichting_norm && (
+                              <Alert className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                <AlertDescription className="text-sm">
+                                  {cert.toelichting_norm}
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <Alert className="bg-muted/30">
+                      <Info className="h-4 w-4" />
+                      <AlertDescription>
+                        Geen certificaten gevonden
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
               </AccordionContent>
             </AccordionItem>
 
