@@ -543,3 +543,66 @@ export const sendValidationRequest = async (
     throw extractError;
   }
 };
+
+// Test webhook URL voor vereenvoudigde test flow
+const TEST_WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/c7bf5b26-e985-41f6-98e6-f271b1bd8719';
+
+export const sendTestValidationRequest = async (
+  sessionId: string,
+  files: File[]
+): Promise<ValidationResponse> => {
+  console.log('🧪 [TEST] Sending test validation request with', files.length, 'files');
+  console.log('🧪 [TEST] Sending request to:', TEST_WEBHOOK_URL);
+  
+  const formData = new FormData();
+  formData.append('sessionId', sessionId);
+  
+  // PDF files toevoegen
+  files.forEach((file) => {
+    formData.append('file', file);
+    console.log('📎 [TEST] Appending file:', file.name);
+  });
+  
+  const response = await fetch(TEST_WEBHOOK_URL, {
+    method: 'POST',
+    body: formData,
+  });
+  
+  console.log('📡 [TEST] Response status:', response.status, response.statusText);
+  console.log('📡 [TEST] Response headers:', Object.fromEntries(response.headers.entries()));
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ [TEST] Send failed with status', response.status, ':', errorText);
+    throw new Error(`Test send failed: ${response.statusText} - ${errorText}`);
+  }
+  
+  // Lees response text eerst om te kunnen loggen
+  const responseText = await response.text();
+  console.log('📦 [TEST] Raw response text:', responseText);
+  console.log('📦 [TEST] Response text length:', responseText.length);
+  
+  // Parse JSON
+  let rawResult;
+  try {
+    rawResult = JSON.parse(responseText);
+    console.log('✅ [TEST] Parsed JSON successfully');
+    console.log('📋 [TEST] Raw validation response:', JSON.stringify(rawResult, null, 2));
+  } catch (parseError) {
+    console.error('❌ [TEST] JSON parse error:', parseError);
+    console.error('❌ [TEST] Failed to parse text:', responseText.substring(0, 500));
+    throw new Error(`Invalid JSON response from test webhook: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+  }
+  
+  // Gebruik de helper functie om validation data te extraheren
+  try {
+    const result = extractValidationData(rawResult);
+    console.log('✅ [TEST] Extracted validation data successfully:', result.type);
+    console.log('📊 [TEST] Validation data:', JSON.stringify(result, null, 2));
+    return result;
+  } catch (extractError) {
+    console.error('❌ [TEST] Failed to extract validation data:', extractError);
+    console.error('❌ [TEST] Raw data that failed extraction:', JSON.stringify(rawResult, null, 2));
+    throw extractError;
+  }
+};
