@@ -201,19 +201,35 @@ export interface VerificatieAuditData {
 export interface BouwbiologischAdviesData {
   product: {
     identificatie: {
-      naam: string;
-      productgroep: string;
-      norm: string;
+      naam: string | null;
+      productgroep: string | null;
+      norm: string | null;
     };
   };
   scores: {
     emissies: {
       status: 'voldoet' | 'voldoet_niet' | 'risico' | 'risico_bij_grote_hoeveelheden' | 'missende_informatie';
-      details: any[];
+      details: {
+        gevonden_waarnemingen?: Array<{
+          component?: string;
+          waarde?: number;
+          eenheid?: string;
+          bron?: string;
+        }>;
+        gevonden_waarden?: Array<{
+          component?: string;
+          waarde?: number;
+          eenheid?: string;
+          bron?: string;
+        }>;
+        conclusie: string;
+        toelichting: string;
+      };
     };
     toxicologie: {
       tox_status: 'banned' | 'priority' | 'watch' | 'clean' | 'onbekend';
       samenvatting?: string;
+      conclusie?: string;
       gecheckte_stoffen?: Array<{
         cas: string;
         naam: string;
@@ -223,7 +239,13 @@ export interface BouwbiologischAdviesData {
     };
     certificaten: {
       status: 'erkend' | 'niet_erkend' | 'geen_certificaten';
-      gevonden_certificaten: any[];
+      conclusie?: string;
+      gevonden_certificaten: Array<{
+        naam: string;
+        status_gn22_general?: string;
+        bewijs_uit_pdf?: string;
+        toelichting_norm?: string;
+      }>;
     };
     informatie_dekking: 'voldoende' | 'onvoldoende';
   };
