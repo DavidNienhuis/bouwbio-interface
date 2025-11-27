@@ -300,7 +300,18 @@ const stripMarkdownCodeBlock = (text: string): string => {
 const extractValidationData = (data: any): ValidationResponse => {
   let workingData = data;
   
-  // Als het een array is, pak het eerste element
+  // Detecteer CAS Results array format EERST (voordat we array unpacking doen!)
+  if (Array.isArray(workingData) && workingData.length > 0 && 
+      workingData[0]?.cas && workingData[0]?.naam && 
+      ('redlist' in workingData[0] || 'priority' in workingData[0] || 'watch' in workingData[0])) {
+    console.log('✅ Detected CAS Results format');
+    return {
+      type: 'cas_results',
+      data: workingData as CASResultItem[]
+    };
+  }
+  
+  // Als het een array is, pak het eerste element (voor andere formaten)
   if (Array.isArray(workingData)) {
     console.log('Response is array, taking first element');
     workingData = workingData[0];
@@ -318,17 +329,6 @@ const extractValidationData = (data: any): ValidationResponse => {
       const cleanedData = stripMarkdownCodeBlock(workingData);
       workingData = JSON.parse(cleanedData);
     }
-  }
-  
-  // Detecteer CAS Results array format (hoogste prioriteit voor test omgeving)
-  if (Array.isArray(workingData) && workingData.length > 0 && 
-      workingData[0]?.cas && workingData[0]?.naam && 
-      ('redlist' in workingData[0] || 'priority' in workingData[0] || 'watch' in workingData[0])) {
-    console.log('✅ Detected CAS Results format');
-    return {
-      type: 'cas_results',
-      data: workingData as CASResultItem[]
-    };
   }
 
   // Detecteer BouwbiologischAdviesData format (hoogste prioriteit - nieuwe format met advies)
