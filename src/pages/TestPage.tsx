@@ -14,7 +14,18 @@ import { BouwbiologischAdviesDisplay } from "@/components/BouwbiologischAdviesDi
 import { CASResultsDisplay } from "@/components/CASResultsDisplay";
 import { LoadingModal } from "@/components/LoadingModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { TestTube } from "lucide-react";
+
+const productTypes = [
+  { id: "1", name: "Binnenverf en vernissen", description: "Binnenverf en vernissen" },
+  { id: "2", name: "Houtachtige plaatmaterialen", description: "Houtachtige plaatmaterialen, inclusief spaanplaat, houtvezelplaat, MDF, OSB, cementgebonden vezelplaat, triplex, massief houten panelen en akoestische platen. Ook houten vloeren, zoals parket vallen hieronder, alsmede houtconstructies zoals gelamineerd hout." },
+  { id: "3", name: "Vloerafwerking", description: "Vloerafwerking, inclusief vinyl, linoleum, kurk, rubber, tapijt en houten laminaatvloeren. Ook gietvloeren." },
+  { id: "4", name: "Verlaagde plafonds en tussenwanden", description: "Verlaagde plafonds, tussenwanden plus akoestisch en isolatie technische materialen." },
+  { id: "5", name: "Lijmen en kitten", description: "Lijmen en kitten, inclusief vloerlijmen." },
+];
 
 const TestPage = () => {
   // Genereer unieke session ID bij component mount
@@ -22,6 +33,8 @@ const TestPage = () => {
     return `test_session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   });
   
+  const [selectedCertification, setSelectedCertification] = useState<string>("");
+  const [selectedProductType, setSelectedProductType] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -49,7 +62,10 @@ const TestPage = () => {
     toast.info("Validatie verzenden naar test webhook...");
     
     try {
-      const response = await sendTestValidationRequest(sessionId, uploadedFiles);
+      const selectedProduct = productTypes.find(p => p.id === selectedProductType);
+      if (!selectedProduct) throw new Error("Product type not found");
+      
+      const response = await sendTestValidationRequest(sessionId, selectedCertification, selectedProduct, uploadedFiles);
       setValidationData(response);
       setErrorData(null);
       toast.success("Validatie ontvangen!");
@@ -72,6 +88,8 @@ const TestPage = () => {
     setErrorData(null);
     toast.info("Sessie gereset");
   };
+
+  const canShowUpload = selectedCertification === "BREEAM_HEA02" && selectedProductType !== "";
 
   return (
     <div className="min-h-screen p-8 bg-background">
@@ -96,16 +114,83 @@ const TestPage = () => {
           </Button>
         </div>
 
-        {/* Upload Card */}
+        {/* Stap 1: Certificeringssysteem */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              Upload PDF
+              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                1
+              </span>
+              Kies certificeringssysteem
             </CardTitle>
             <CardDescription>
-              Upload PDF bestanden voor test validatie
+              Selecteer het certificeringssysteem waarmee u wilt valideren
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <Select value={selectedCertification} onValueChange={setSelectedCertification}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecteer certificeringssysteem..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BREEAM_HEA02">BREEAM HEA02</SelectItem>
+                <SelectItem value="EU_TAXONOMY" disabled>
+                  EU Taxonomy 🔒 (Binnenkort beschikbaar)
+                </SelectItem>
+                <SelectItem value="WELL" disabled>
+                  WELL 🔒 (Binnenkort beschikbaar)
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
+        {/* Stap 2: Productgroep */}
+        {selectedCertification === "BREEAM_HEA02" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                  2
+                </span>
+                Kies productgroep
+              </CardTitle>
+              <CardDescription>
+                Selecteer de productgroep die van toepassing is
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup value={selectedProductType} onValueChange={setSelectedProductType}>
+                <div className="space-y-4">
+                  {productTypes.map((product) => (
+                    <div key={product.id} className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                      <RadioGroupItem value={product.id} id={product.id} className="mt-1" />
+                      <Label htmlFor={product.id} className="flex-1 cursor-pointer">
+                        <div className="font-semibold mb-1">{product.id}. {product.name}</div>
+                        <div className="text-sm text-muted-foreground">{product.description}</div>
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Stap 3: Upload PDF */}
+        {canShowUpload && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                  3
+                </span>
+                Upload PDF
+              </CardTitle>
+              <CardDescription>
+                Upload PDF bestanden voor test validatie
+              </CardDescription>
+            </CardHeader>
           <CardContent className="space-y-4">
             <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
             
@@ -139,8 +224,9 @@ const TestPage = () => {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Error display */}
         {errorData && (
