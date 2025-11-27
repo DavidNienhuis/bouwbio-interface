@@ -198,6 +198,24 @@ export interface VerificatieAuditData {
   };
 }
 
+export interface RedListInfo {
+  cas_rn: string;
+  ec_number: string;
+  substance_name: string;
+  red_list_chemical_group: string;
+  date_modified: string;
+  supabase_node: string;
+}
+
+export interface CASResultItem {
+  cas: string;
+  naam: string;
+  percentage: string;
+  redlist: RedListInfo | null;
+  priority: RedListInfo | null;
+  watch: RedListInfo | null;
+}
+
 export interface BouwbiologischAdviesData {
   product: {
     identificatie: {
@@ -259,6 +277,7 @@ export interface BouwbiologischAdviesData {
 }
 
 export type ValidationResponse = 
+  | { type: 'cas_results'; data: CASResultItem[] }
   | { type: 'table'; criteria: CriteriaData[] }
   | { type: 'classification'; data: ClassificationData }
   | { type: 'hea02_verdict'; data: HEA02VerdictData }
@@ -301,6 +320,17 @@ const extractValidationData = (data: any): ValidationResponse => {
     }
   }
   
+  // Detecteer CAS Results array format (hoogste prioriteit voor test omgeving)
+  if (Array.isArray(workingData) && workingData.length > 0 && 
+      workingData[0]?.cas && workingData[0]?.naam && 
+      ('redlist' in workingData[0] || 'priority' in workingData[0] || 'watch' in workingData[0])) {
+    console.log('✅ Detected CAS Results format');
+    return {
+      type: 'cas_results',
+      data: workingData as CASResultItem[]
+    };
+  }
+
   // Detecteer BouwbiologischAdviesData format (hoogste prioriteit - nieuwe format met advies)
   if (workingData?.scores && workingData?.advies && workingData?.product?.identificatie) {
     console.log('✅ Detected BouwbiologischAdviesData format');
