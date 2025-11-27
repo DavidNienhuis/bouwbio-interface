@@ -579,13 +579,21 @@ const TEST_WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/c7bf5b26-e985-41
 
 export const sendTestValidationRequest = async (
   sessionId: string,
+  certification: string,
+  productType: { id: string; name: string; description: string },
   files: File[]
 ): Promise<ValidationResponse> => {
   console.log('🧪 [TEST] Sending test validation request with', files.length, 'files');
+  console.log('🧪 [TEST] Certification:', certification);
+  console.log('🧪 [TEST] Product Type:', productType);
   console.log('🧪 [TEST] Sending request to:', TEST_WEBHOOK_URL);
   
   const formData = new FormData();
   formData.append('sessionId', sessionId);
+  formData.append('certification', certification);
+  formData.append('productTypeId', productType.id);
+  formData.append('productTypeName', productType.name);
+  formData.append('productTypeDescription', productType.description);
   
   // PDF files toevoegen
   files.forEach((file) => {
