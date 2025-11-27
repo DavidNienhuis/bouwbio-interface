@@ -11,6 +11,7 @@ import { Hea02ResultDisplay } from "@/components/Hea02ResultDisplay";
 import { DetailedProductAnalysis } from "@/components/DetailedProductAnalysis";
 import { VerificatieAuditDisplay } from "@/components/VerificatieAuditDisplay";
 import { BouwbiologischAdviesDisplay } from "@/components/BouwbiologischAdviesDisplay";
+import { CASResultsDisplay } from "@/components/CASResultsDisplay";
 import { LoadingModal } from "@/components/LoadingModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TestTube } from "lucide-react";
@@ -173,6 +174,9 @@ const TestPage = () => {
               <CardTitle>Validatie resultaten</CardTitle>
             </CardHeader>
             <CardContent>
+              {validationData.type === 'cas_results' && (
+                <CASResultsDisplay data={validationData.data} />
+              )}
               {validationData.type === 'bouwbiologisch_advies' && (
                 <BouwbiologischAdviesDisplay data={validationData.data} />
               )}

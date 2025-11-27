@@ -42,6 +42,7 @@ export type Database = {
           ec_number: string | null
           red_list_chemical_group: string | null
           substance_name: string | null
+          supabase_node: string
         }
         Insert: {
           cas_rn?: string | null
@@ -49,6 +50,7 @@ export type Database = {
           ec_number?: string | null
           red_list_chemical_group?: string | null
           substance_name?: string | null
+          supabase_node?: string
         }
         Update: {
           cas_rn?: string | null
@@ -56,6 +58,7 @@ export type Database = {
           ec_number?: string | null
           red_list_chemical_group?: string | null
           substance_name?: string | null
+          supabase_node?: string
         }
         Relationships: []
       }
@@ -65,18 +68,21 @@ export type Database = {
           date_added: string | null
           red_list_chemical_group: string | null
           substance_name: string | null
+          supabase_node: string
         }
         Insert: {
           cas_rn?: string | null
           date_added?: string | null
           red_list_chemical_group?: string | null
           substance_name?: string | null
+          supabase_node?: string
         }
         Update: {
           cas_rn?: string | null
           date_added?: string | null
           red_list_chemical_group?: string | null
           substance_name?: string | null
+          supabase_node?: string
         }
         Relationships: []
       }
@@ -86,18 +92,21 @@ export type Database = {
           date_modified: string | null
           red_list_chemical_group: string | null
           substance_name: string | null
+          supabase_node: string
         }
         Insert: {
           cas_rn?: string | null
           date_modified?: string | null
           red_list_chemical_group?: string | null
           substance_name?: string | null
+          supabase_node?: string
         }
         Update: {
           cas_rn?: string | null
           date_modified?: string | null
           red_list_chemical_group?: string | null
           substance_name?: string | null
+          supabase_node?: string
         }
         Relationships: []
       }
