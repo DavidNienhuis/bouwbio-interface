@@ -8,13 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { Navbar } from '@/components/Navbar';
 import { ValidationFooter } from '@/components/ValidationFooter';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Profile {
   id: string;
   full_name: string | null;
   company_name: string | null;
+  tour_completed: boolean | null;
 }
 
 export default function Profile() {
@@ -35,13 +36,13 @@ export default function Profile() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, company_name, tour_completed')
         .eq('id', user?.id)
         .single();
 
       if (error) throw error;
 
-      setProfile(data);
+      setProfile(data as Profile);
       setFullName(data.full_name || '');
       setCompanyName(data.company_name || '');
     } catch (error) {
@@ -72,6 +73,26 @@ export default function Profile() {
       toast.error('Kon profiel niet bijwerken');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRestartTour = async () => {
+    try {
+      await supabase
+        .from('profiles')
+        .update({ tour_completed: false })
+        .eq('id', user?.id);
+
+      toast.success('Rondleiding wordt gestart op het Dashboard');
+      navigate('/dashboard');
+      
+      // Trigger tour after navigation
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('start-guided-tour'));
+      }, 500);
+    } catch (error) {
+      console.error('Error resetting tour:', error);
+      toast.error('Kon rondleiding niet herstarten');
     }
   };
 
@@ -149,6 +170,26 @@ export default function Profile() {
                     {loading ? 'Opslaan...' : 'Profiel Opslaan'}
                   </Button>
                 </form>
+              </CardContent>
+            </Card>
+
+            {/* Tour Section */}
+            <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+              <CardHeader>
+                <CardTitle className="font-heading">Rondleiding</CardTitle>
+                <CardDescription>
+                  Bekijk de rondleiding opnieuw om de applicatie te leren kennen
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="outline" 
+                  onClick={handleRestartTour}
+                  className="gap-2"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Start Rondleiding Opnieuw
+                </Button>
               </CardContent>
             </Card>
 

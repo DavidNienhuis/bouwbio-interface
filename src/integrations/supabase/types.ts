@@ -41,6 +41,8 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          onboarding_completed: boolean | null
+          tour_completed: boolean | null
           updated_at: string | null
         }
         Insert: {
@@ -48,6 +50,8 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          onboarding_completed?: boolean | null
+          tour_completed?: boolean | null
           updated_at?: string | null
         }
         Update: {
@@ -55,6 +59,8 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          onboarding_completed?: boolean | null
+          tour_completed?: boolean | null
           updated_at?: string | null
         }
         Relationships: []
