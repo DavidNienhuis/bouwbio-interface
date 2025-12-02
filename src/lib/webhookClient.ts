@@ -1,5 +1,4 @@
-const WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/2ac96ace-b5fc-4633-91d9-368f5f0d3023';
-const SEND_WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/f4baeea1-2ab9-4141-bfdf-791b6b5877b7';
+const WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/c7bf5b26-e985-41f6-98e6-f271b1bd8719';
 
 export interface CriteriaData {
   criterium: string;
@@ -453,134 +452,6 @@ const extractValidationData = (data: any): ValidationResponse => {
   throw new Error('Invalid response format: no criteria array or classification found');
 };
 
-export const uploadPDFToWebhook = async (
-  files: File[], 
-  sessionId: string,
-  certification: string,
-  productType: { id: string; name: string; description: string }
-): Promise<void> => {
-  const formData = new FormData();
-  
-  // Voeg session ID toe als tekst veld
-  formData.append('sessionId', sessionId);
-  formData.append('certification', certification);
-  formData.append('productTypeId', productType.id);
-  formData.append('productTypeName', productType.name);
-  formData.append('productTypeDescription', productType.description);
-  
-  // Use 'file' as field name for each file (n8n webhook expects this)
-  files.forEach((file) => {
-    formData.append('file', file);
-    console.log('Appending file:', file.name, 'Size:', file.size, 'Type:', file.type);
-  });
-  
-  console.log('Session ID:', sessionId);
-  console.log('Sending request to:', WEBHOOK_URL);
-  console.log('FormData entries:', Array.from(formData.entries()).map(([key, value]) => ({
-    key,
-    valueType: value instanceof File ? 'File' : typeof value,
-    fileName: value instanceof File ? value.name : undefined,
-    fileSize: value instanceof File ? value.size : undefined,
-    value: typeof value === 'string' ? value : undefined
-  })));
-  
-  const response = await fetch(WEBHOOK_URL, {
-    method: 'POST',
-    body: formData,
-    // Don't set Content-Type header - browser will set it automatically with boundary
-  });
-  
-  console.log('Response status:', response.status, response.statusText);
-  console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Upload failed:', errorText);
-    throw new Error(`Upload failed: ${response.statusText}`);
-  }
-  
-  // Check content-type voordat we JSON parsen
-  const contentType = response.headers.get('content-type');
-  if (contentType?.includes('application/json')) {
-    const result = await response.json();
-    console.log('Upload successful, response:', result);
-  } else {
-    // Geen JSON response - dat is OK voor upload webhook
-    console.log('Upload successful (no JSON response)');
-  }
-};
-
-export const sendValidationRequest = async (
-  sessionId: string,
-  certification: string,
-  productType: { id: string; name: string; description: string },
-  files: File[]
-): Promise<ValidationResponse> => {
-  console.log('🚀 [DEBUG] Sending validation request with', files.length, 'files');
-  console.log('🚀 [DEBUG] Sending request to:', SEND_WEBHOOK_URL);
-  
-  const formData = new FormData();
-  
-  // Metadata toevoegen
-  formData.append('sessionId', sessionId);
-  formData.append('certification', certification);
-  formData.append('productTypeId', productType.id);
-  formData.append('productTypeName', productType.name);
-  formData.append('productTypeDescription', productType.description);
-  
-  // PDF files toevoegen
-  files.forEach((file) => {
-    formData.append('file', file);
-    console.log('📎 Appending file to validation:', file.name);
-  });
-  
-  const response = await fetch(SEND_WEBHOOK_URL, {
-    method: 'POST',
-    body: formData,
-  });
-  
-  console.log('📡 [DEBUG] Response status:', response.status, response.statusText);
-  console.log('📡 [DEBUG] Response headers:', Object.fromEntries(response.headers.entries()));
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('❌ [DEBUG] Send failed with status', response.status, ':', errorText);
-    throw new Error(`Send failed: ${response.statusText} - ${errorText}`);
-  }
-  
-  // Lees response text eerst om te kunnen loggen
-  const responseText = await response.text();
-  console.log('📦 [DEBUG] Raw response text:', responseText);
-  console.log('📦 [DEBUG] Response text length:', responseText.length);
-  
-  // Parse JSON
-  let rawResult;
-  try {
-    rawResult = JSON.parse(responseText);
-    console.log('✅ [DEBUG] Parsed JSON successfully');
-    console.log('📋 [DEBUG] Raw validation response:', JSON.stringify(rawResult, null, 2));
-  } catch (parseError) {
-    console.error('❌ [DEBUG] JSON parse error:', parseError);
-    console.error('❌ [DEBUG] Failed to parse text:', responseText.substring(0, 500));
-    throw new Error(`Invalid JSON response from n8n: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
-  }
-  
-  // Gebruik de helper functie om validation data te extraheren
-  try {
-    const result = extractValidationData(rawResult);
-    console.log('✅ [DEBUG] Extracted validation data successfully:', result.type);
-    console.log('📊 [DEBUG] Validation data:', JSON.stringify(result, null, 2));
-    return result;
-  } catch (extractError) {
-    console.error('❌ [DEBUG] Failed to extract validation data:', extractError);
-    console.error('❌ [DEBUG] Raw data that failed extraction:', JSON.stringify(rawResult, null, 2));
-    throw extractError;
-  }
-};
-
-// Test webhook URL voor vereenvoudigde test flow
-const TEST_WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/c7bf5b26-e985-41f6-98e6-f271b1bd8719';
-
 // Helper functie voor retry mechanisme met exponential backoff
 const fetchWithRetry = async (
   url: string,
@@ -615,16 +486,16 @@ const fetchWithRetry = async (
   throw new Error(`Request mislukt na ${maxRetries} pogingen: ${lastError?.message}`);
 };
 
-export const sendTestValidationRequest = async (
+export const sendValidationRequest = async (
   sessionId: string,
   certification: string,
   productType: { id: string; name: string; description: string },
   files: File[]
 ): Promise<ValidationResponse> => {
-  console.log('🧪 [TEST] Sending test validation request with', files.length, 'files');
-  console.log('🧪 [TEST] Certification:', certification);
-  console.log('🧪 [TEST] Product Type:', productType);
-  console.log('🧪 [TEST] Sending request to:', TEST_WEBHOOK_URL);
+  console.log('🚀 Sending validation request with', files.length, 'files');
+  console.log('🚀 Certification:', certification);
+  console.log('🚀 Product Type:', productType);
+  console.log('🚀 Sending request to:', WEBHOOK_URL);
   
   const formData = new FormData();
   formData.append('sessionId', sessionId);
@@ -636,49 +507,50 @@ export const sendTestValidationRequest = async (
   // PDF files toevoegen
   files.forEach((file) => {
     formData.append('file', file);
-    console.log('📎 [TEST] Appending file:', file.name);
+    console.log('📎 Appending file:', file.name);
   });
   
-  const response = await fetchWithRetry(TEST_WEBHOOK_URL, {
+  const response = await fetchWithRetry(WEBHOOK_URL, {
     method: 'POST',
     body: formData,
   }, 3, 2000); // 3 pogingen, 2 seconden start delay
   
-  console.log('📡 [TEST] Response status:', response.status, response.statusText);
-  console.log('📡 [TEST] Response headers:', Object.fromEntries(response.headers.entries()));
+  console.log('📡 Response status:', response.status, response.statusText);
+  console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
   
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('❌ [TEST] Send failed with status', response.status, ':', errorText);
-    throw new Error(`Test send failed: ${response.statusText} - ${errorText}`);
+    console.error('❌ Send failed with status', response.status, ':', errorText);
+    throw new Error(`Send failed: ${response.statusText} - ${errorText}`);
   }
   
   // Lees response text eerst om te kunnen loggen
   const responseText = await response.text();
-  console.log('📦 [TEST] Raw response text:', responseText);
-  console.log('📦 [TEST] Response text length:', responseText.length);
+  console.log('📦 Raw response text:', responseText);
+  console.log('📦 Response text length:', responseText.length);
   
   // Parse JSON
   let rawResult;
   try {
     rawResult = JSON.parse(responseText);
-    console.log('✅ [TEST] Parsed JSON successfully');
-    console.log('📋 [TEST] Raw validation response:', JSON.stringify(rawResult, null, 2));
+    console.log('✅ Parsed JSON successfully');
+    console.log('📋 Raw validation response:', JSON.stringify(rawResult, null, 2));
   } catch (parseError) {
-    console.error('❌ [TEST] JSON parse error:', parseError);
-    console.error('❌ [TEST] Failed to parse text:', responseText.substring(0, 500));
-    throw new Error(`Invalid JSON response from test webhook: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+    console.error('❌ JSON parse error:', parseError);
+    console.error('❌ Failed to parse text:', responseText.substring(0, 500));
+    throw new Error(`Invalid JSON response from webhook: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
   }
   
   // Gebruik de helper functie om validation data te extraheren
   try {
     const result = extractValidationData(rawResult);
-    console.log('✅ [TEST] Extracted validation data successfully:', result.type);
-    console.log('📊 [TEST] Validation data:', JSON.stringify(result, null, 2));
+    console.log('✅ Extracted validation data successfully:', result.type);
+    console.log('📊 Validation data:', JSON.stringify(result, null, 2));
     return result;
   } catch (extractError) {
-    console.error('❌ [TEST] Failed to extract validation data:', extractError);
-    console.error('❌ [TEST] Raw data that failed extraction:', JSON.stringify(rawResult, null, 2));
+    console.error('❌ Failed to extract validation data:', extractError);
+    console.error('❌ Raw data that failed extraction:', JSON.stringify(rawResult, null, 2));
     throw extractError;
   }
 };
+
