@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PDFUploadZone } from "@/components/PDFUploadZone";
-import { uploadPDFToWebhook, sendValidationRequest, ValidationResponse } from "@/lib/webhookClient";
+import { sendValidationRequest, ValidationResponse } from "@/lib/webhookClient";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ResultsTable } from "@/components/ResultsTable";
@@ -11,6 +11,7 @@ import { Hea02ResultDisplay } from "@/components/Hea02ResultDisplay";
 import { DetailedProductAnalysis } from "@/components/DetailedProductAnalysis";
 import { VerificatieAuditDisplay } from "@/components/VerificatieAuditDisplay";
 import { BouwbiologischAdviesDisplay } from "@/components/BouwbiologischAdviesDisplay";
+import { CASResultsDisplay } from "@/components/CASResultsDisplay";
 import { LoadingModal } from "@/components/LoadingModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,7 +27,7 @@ const productTypes = [
 ];
 
 const Index = () => {
-  // Genereer unieke session ID bij component mount (nieuwe ID bij elke refresh)
+  // Genereer unieke session ID bij component mount
   const [sessionId] = useState(() => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   });
@@ -44,10 +45,6 @@ const Index = () => {
     toast.info(`${files.length} bestand${files.length > 1 ? 'en' : ''} uploaden...`);
     
     try {
-      const selectedProduct = productTypes.find(p => p.id === selectedProductType);
-      if (!selectedProduct) throw new Error("Product type not found");
-      
-      await uploadPDFToWebhook(files, sessionId, selectedCertification, selectedProduct);
       setUploadedFiles(prev => [...prev, ...files]);
       toast.success("Upload gelukt!");
     } catch (error) {
@@ -61,7 +58,7 @@ const Index = () => {
   const handleSend = async () => {
     setIsSending(true);
     setErrorData(null);
-    toast.info("Validatie verzenden...");
+    toast.info("Validatie verzenden naar webhook...");
     
     try {
       const selectedProduct = productTypes.find(p => p.id === selectedProductType);
@@ -102,12 +99,6 @@ const Index = () => {
       />
       
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Test page link */}
-        <div className="flex justify-end">
-          <a href="/test" className="text-xs text-muted-foreground hover:underline flex items-center gap-1">
-            🧪 Test pagina
-          </a>
-        </div>
         {/* Stap 1: Certificeringssysteem */}
         <Card>
           <CardHeader>
@@ -182,42 +173,42 @@ const Index = () => {
                 Upload PDF
               </CardTitle>
               <CardDescription>
-                Upload uw PDF bestanden voor validatie
+                Upload PDF bestanden voor validatie
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
-              
-              {uploadedFiles.length > 0 && (
-                <div className="space-y-4">
-                  <div className="text-sm">
-                    <p className="font-semibold mb-2">Geüploade bestanden ({uploadedFiles.length}):</p>
-                    {uploadedFiles.map((file, idx) => (
-                      <div key={idx} className="flex items-center gap-2 py-1 text-muted-foreground">
-                        <span className="text-green-600">✓</span>
-                        {file.name}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleSend} 
-                      className="flex-1"
-                      disabled={isSending}
-                    >
-                      Verstuur naar validatie
-                    </Button>
-                    <Button 
-                      onClick={handleReset} 
-                      variant="outline"
-                      disabled={isSending || isUploading}
-                    >
-                      Opnieuw beginnen
-                    </Button>
-                  </div>
+          <CardContent className="space-y-4">
+            <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
+            
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-4">
+                <div className="text-sm">
+                  <p className="font-semibold mb-2">Geüploade bestanden ({uploadedFiles.length}):</p>
+                  {uploadedFiles.map((file, idx) => (
+                    <div key={idx} className="flex items-center gap-2 py-1 text-muted-foreground">
+                      <span className="text-green-600">✓</span>
+                      {file.name}
+                    </div>
+                  ))}
                 </div>
-              )}
+                
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleSend} 
+                    className="flex-1"
+                    disabled={isSending}
+                  >
+                    Verstuur naar validatie
+                  </Button>
+                  <Button 
+                    onClick={handleReset} 
+                    variant="outline"
+                    disabled={isSending || isUploading}
+                  >
+                    Opnieuw beginnen
+                  </Button>
+                </div>
+              </div>
+            )}
             </CardContent>
           </Card>
         )}
@@ -254,6 +245,9 @@ const Index = () => {
               <CardTitle>Validatie resultaten</CardTitle>
             </CardHeader>
             <CardContent>
+              {validationData.type === 'cas_results' && (
+                <CASResultsDisplay data={validationData.data} />
+              )}
               {validationData.type === 'bouwbiologisch_advies' && (
                 <BouwbiologischAdviesDisplay data={validationData.data} />
               )}
