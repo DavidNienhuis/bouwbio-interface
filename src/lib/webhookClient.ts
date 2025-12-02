@@ -240,9 +240,13 @@ export interface BouwbiologischAdviesData {
           eenheid?: string;
           bron?: string;
         }>;
-        conclusie: string;
-        toelichting: string;
-      };
+        conclusie?: string;
+        toelichting?: string;
+      } | Array<{
+        stof: string;
+        gemeten_waarde: string;
+        oordeel: string;
+      }>;
     };
     toxicologie: {
       tox_status: 'banned' | 'priority' | 'watch' | 'clean' | 'onbekend';
@@ -250,8 +254,8 @@ export interface BouwbiologischAdviesData {
       conclusie?: string;
       gecheckte_stoffen?: Array<{
         cas: string;
-        naam: string;
-        lijst: string;
+        naam?: string;
+        lijst: string | null;
         status: string;
       }>;
     };

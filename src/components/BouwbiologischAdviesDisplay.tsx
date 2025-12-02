@@ -102,8 +102,8 @@ const getStofLijstBadge = (lijst: string) => {
 const getStofStatusBadge = (status: string) => {
   if (status === 'HIT') {
     return <Badge variant="destructive" className="ml-2">🚨 HIT</Badge>;
-  } else if (status === 'OK') {
-    return <Badge className="bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200 ml-2">✓ OK</Badge>;
+  } else if (status === 'OK' || status === 'NO_HIT') {
+    return <Badge className="bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200 ml-2">✓ {status === 'NO_HIT' ? 'Geen hit' : 'OK'}</Badge>;
   }
   return <Badge variant="outline" className="ml-2">{status}</Badge>;
 };
@@ -216,52 +216,79 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
               </AccordionTrigger>
               <AccordionContent>
                 <div className="space-y-4 pt-2">
-                  {/* Conclusie Badge */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Conclusie:</span>
-                    <Badge variant="outline">{data.scores.emissies.details.conclusie}</Badge>
-                  </div>
-                  
-                  {/* Toelichting */}
-                  {data.scores.emissies.details.toelichting && (
-                    <Alert className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-                      <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      <AlertDescription className="text-sm">
-                        {data.scores.emissies.details.toelichting}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  {/* Gevonden Waarnemingen/Waarden */}
-                  {((data.scores.emissies.details.gevonden_waarnemingen && data.scores.emissies.details.gevonden_waarnemingen.length > 0) ||
-                    (data.scores.emissies.details.gevonden_waarden && data.scores.emissies.details.gevonden_waarden.length > 0)) ? (
+                  {Array.isArray(data.scores.emissies.details) ? (
+                    // Array formaat (nieuw format met stof, gemeten_waarde, oordeel)
                     <div className="space-y-2">
-                      <h4 className="text-sm font-semibold">Gevonden Emissiewaarden:</h4>
+                      <h4 className="text-sm font-semibold">Emissiewaarden:</h4>
                       <div className="space-y-2">
-                        {(data.scores.emissies.details.gevonden_waarnemingen || data.scores.emissies.details.gevonden_waarden || []).map((waarde, idx) => (
+                        {data.scores.emissies.details.map((item, idx) => (
                           <Card key={idx} className="bg-muted/30">
                             <CardContent className="p-3">
                               <div className="flex justify-between items-center">
-                                <span className="font-medium">{waarde.component || 'Onbekend'}</span>
-                                <span className="font-mono text-sm">
-                                  {waarde.waarde !== undefined ? `${waarde.waarde} ${waarde.eenheid || ''}` : 'Geen waarde'}
-                                </span>
+                                <span className="font-medium">{item.stof}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-sm">{item.gemeten_waarde}</span>
+                                  <Badge variant="outline">{item.oordeel}</Badge>
+                                </div>
                               </div>
-                              {waarde.bron && (
-                                <div className="text-xs text-muted-foreground mt-1">Bron: {waarde.bron}</div>
-                              )}
                             </CardContent>
                           </Card>
                         ))}
                       </div>
                     </div>
                   ) : (
-                    <Alert className="bg-muted/30">
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>
-                        Geen emissiewaarden gevonden
-                      </AlertDescription>
-                    </Alert>
+                    // Object formaat (origineel format)
+                    <>
+                      {/* Conclusie Badge */}
+                      {data.scores.emissies.details.conclusie && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">Conclusie:</span>
+                          <Badge variant="outline">{data.scores.emissies.details.conclusie}</Badge>
+                        </div>
+                      )}
+                      
+                      {/* Toelichting */}
+                      {data.scores.emissies.details.toelichting && (
+                        <Alert className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          <AlertDescription className="text-sm">
+                            {data.scores.emissies.details.toelichting}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      {/* Gevonden Waarnemingen/Waarden */}
+                      {((data.scores.emissies.details.gevonden_waarnemingen && data.scores.emissies.details.gevonden_waarnemingen.length > 0) ||
+                        (data.scores.emissies.details.gevonden_waarden && data.scores.emissies.details.gevonden_waarden.length > 0)) ? (
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold">Gevonden Emissiewaarden:</h4>
+                          <div className="space-y-2">
+                            {(data.scores.emissies.details.gevonden_waarnemingen || data.scores.emissies.details.gevonden_waarden || []).map((waarde, idx) => (
+                              <Card key={idx} className="bg-muted/30">
+                                <CardContent className="p-3">
+                                  <div className="flex justify-between items-center">
+                                    <span className="font-medium">{waarde.component || 'Onbekend'}</span>
+                                    <span className="font-mono text-sm">
+                                      {waarde.waarde !== undefined ? `${waarde.waarde} ${waarde.eenheid || ''}` : 'Geen waarde'}
+                                    </span>
+                                  </div>
+                                  {waarde.bron && (
+                                    <div className="text-xs text-muted-foreground mt-1">Bron: {waarde.bron}</div>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <Alert className="bg-muted/30">
+                          <Info className="h-4 w-4" />
+                          <AlertDescription>
+                            Geen emissiewaarden gevonden
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </>
                   )}
                 </div>
               </AccordionContent>
@@ -312,13 +339,15 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
                             <CardContent className="p-4">
                               <div className="flex justify-between items-start gap-3">
                                 <div className="flex-1">
-                                  <div className="font-medium">{stof.naam}</div>
-                                  <div className="text-sm text-muted-foreground mt-1">
-                                    CAS: {stof.cas}
-                                  </div>
+                                  <div className="font-medium">{stof.naam || `CAS: ${stof.cas}`}</div>
+                                  {stof.naam && (
+                                    <div className="text-sm text-muted-foreground mt-1">
+                                      CAS: {stof.cas}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
-                                  {getStofLijstBadge(stof.lijst)}
+                                  {stof.lijst ? getStofLijstBadge(stof.lijst) : <Badge variant="outline">Geen match</Badge>}
                                   {getStofStatusBadge(stof.status)}
                                 </div>
                               </div>
