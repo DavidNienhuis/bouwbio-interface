@@ -577,6 +577,40 @@ export const sendValidationRequest = async (
 // Test webhook URL voor vereenvoudigde test flow
 const TEST_WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/c7bf5b26-e985-41f6-98e6-f271b1bd8719';
 
+// Helper functie voor retry mechanisme met exponential backoff
+const fetchWithRetry = async (
+  url: string,
+  options: RequestInit,
+  maxRetries: number = 3,
+  baseDelayMs: number = 2000
+): Promise<Response> => {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🔄 Poging ${attempt}/${maxRetries}...`);
+      const response = await fetch(url, options);
+      
+      if (attempt > 1) {
+        console.log(`✅ Request succesvol na ${attempt} pogingen`);
+      }
+      
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.warn(`⚠️ Poging ${attempt} mislukt:`, lastError.message);
+      
+      if (attempt < maxRetries) {
+        const delay = baseDelayMs * Math.pow(2, attempt - 1); // Exponential backoff
+        console.log(`⏳ Wacht ${delay}ms voordat opnieuw geprobeerd wordt...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw new Error(`Request mislukt na ${maxRetries} pogingen: ${lastError?.message}`);
+};
+
 export const sendTestValidationRequest = async (
   sessionId: string,
   certification: string,
@@ -601,10 +635,10 @@ export const sendTestValidationRequest = async (
     console.log('📎 [TEST] Appending file:', file.name);
   });
   
-  const response = await fetch(TEST_WEBHOOK_URL, {
+  const response = await fetchWithRetry(TEST_WEBHOOK_URL, {
     method: 'POST',
     body: formData,
-  });
+  }, 3, 2000); // 3 pogingen, 2 seconden start delay
   
   console.log('📡 [TEST] Response status:', response.status, response.statusText);
   console.log('📡 [TEST] Response headers:', Object.fromEntries(response.headers.entries()));
