@@ -35,6 +35,44 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          created_at: string
+          description: string | null
+          ean_code: string | null
+          id: string
+          name: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ean_code?: string | null
+          id?: string
+          name: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ean_code?: string | null
+          id?: string
+          name?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company_name: string | null
@@ -62,6 +100,33 @@ export type Database = {
           onboarding_completed?: boolean | null
           tour_completed?: boolean | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -146,6 +211,7 @@ export type Database = {
           created_at: string | null
           file_names: string[] | null
           id: string
+          product_id: string | null
           product_type: Json
           result: Json | null
           session_id: string
@@ -157,6 +223,7 @@ export type Database = {
           created_at?: string | null
           file_names?: string[] | null
           id?: string
+          product_id?: string | null
           product_type: Json
           result?: Json | null
           session_id: string
@@ -168,13 +235,22 @@ export type Database = {
           created_at?: string | null
           file_names?: string[] | null
           id?: string
+          product_id?: string | null
           product_type?: Json
           result?: Json | null
           session_id?: string
           status?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "validations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

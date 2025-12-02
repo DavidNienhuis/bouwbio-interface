@@ -48,6 +48,15 @@ export function Navbar() {
                   Dashboard
                 </Link>
                 <Link 
+                  to="/projecten" 
+                  className="font-heading text-sm uppercase tracking-wider transition-colors"
+                  style={{ color: 'rgba(255, 255, 255, 0.9)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(142 64% 62%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
+                >
+                  Projecten
+                </Link>
+                <Link 
                   to="/validatie" 
                   className="font-heading text-sm uppercase tracking-wider transition-colors"
                   style={{ color: 'rgba(255, 255, 255, 0.9)' }}
