@@ -1,14 +1,77 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileCheck, User, ArrowRight } from 'lucide-react';
+import { FileCheck, User, ArrowRight, Clock, Calendar, Trash2 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { ValidationFooter } from '@/components/ValidationFooter';
+import { format } from 'date-fns';
+import { nl } from 'date-fns/locale';
+import { toast } from 'sonner';
+
+interface Validation {
+  id: string;
+  session_id: string;
+  certification: string;
+  product_type: { id: string; name: string; description: string };
+  file_names: string[];
+  status: string;
+  created_at: string;
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [validations, setValidations] = useState<Validation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchValidations();
+    }
+  }, [user]);
+
+  const fetchValidations = async () => {
+    const { data, error } = await supabase
+      .from('validations')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error('Error fetching validations:', error);
+    } else {
+      setValidations((data as unknown as Validation[]) || []);
+    }
+    setLoading(false);
+  };
+
+  const deleteValidation = async (id: string) => {
+    const { error } = await supabase
+      .from('validations')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Verwijderen mislukt');
+    } else {
+      toast.success('Validatie verwijderd');
+      setValidations(prev => prev.filter(v => v.id !== id));
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'hsl(142 64% 62%)';
+      case 'pending':
+        return 'hsl(45 93% 47%)';
+      default:
+        return 'hsl(218 14% 85%)';
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
@@ -73,29 +136,68 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* Info Section */}
+          {/* Validation History */}
           <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
             <CardHeader>
-              <CardTitle className="font-heading">Aan de slag</CardTitle>
+              <CardTitle className="font-heading flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Recente Validaties
+              </CardTitle>
+              <CardDescription>
+                Je laatste {validations.length} validaties
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h4 className="font-heading font-medium mb-2" style={{ color: 'hsl(190 16% 12%)' }}>
-                  Validatie Proces
-                </h4>
-                <p className="text-sm" style={{ color: 'hsl(218 19% 27%)' }}>
-                  1. Selecteer BREEAM HEA02 certificering<br />
-                  2. Kies je producttype<br />
-                  3. Upload je PDF documenten<br />
-                  4. Ontvang gedetailleerd validatierapport
-                </p>
-              </div>
-              <div className="pt-4">
-                <Button onClick={() => navigate('/validatie')}>
-                  Start Nieuwe Validatie
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </div>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">Laden...</div>
+              ) : validations.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">Nog geen validaties uitgevoerd</p>
+                  <Button onClick={() => navigate('/validatie')}>
+                    Start je eerste validatie
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {validations.map((validation) => (
+                    <div 
+                      key={validation.id}
+                      className="flex items-center justify-between p-4 rounded-lg"
+                      style={{ background: 'hsl(180 14% 97%)', border: '1px solid hsl(218 14% 85%)' }}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span 
+                            className="w-2 h-2 rounded-full"
+                            style={{ background: getStatusColor(validation.status) }}
+                          />
+                          <span className="font-medium font-heading">
+                            {validation.product_type?.name || 'Onbekend product'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm" style={{ color: 'hsl(218 19% 27%)' }}>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {format(new Date(validation.created_at), 'dd MMM yyyy, HH:mm', { locale: nl })}
+                          </span>
+                          <span>
+                            {validation.file_names?.length || 0} bestand(en)
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteValidation(validation.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

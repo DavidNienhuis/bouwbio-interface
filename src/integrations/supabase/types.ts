@@ -134,6 +134,42 @@ export type Database = {
         }
         Relationships: []
       }
+      validations: {
+        Row: {
+          certification: string
+          created_at: string | null
+          file_names: string[] | null
+          id: string
+          product_type: Json
+          result: Json | null
+          session_id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          certification: string
+          created_at?: string | null
+          file_names?: string[] | null
+          id?: string
+          product_type: Json
+          result?: Json | null
+          session_id: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          certification?: string
+          created_at?: string | null
+          file_names?: string[] | null
+          id?: string
+          product_type?: Json
+          result?: Json | null
+          session_id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
