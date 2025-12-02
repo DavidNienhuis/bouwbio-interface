@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PDFUploadZone } from "@/components/PDFUploadZone";
 import { sendValidationRequest, ValidationResponse } from "@/lib/webhookClient";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { VerificatieAuditDisplay } from "@/components/VerificatieAuditDisplay";
 import { BouwbiologischAdviesDisplay } from "@/components/BouwbiologischAdviesDisplay";
 import { CASResultsDisplay } from "@/components/CASResultsDisplay";
 import { LoadingModal } from "@/components/LoadingModal";
+import { ProductSelector } from "@/components/ProductSelector";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -20,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/Navbar";
 import { ValidationFooter } from "@/components/ValidationFooter";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -34,11 +35,16 @@ const productTypes = [
 
 export default function Validatie() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   
   const [sessionId] = useState(() => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   });
+  
+  // Get project/product from URL params if coming from product detail
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(searchParams.get('projectId'));
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(searchParams.get('productId'));
   
   const [selectedCertification, setSelectedCertification] = useState<string>("");
   const [selectedProductType, setSelectedProductType] = useState<string>("");
@@ -79,6 +85,7 @@ export default function Validatie() {
           file_names: uploadedFiles.map(f => f.name),
           result: result as any,
           status: status,
+          product_id: selectedProductId,
         });
     } catch (error) {
       console.error('Error saving validation:', error);
@@ -121,6 +128,8 @@ export default function Validatie() {
     setUploadedFiles([]);
     setValidationData(null);
     setErrorData(null);
+    setSelectedProjectId(null);
+    setSelectedProductId(null);
     toast.info("Sessie gereset");
   };
 
@@ -156,6 +165,14 @@ export default function Validatie() {
           </div>
 
           <div className="space-y-6">
+            {/* Stap 0: Product koppelen (optioneel) */}
+            <ProductSelector
+              selectedProjectId={selectedProjectId}
+              selectedProductId={selectedProductId}
+              onProjectChange={setSelectedProjectId}
+              onProductChange={setSelectedProductId}
+            />
+
             {/* Stap 1: Certificeringssysteem */}
             <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
               <CardHeader>

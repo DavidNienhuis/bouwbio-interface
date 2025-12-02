@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileCheck, User, ArrowRight, Clock, Calendar, Trash2 } from 'lucide-react';
+import { FileCheck, User, ArrowRight, Clock, Calendar, Trash2, FolderOpen } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { ValidationFooter } from '@/components/ValidationFooter';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
@@ -31,6 +31,12 @@ interface Profile {
 }
 
 const dashboardTourSteps = [
+  {
+    target: '[data-tour="projects"]',
+    title: 'Projecten',
+    description: 'Beheer hier je projecten en producten. Organiseer validaties per product met EAN codes.',
+    placement: 'bottom' as const,
+  },
   {
     target: '[data-tour="new-validation"]',
     title: 'Nieuwe Validatie',
@@ -180,7 +186,30 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <Card 
+              data-tour="projects"
+              className="cursor-pointer transition-all hover:shadow-lg"
+              style={{ border: '1px solid hsl(218 14% 85%)' }}
+              onClick={() => navigate('/projecten')}
+            >
+              <CardHeader>
+                <div 
+                  className="w-12 h-12 flex items-center justify-center mb-4"
+                  style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
+                >
+                  <FolderOpen className="w-6 h-6" />
+                </div>
+                <CardTitle className="font-heading flex items-center justify-between">
+                  Projecten
+                  <ArrowRight className="w-5 h-5" style={{ color: 'hsl(142 64% 62%)' }} />
+                </CardTitle>
+                <CardDescription>
+                  Beheer je projecten en producten met EAN codes
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
             <Card 
               data-tour="new-validation"
               className="cursor-pointer transition-all hover:shadow-lg"
