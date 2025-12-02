@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
+import logo from '@/assets/logo.jpeg';
 
 export function Navbar() {
   const { user, signOut } = useAuth();
@@ -18,15 +19,11 @@ export function Navbar() {
       <div className="container mx-auto px-6 py-4 max-w-7xl">
         <div className="flex items-center justify-between">
           <Link to={user ? '/dashboard' : '/'} className="flex items-center gap-3">
-            <div 
-              className="w-10 h-10 flex items-center justify-center font-heading font-bold text-lg"
-              style={{ 
-                background: 'hsl(142 64% 62%)',
-                color: 'hsl(186 100% 10%)'
-              }}
-            >
-              BB
-            </div>
+            <img 
+              src={logo} 
+              alt="Bouwbioloog logo" 
+              className="h-10 w-auto"
+            />
             <span 
               className="font-heading font-medium text-lg uppercase tracking-wider"
               style={{ color: '#FFFFFF' }}

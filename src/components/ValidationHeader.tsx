@@ -1,3 +1,5 @@
+import logo from '@/assets/logo.jpeg';
+
 export const ValidationHeader = () => {
   return (
     <header 
@@ -12,15 +14,11 @@ export const ValidationHeader = () => {
         {/* Logo */}
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div 
-              className="w-10 h-10 flex items-center justify-center"
-              style={{
-                background: 'hsl(142 64% 62%)',
-                boxShadow: '0 0 20px hsla(142 64% 62% / 0.4)'
-              }}
-            >
-              <span className="font-heading" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'hsl(186 100% 10%)' }}>BB</span>
-            </div>
+            <img 
+              src={logo} 
+              alt="Bouwbioloog logo" 
+              className="h-10 w-auto"
+            />
             <h1 
               className="text-3xl font-bold tracking-wide uppercase font-heading" 
               style={{ 
