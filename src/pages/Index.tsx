@@ -147,8 +147,8 @@ const Index = () => {
             <CardContent>
               <RadioGroup value={selectedProductType} onValueChange={setSelectedProductType}>
                 <div className="space-y-4">
-                  {productTypes.map((product) => (
-                    <div key={product.id} className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                   {productTypes.map((product) => (
+                    <div key={product.id} className="flex items-start space-x-3 p-4 border hover:bg-accent/5 transition-colors">
                       <RadioGroupItem value={product.id} id={product.id} className="mt-1" />
                       <Label htmlFor={product.id} className="flex-1 cursor-pointer">
                         <div className="font-semibold mb-1">{product.id}. {product.name}</div>
