@@ -3,22 +3,22 @@ export const ValidationFooter = () => {
     <footer 
       className="border-t mt-16"
       style={{ 
-        borderColor: 'hsl(var(--line))',
-        background: 'linear-gradient(to top, hsla(var(--panel), 0.3), transparent)'
+        borderColor: 'hsl(186 100% 10%)',
+        background: 'hsl(186 100% 10%)'
       }}
     >
       <div className="container mx-auto px-6 py-8 max-w-7xl">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-center md:text-left">
             <p 
-              className="mono font-medium text-sm" 
-              style={{ color: 'hsl(var(--ink))' }}
+              className="font-heading font-medium text-sm uppercase" 
+              style={{ color: '#FFFFFF', letterSpacing: '0.05em' }}
             >
               Bouwbioloog
             </p>
             <p 
-              className="mono text-xs mt-1" 
-              style={{ color: 'hsl(var(--muted))' }}
+              className="text-xs mt-1" 
+              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
             >
               GWK – Gezonde Woningkeur
             </p>
@@ -27,20 +27,20 @@ export const ValidationFooter = () => {
           <nav className="flex items-center gap-6 text-sm">
             <a 
               href="#" 
-              className="mono transition-colors"
-              style={{ color: 'hsl(var(--muted))' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(var(--accent))'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'hsl(var(--muted))'}
+              className="uppercase font-heading transition-colors"
+              style={{ color: 'rgba(255, 255, 255, 0.8)', letterSpacing: '0.05em' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(142 64% 62%)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'}
             >
               Privacy
             </a>
-            <span style={{ color: 'hsl(var(--line))' }}>•</span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>•</span>
             <a 
               href="#" 
-              className="mono transition-colors"
-              style={{ color: 'hsl(var(--muted))' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(var(--accent))'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'hsl(var(--muted))'}
+              className="uppercase font-heading transition-colors"
+              style={{ color: 'rgba(255, 255, 255, 0.8)', letterSpacing: '0.05em' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(142 64% 62%)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'}
             >
               Gebruiksvoorwaarden
             </a>
