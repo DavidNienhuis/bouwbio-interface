@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FileCheck, User, ArrowRight, Clock, Calendar, Trash2 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { ValidationFooter } from '@/components/ValidationFooter';
+import { OnboardingWizard } from '@/components/OnboardingWizard';
+import { GuidedTour } from '@/components/GuidedTour';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -21,17 +23,75 @@ interface Validation {
   created_at: string;
 }
 
+interface Profile {
+  full_name: string | null;
+  company_name: string | null;
+  onboarding_completed: boolean | null;
+  tour_completed: boolean | null;
+}
+
+const dashboardTourSteps = [
+  {
+    target: '[data-tour="new-validation"]',
+    title: 'Nieuwe Validatie',
+    description: 'Klik hier om een nieuwe BREEAM HEA02 validatie te starten. Upload je PDF documenten en ontvang direct een analyse.',
+    placement: 'bottom' as const,
+  },
+  {
+    target: '[data-tour="profile"]',
+    title: 'Mijn Profiel',
+    description: 'Beheer hier je account instellingen, wijzig je naam en bedrijfsinformatie.',
+    placement: 'bottom' as const,
+  },
+  {
+    target: '[data-tour="history"]',
+    title: 'Validatie Geschiedenis',
+    description: 'Hier vind je al je eerdere validaties terug. Je kunt ze bekijken of verwijderen.',
+    placement: 'top' as const,
+  },
+];
+
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [validations, setValidations] = useState<Validation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchValidations();
+      fetchProfile();
     }
   }, [user]);
+
+  // Listen for tour start event from onboarding wizard
+  useEffect(() => {
+    const handleStartTour = () => {
+      setShowTour(true);
+    };
+
+    window.addEventListener('start-guided-tour', handleStartTour);
+    return () => window.removeEventListener('start-guided-tour', handleStartTour);
+  }, []);
+
+  const fetchProfile = async () => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('full_name, company_name, onboarding_completed, tour_completed')
+      .eq('id', user?.id)
+      .single();
+
+    if (!error && data) {
+      setProfile(data as Profile);
+      // Show onboarding if not completed
+      if (!data.onboarding_completed) {
+        setShowOnboarding(true);
+      }
+    }
+  };
 
   const fetchValidations = async () => {
     const { data, error } = await supabase
@@ -73,16 +133,46 @@ export default function Dashboard() {
     }
   };
 
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    fetchProfile(); // Refresh profile to get updated state
+  };
+
+  const handleTourComplete = () => {
+    setShowTour(false);
+    fetchProfile();
+  };
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
       <Navbar />
+
+      {/* Onboarding Wizard */}
+      {user && showOnboarding && (
+        <OnboardingWizard
+          open={showOnboarding}
+          onComplete={handleOnboardingComplete}
+          userId={user.id}
+          initialName={profile?.full_name || ''}
+          initialCompany={profile?.company_name || ''}
+        />
+      )}
+
+      {/* Guided Tour */}
+      {user && showTour && (
+        <GuidedTour
+          userId={user.id}
+          onComplete={handleTourComplete}
+          steps={dashboardTourSteps}
+        />
+      )}
 
       <div className="flex-1 py-12 px-6">
         <div className="container mx-auto max-w-7xl">
           {/* Welcome Header */}
           <div className="mb-12">
             <h1 className="font-heading font-medium text-4xl mb-2" style={{ color: 'hsl(190 16% 12%)' }}>
-              Welkom terug
+              Welkom terug{profile?.full_name ? `, ${profile.full_name}` : ''}
             </h1>
             <p className="text-lg" style={{ color: 'hsl(218 19% 27%)' }}>
               {user?.email}
@@ -92,6 +182,7 @@ export default function Dashboard() {
           {/* Quick Actions */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             <Card 
+              data-tour="new-validation"
               className="cursor-pointer transition-all hover:shadow-lg"
               style={{ border: '1px solid hsl(218 14% 85%)' }}
               onClick={() => navigate('/validatie')}
@@ -114,6 +205,7 @@ export default function Dashboard() {
             </Card>
 
             <Card 
+              data-tour="profile"
               className="cursor-pointer transition-all hover:shadow-lg"
               style={{ border: '1px solid hsl(218 14% 85%)' }}
               onClick={() => navigate('/profiel')}
@@ -137,7 +229,7 @@ export default function Dashboard() {
           </div>
 
           {/* Validation History */}
-          <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+          <Card data-tour="history" style={{ border: '1px solid hsl(218 14% 85%)' }}>
             <CardHeader>
               <CardTitle className="font-heading flex items-center gap-2">
                 <Clock className="w-5 h-5" />
