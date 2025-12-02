@@ -26,7 +26,7 @@ export const ValidationFooter = () => {
           
           <nav className="flex items-center gap-6 text-sm">
             <a 
-              href="#" 
+              href="/privacy" 
               className="uppercase font-heading transition-colors"
               style={{ color: 'rgba(255, 255, 255, 0.8)', letterSpacing: '0.05em' }}
               onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(142 64% 62%)'}
@@ -36,13 +36,13 @@ export const ValidationFooter = () => {
             </a>
             <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>•</span>
             <a 
-              href="#" 
+              href="/voorwaarden" 
               className="uppercase font-heading transition-colors"
               style={{ color: 'rgba(255, 255, 255, 0.8)', letterSpacing: '0.05em' }}
               onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(142 64% 62%)'}
               onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'}
             >
-              Gebruiksvoorwaarden
+              Voorwaarden
             </a>
           </nav>
         </div>
