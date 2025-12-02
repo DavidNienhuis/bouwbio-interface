@@ -21,6 +21,8 @@ import { Navbar } from "@/components/Navbar";
 import { ValidationFooter } from "@/components/ValidationFooter";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const productTypes = [
   { id: "1", name: "Binnenverf en vernissen", description: "Binnenverf en vernissen" },
@@ -32,6 +34,7 @@ const productTypes = [
 
 export default function Validatie() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [sessionId] = useState(() => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -60,6 +63,28 @@ export default function Validatie() {
     }
   };
 
+  const saveValidation = async (result: ValidationResponse | null, status: string) => {
+    if (!user) return;
+
+    const selectedProduct = productTypes.find(p => p.id === selectedProductType);
+    
+    try {
+      await supabase
+        .from('validations')
+        .insert({
+          user_id: user.id,
+          session_id: sessionId,
+          certification: selectedCertification,
+          product_type: selectedProduct as any,
+          file_names: uploadedFiles.map(f => f.name),
+          result: result as any,
+          status: status,
+        });
+    } catch (error) {
+      console.error('Error saving validation:', error);
+    }
+  };
+
   const handleSend = async () => {
     setIsSending(true);
     setErrorData(null);
@@ -73,6 +98,9 @@ export default function Validatie() {
       setValidationData(response);
       setErrorData(null);
       toast.success("Validatie ontvangen!");
+      
+      // Save to database
+      await saveValidation(response, 'completed');
     } catch (error) {
       console.error("❌ [UI] Send error:", error);
       const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
@@ -81,6 +109,9 @@ export default function Validatie() {
         rawResponse: (error as any).rawResponse
       });
       toast.error("Verzenden mislukt - check console voor details");
+      
+      // Save failed validation
+      await saveValidation(null, 'failed');
     } finally {
       setIsSending(false);
     }
