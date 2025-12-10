@@ -1,5 +1,15 @@
 const WEBHOOK_URL = 'https://n8n-zztf.onrender.com/webhook/c7bf5b26-e985-41f6-98e6-f271b1bd8719';
 
+// BronReference type voor geciteerde bronnen met pagina en citaat
+export interface BronReference {
+  bestand: string;
+  pagina?: number;
+  citaat?: string;
+}
+
+// Bron kan string of object zijn (backward compatible)
+export type Bron = string | BronReference;
+
 export interface CriteriaData {
   criterium: string;
   status: string;
