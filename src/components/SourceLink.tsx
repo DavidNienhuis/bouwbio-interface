@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { FileText, ExternalLink, Loader2 } from "lucide-react";
+import { FileText, ExternalLink, Loader2, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getSignedUrl, findStoredFileByName, StoredFile } from "@/lib/storageClient";
-import { toast } from "sonner";
+import { findStoredFileByName, StoredFile } from "@/lib/storageClient";
+import { PDFViewerModal } from "@/components/PDFViewerModal";
+import type { Bron, BronReference } from "@/lib/webhookClient";
 
 interface SourceLinkProps {
-  /** De bron tekst (bijv. "Productblad.pdf" of "Productblad.pdf, pagina 3") */
-  bron: string;
+  /** De bron tekst (string) of object met bestand, pagina en citaat */
+  bron: Bron;
   /** Array van opgeslagen bestanden van deze validatie */
   sourceFiles?: StoredFile[];
   /** Optionele className voor styling */
@@ -15,58 +16,60 @@ interface SourceLinkProps {
   variant?: "link" | "badge" | "text";
 }
 
+// Helper om bron te parsen naar unified format
+const parseBron = (bron: Bron): { filename: string; page?: number; citaat?: string } => {
+  // Object format (nieuw)
+  if (typeof bron === 'object' && bron !== null) {
+    return {
+      filename: bron.bestand,
+      page: bron.pagina,
+      citaat: bron.citaat
+    };
+  }
+  
+  // String format (legacy) - parse "filename, pagina X" of "filename (pagina X)"
+  const bronText = String(bron);
+  const pageMatch = bronText.match(/(.+?)(?:,?\s*pagina\s*(\d+)|(?:\s*\(pagina\s*(\d+)\)))?$/i);
+  
+  if (pageMatch) {
+    const filename = pageMatch[1].trim();
+    const page = pageMatch[2] || pageMatch[3];
+    return {
+      filename,
+      page: page ? parseInt(page, 10) : undefined
+    };
+  }
+  
+  return { filename: bronText.trim() };
+};
+
+// Helper om display tekst te maken
+const getDisplayText = (filename: string, page?: number, citaat?: string): string => {
+  let text = `Bron: ${filename}`;
+  if (page) {
+    text += `, pagina ${page}`;
+  }
+  return text;
+};
+
 export const SourceLink = ({ 
   bron, 
   sourceFiles = [], 
   className = "",
   variant = "text"
 }: SourceLinkProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Parse de bron tekst om filename en eventueel paginanummer te extraheren
-  const parseBron = (bronText: string): { filename: string; page?: number } => {
-    // Check voor "filename, pagina X" of "filename (pagina X)" formaat
-    const pageMatch = bronText.match(/(.+?)(?:,?\s*pagina\s*(\d+)|(?:\s*\(pagina\s*(\d+)\)))?$/i);
-    
-    if (pageMatch) {
-      const filename = pageMatch[1].trim();
-      const page = pageMatch[2] || pageMatch[3];
-      return {
-        filename,
-        page: page ? parseInt(page, 10) : undefined
-      };
-    }
-    
-    return { filename: bronText.trim() };
-  };
-  
-  const { filename, page } = parseBron(bron);
+  const { filename, page, citaat } = parseBron(bron);
   const storedFile = findStoredFileByName(sourceFiles, filename);
   const isClickable = !!storedFile;
+  const displayText = getDisplayText(filename, page, citaat);
   
-  const handleClick = async () => {
+  const handleClick = () => {
     if (!storedFile) {
-      toast.error("Bronbestand niet gevonden in opslag");
       return;
     }
-    
-    setIsLoading(true);
-    
-    try {
-      // Verkrijg een signed URL (geldig voor 1 uur)
-      const signedUrl = await getSignedUrl(storedFile.storage_path);
-      
-      // Open de PDF in een nieuw tabblad
-      // Als er een paginanummer is, voeg dat toe aan de URL (PDF viewers ondersteunen #page=X)
-      const finalUrl = page ? `${signedUrl}#page=${page}` : signedUrl;
-      window.open(finalUrl, '_blank', 'noopener,noreferrer');
-      
-    } catch (error) {
-      console.error('Error opening PDF:', error);
-      toast.error("Kon PDF niet openen");
-    } finally {
-      setIsLoading(false);
-    }
+    setIsModalOpen(true);
   };
   
   // Text variant (inline)
@@ -74,66 +77,90 @@ export const SourceLink = ({
     if (!isClickable) {
       return (
         <span className={`text-xs text-muted-foreground ${className}`}>
-          Bron: {bron}
+          {displayText}
         </span>
       );
     }
     
     return (
-      <button
-        onClick={handleClick}
-        disabled={isLoading}
-        className={`text-xs text-primary hover:underline inline-flex items-center gap-1 cursor-pointer disabled:opacity-50 ${className}`}
-      >
-        {isLoading ? (
-          <Loader2 className="w-3 h-3 animate-spin" />
-        ) : (
+      <>
+        <button
+          onClick={handleClick}
+          className={`text-xs text-primary hover:underline inline-flex items-center gap-1 cursor-pointer ${className}`}
+        >
           <FileText className="w-3 h-3" />
-        )}
-        Bron: {bron}
-        <ExternalLink className="w-3 h-3" />
-      </button>
+          {displayText}
+          {citaat && <Quote className="w-3 h-3 text-muted-foreground" />}
+          <ExternalLink className="w-3 h-3" />
+        </button>
+        
+        <PDFViewerModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          storedFile={storedFile}
+          initialPage={page || 1}
+          citaat={citaat}
+        />
+      </>
     );
   }
   
   // Badge variant
   if (variant === "badge") {
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleClick}
-        disabled={!isClickable || isLoading}
-        className={`h-6 text-xs gap-1 ${className}`}
-      >
-        {isLoading ? (
-          <Loader2 className="w-3 h-3 animate-spin" />
-        ) : (
+      <>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleClick}
+          disabled={!isClickable}
+          className={`h-6 text-xs gap-1 ${className}`}
+        >
           <FileText className="w-3 h-3" />
+          {filename}
+          {page && <span className="text-muted-foreground">(p.{page})</span>}
+          {citaat && <Quote className="w-3 h-3 text-muted-foreground" />}
+          {isClickable && <ExternalLink className="w-3 h-3" />}
+        </Button>
+        
+        {isClickable && (
+          <PDFViewerModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            storedFile={storedFile}
+            initialPage={page || 1}
+            citaat={citaat}
+          />
         )}
-        {filename}
-        {page && <span className="text-muted-foreground">(p.{page})</span>}
-        {isClickable && <ExternalLink className="w-3 h-3" />}
-      </Button>
+      </>
     );
   }
   
   // Link variant
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={handleClick}
-      disabled={!isClickable || isLoading}
-      className={`p-0 h-auto font-normal text-primary hover:underline ${className}`}
-    >
-      {isLoading ? (
-        <Loader2 className="w-3 h-3 animate-spin mr-1" />
-      ) : (
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleClick}
+        disabled={!isClickable}
+        className={`p-0 h-auto font-normal text-primary hover:underline ${className}`}
+      >
         <FileText className="w-3 h-3 mr-1" />
+        {typeof bron === 'string' ? bron : `${filename}${page ? `, pagina ${page}` : ''}`}
+        {citaat && <Quote className="w-3 h-3 ml-1 text-muted-foreground" />}
+        {isClickable && <ExternalLink className="w-3 h-3 ml-1" />}
+      </Button>
+      
+      {isClickable && (
+        <PDFViewerModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          storedFile={storedFile}
+          initialPage={page || 1}
+          citaat={citaat}
+        />
       )}
-      {bron}
-      {isClickable && <ExternalLink className="w-3 h-3 ml-1" />}
-    </Button>
+    </>
   );
 };
