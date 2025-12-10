@@ -83,37 +83,65 @@ export const PDFViewerModal = ({
     // Normalize search text
     const searchText = citaat.toLowerCase().replace(/\s+/g, ' ').trim();
     
-    // Build full text from spans to find the citaat
+    // Build full text with proper position mapping between normalized and original text
     let fullText = '';
-    const spanPositions: { span: Element; start: number; end: number }[] = [];
+    let normalizedText = '';
+    const charMap: number[] = []; // Maps normalized position -> original position
     
     textSpans.forEach((span) => {
-      const start = fullText.length;
       const text = span.textContent || '';
-      fullText += text;
-      spanPositions.push({ span, start, end: fullText.length });
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const normalizedChar = char.toLowerCase();
+        
+        // For whitespace: collapse multiple spaces in normalized version
+        if (/\s/.test(char)) {
+          if (!normalizedText.endsWith(' ') && normalizedText.length > 0) {
+            charMap.push(fullText.length);
+            normalizedText += ' ';
+          }
+          fullText += char;
+        } else {
+          charMap.push(fullText.length);
+          normalizedText += normalizedChar;
+          fullText += char;
+        }
+      }
     });
     
-    const normalizedFullText = fullText.toLowerCase().replace(/\s+/g, ' ');
-    const citaatIndex = normalizedFullText.indexOf(searchText);
+    // Find citaat in normalized text
+    const citaatIndex = normalizedText.indexOf(searchText);
     
     if (citaatIndex !== -1) {
-      // Find which spans contain the citaat
-      const citaatEnd = citaatIndex + searchText.length;
+      // Map normalized positions back to original positions
+      const originalStart = charMap[citaatIndex] ?? 0;
+      const citaatEndIndex = Math.min(citaatIndex + searchText.length - 1, charMap.length - 1);
+      const originalEnd = (charMap[citaatEndIndex] ?? fullText.length - 1) + 1;
       
-      spanPositions.forEach(({ span, start, end }) => {
-        // Check if this span overlaps with the citaat
-        if (start < citaatEnd && end > citaatIndex) {
+      // Track current position in original text and highlight matching spans
+      let currentPos = 0;
+      let firstHighlighted = false;
+      
+      textSpans.forEach((span) => {
+        const spanText = span.textContent || '';
+        const spanStart = currentPos;
+        const spanEnd = currentPos + spanText.length;
+        
+        // Check if this span overlaps with the citaat in original text
+        if (spanStart < originalEnd && spanEnd > originalStart) {
           (span as HTMLElement).classList.add('pdf-highlight');
           found = true;
           
           // Scroll to first highlighted element
-          if (start <= citaatIndex) {
+          if (!firstHighlighted) {
+            firstHighlighted = true;
             setTimeout(() => {
               (span as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 100);
           }
         }
+        
+        currentPos = spanEnd;
       });
     }
     
@@ -121,6 +149,8 @@ export const PDFViewerModal = ({
     
     if (!found && citaat) {
       console.warn('Citaat niet gevonden in PDF tekst:', citaat);
+      console.debug('Gezocht (normalized):', searchText);
+      console.debug('Beschikbare tekst (eerste 300 chars):', normalizedText.substring(0, 300));
     }
   }, [citaat]);
 
@@ -307,9 +337,15 @@ export const PDFViewerModal = ({
       {/* CSS for highlighting */}
       <style>{`
         .pdf-highlight {
-          background-color: hsl(var(--chart-4) / 0.5) !important;
+          background-color: #fef08a !important;
           border-radius: 2px;
-          box-shadow: 0 0 0 2px hsl(var(--chart-4) / 0.3);
+          box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.4);
+          animation: highlight-pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes highlight-pulse {
+          0%, 100% { background-color: #fef08a; }
+          50% { background-color: #fde047; }
         }
       `}</style>
     </Dialog>
