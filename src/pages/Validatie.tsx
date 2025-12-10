@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PDFUploadZone } from "@/components/PDFUploadZone";
 import { sendValidationRequest, ValidationResponse } from "@/lib/webhookClient";
 import { toast } from "sonner";
@@ -14,13 +14,14 @@ import { BouwbiologischAdviesDisplay } from "@/components/BouwbiologischAdviesDi
 import { CASResultsDisplay } from "@/components/CASResultsDisplay";
 import { LoadingModal } from "@/components/LoadingModal";
 import { ProductSelector } from "@/components/ProductSelector";
+import { StepIndicator } from "@/components/StepIndicator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/Navbar";
 import { ValidationFooter } from "@/components/ValidationFooter";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw, CheckCircle2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,16 +34,24 @@ const productTypes = [
   { id: "5", name: "Lijmen en kitten", description: "Lijmen en kitten, inclusief vloerlijmen." },
 ];
 
+const steps = [
+  { id: 1, label: "Setup" },
+  { id: 2, label: "Productgroep" },
+  { id: 3, label: "Upload" },
+  { id: 4, label: "Resultaten" },
+];
+
 export default function Validatie() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   
+  const [currentStep, setCurrentStep] = useState(1);
+  
   const [sessionId] = useState(() => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   });
   
-  // Get project/product from URL params if coming from product detail
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(searchParams.get('projectId'));
   const [selectedProductId, setSelectedProductId] = useState<string | null>(searchParams.get('productId'));
   
@@ -105,8 +114,8 @@ export default function Validatie() {
       setValidationData(response);
       setErrorData(null);
       toast.success("Validatie ontvangen!");
+      setCurrentStep(4); // Go to results
       
-      // Save to database
       await saveValidation(response, 'completed');
     } catch (error) {
       console.error("❌ [UI] Send error:", error);
@@ -116,8 +125,8 @@ export default function Validatie() {
         rawResponse: (error as any).rawResponse
       });
       toast.error("Verzenden mislukt - check console voor details");
+      setCurrentStep(4); // Also go to results to show error
       
-      // Save failed validation
       await saveValidation(null, 'failed');
     } finally {
       setIsSending(false);
@@ -130,177 +139,62 @@ export default function Validatie() {
     setErrorData(null);
     setSelectedProjectId(null);
     setSelectedProductId(null);
+    setSelectedCertification("");
+    setSelectedProductType("");
+    setCurrentStep(1);
     toast.info("Sessie gereset");
   };
 
-  const canShowUpload = selectedCertification === "BREEAM_HEA02" && selectedProductType !== "";
+  const canGoToStep2 = selectedCertification === "BREEAM_HEA02";
+  const canGoToStep3 = canGoToStep2 && selectedProductType !== "";
+  const canSend = canGoToStep3 && uploadedFiles.length > 0;
 
-  return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
-      <Navbar />
-      
-      <LoadingModal 
-        isOpen={isSending} 
-        message="Validatie uitvoeren..."
-        estimatedTime={60}
-      />
-      
-      <div className="flex-1 py-12 px-6">
-        <div className="container mx-auto max-w-4xl">
-          <div className="mb-8">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/dashboard')}
-              className="mb-4 gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Terug naar Dashboard
-            </Button>
-            <h1 className="font-heading font-medium text-4xl" style={{ color: 'hsl(190 16% 12%)' }}>
-              Validatie Tool
-            </h1>
-            <p className="text-lg mt-2" style={{ color: 'hsl(218 19% 27%)' }}>
-              BREEAM HEA02 Validatie met PDF Upload
-            </p>
-          </div>
+  const handleNextStep = () => {
+    if (currentStep === 1 && canGoToStep2) {
+      setCurrentStep(2);
+    } else if (currentStep === 2 && canGoToStep3) {
+      setCurrentStep(3);
+    }
+  };
 
-          <div className="space-y-6">
-            {/* Stap 0: Product koppelen (optioneel) */}
-            <ProductSelector
-              selectedProjectId={selectedProjectId}
-              selectedProductId={selectedProductId}
-              onProjectChange={setSelectedProjectId}
-              onProductChange={setSelectedProductId}
-            />
+  const handlePreviousStep = () => {
+    if (currentStep > 1 && currentStep < 4) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
-            {/* Stap 1: Certificeringssysteem */}
-            <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-heading">
-                  <span 
-                    className="flex items-center justify-center w-8 h-8 text-sm font-bold"
-                    style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-                  >
-                    1
-                  </span>
-                  Kies certificeringssysteem
-                </CardTitle>
-                <CardDescription>
-                  Selecteer het certificeringssysteem waarmee u wilt valideren
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Select value={selectedCertification} onValueChange={setSelectedCertification}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecteer certificeringssysteem..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="BREEAM_HEA02">BREEAM HEA02</SelectItem>
-                    <SelectItem value="EU_TAXONOMY" disabled>
-                      EU Taxonomy 🔒 (Binnenkort beschikbaar)
-                    </SelectItem>
-                    <SelectItem value="WELL" disabled>
-                      WELL 🔒 (Binnenkort beschikbaar)
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
+  const handleStepClick = (step: number) => {
+    if (step < currentStep && currentStep !== 4) {
+      setCurrentStep(step);
+    }
+  };
 
-            {/* Stap 2: Productgroep */}
-            {selectedCertification === "BREEAM_HEA02" && (
-              <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 font-heading">
-                    <span 
-                      className="flex items-center justify-center w-8 h-8 text-sm font-bold"
-                      style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-                    >
-                      2
-                    </span>
-                    Kies productgroep
-                  </CardTitle>
-                  <CardDescription>
-                    Selecteer de productgroep die van toepassing is
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RadioGroup value={selectedProductType} onValueChange={setSelectedProductType}>
-                    <div className="space-y-4">
-                       {productTypes.map((product) => (
-                        <div 
-                          key={product.id} 
-                          className="flex items-start space-x-3 p-4 transition-colors"
-                          style={{ border: '1px solid hsl(218 14% 85%)' }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(142 64% 62% / 0.05)'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                        >
-                          <RadioGroupItem value={product.id} id={product.id} className="mt-1" />
-                          <Label htmlFor={product.id} className="flex-1 cursor-pointer">
-                            <div className="font-semibold mb-1 font-heading">{product.id}. {product.name}</div>
-                            <div className="text-sm" style={{ color: 'hsl(218 19% 27%)' }}>{product.description}</div>
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </RadioGroup>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Stap 3: Upload PDF */}
-            {canShowUpload && (
-              <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 font-heading">
-                    <span 
-                      className="flex items-center justify-center w-8 h-8 text-sm font-bold"
-                      style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-                    >
-                      3
-                    </span>
-                    Upload PDF
-                  </CardTitle>
-                  <CardDescription>
-                    Upload PDF bestanden voor validatie
-                  </CardDescription>
-                </CardHeader>
-              <CardContent className="space-y-4">
-                <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
-                
-                {uploadedFiles.length > 0 && (
-                  <div className="space-y-4">
-                    <div className="text-sm">
-                      <p className="font-semibold mb-2">Geüploade bestanden ({uploadedFiles.length}):</p>
-                      {uploadedFiles.map((file, idx) => (
-                        <div key={idx} className="flex items-center gap-2 py-1" style={{ color: 'hsl(218 19% 27%)' }}>
-                          <span style={{ color: 'hsl(142 64% 62%)' }}>✓</span>
-                          {file.name}
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={handleSend} 
-                        className="flex-1"
-                        disabled={isSending}
-                      >
-                        Verstuur naar validatie
-                      </Button>
-                      <Button 
-                        onClick={handleReset} 
-                        variant="outline"
-                        disabled={isSending || isUploading}
-                      >
-                        Opnieuw beginnen
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                </CardContent>
-              </Card>
-            )}
+  // Results View (Step 4)
+  if (currentStep === 4) {
+    return (
+      <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
+        <Navbar />
+        
+        <div className="flex-1 py-12 px-6">
+          <div className="container mx-auto max-w-4xl">
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h1 className="font-heading font-medium text-4xl" style={{ color: 'hsl(190 16% 12%)' }}>
+                  {validationData ? "Validatie Resultaten" : "Validatie Mislukt"}
+                </h1>
+                <p className="text-lg mt-2" style={{ color: 'hsl(218 19% 27%)' }}>
+                  {validationData ? "Bekijk hieronder de resultaten van uw validatie" : "Er is een fout opgetreden"}
+                </p>
+              </div>
+              <Button 
+                onClick={handleReset}
+                className="gap-2"
+                style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
+              >
+                <RotateCcw className="w-4 h-4" />
+                Nieuwe validatie
+              </Button>
+            </div>
 
             {/* Error display */}
             {errorData && (
@@ -328,7 +222,10 @@ export default function Validatie() {
             {validationData && (
               <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
                 <CardHeader>
-                  <CardTitle className="font-heading">Validatie resultaten</CardTitle>
+                  <CardTitle className="font-heading flex items-center gap-2">
+                    <CheckCircle2 className="w-6 h-6" style={{ color: 'hsl(142 64% 62%)' }} />
+                    Validatie Resultaten
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {validationData.type === 'cas_results' && (
@@ -362,6 +259,202 @@ export default function Validatie() {
               </Card>
             )}
           </div>
+        </div>
+
+        <ValidationFooter />
+      </div>
+    );
+  }
+
+  // Wizard View (Steps 1-3)
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
+      <Navbar />
+      
+      <LoadingModal 
+        isOpen={isSending} 
+        message="Validatie uitvoeren..."
+        estimatedTime={60}
+      />
+      
+      <div className="flex-1 py-12 px-6">
+        <div className="container mx-auto max-w-4xl">
+          <div className="mb-8">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/dashboard')}
+              className="mb-4 gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Terug naar Dashboard
+            </Button>
+            <h1 className="font-heading font-medium text-4xl" style={{ color: 'hsl(190 16% 12%)' }}>
+              Validatie Tool
+            </h1>
+            <p className="text-lg mt-2" style={{ color: 'hsl(218 19% 27%)' }}>
+              BREEAM HEA02 Validatie met PDF Upload
+            </p>
+          </div>
+
+          {/* Step Indicator */}
+          <StepIndicator 
+            steps={steps} 
+            currentStep={currentStep} 
+            onStepClick={handleStepClick}
+          />
+
+          {/* Step 1: Setup */}
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              <ProductSelector
+                selectedProjectId={selectedProjectId}
+                selectedProductId={selectedProductId}
+                onProjectChange={setSelectedProjectId}
+                onProductChange={setSelectedProductId}
+              />
+
+              <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+                <CardHeader>
+                  <CardTitle className="font-heading">Kies certificeringssysteem</CardTitle>
+                  <CardDescription>
+                    Selecteer het certificeringssysteem waarmee u wilt valideren
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Select value={selectedCertification} onValueChange={setSelectedCertification}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecteer certificeringssysteem..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BREEAM_HEA02">BREEAM HEA02</SelectItem>
+                      <SelectItem value="EU_TAXONOMY" disabled>
+                        EU Taxonomy 🔒 (Binnenkort beschikbaar)
+                      </SelectItem>
+                      <SelectItem value="WELL" disabled>
+                        WELL 🔒 (Binnenkort beschikbaar)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end">
+                <Button 
+                  onClick={handleNextStep}
+                  disabled={!canGoToStep2}
+                  className="gap-2"
+                  style={{ background: canGoToStep2 ? 'hsl(142 64% 62%)' : undefined, color: canGoToStep2 ? 'hsl(186 100% 10%)' : undefined }}
+                >
+                  Volgende
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Product Type */}
+          {currentStep === 2 && (
+            <div className="space-y-6">
+              <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+                <CardHeader>
+                  <CardTitle className="font-heading">Kies productgroep</CardTitle>
+                  <CardDescription>
+                    Selecteer de productgroep die van toepassing is
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RadioGroup value={selectedProductType} onValueChange={setSelectedProductType}>
+                    <div className="space-y-4">
+                      {productTypes.map((product) => (
+                        <div 
+                          key={product.id} 
+                          className="flex items-start space-x-3 p-4 transition-colors cursor-pointer"
+                          style={{ border: '1px solid hsl(218 14% 85%)' }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(142 64% 62% / 0.05)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <RadioGroupItem value={product.id} id={product.id} className="mt-1" />
+                          <Label htmlFor={product.id} className="flex-1 cursor-pointer">
+                            <div className="font-semibold mb-1 font-heading">{product.id}. {product.name}</div>
+                            <div className="text-sm" style={{ color: 'hsl(218 19% 27%)' }}>{product.description}</div>
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </RadioGroup>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-between">
+                <Button 
+                  variant="outline"
+                  onClick={handlePreviousStep}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Vorige
+                </Button>
+                <Button 
+                  onClick={handleNextStep}
+                  disabled={!canGoToStep3}
+                  className="gap-2"
+                  style={{ background: canGoToStep3 ? 'hsl(142 64% 62%)' : undefined, color: canGoToStep3 ? 'hsl(186 100% 10%)' : undefined }}
+                >
+                  Volgende
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Upload */}
+          {currentStep === 3 && (
+            <div className="space-y-6">
+              <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+                <CardHeader>
+                  <CardTitle className="font-heading">Upload PDF</CardTitle>
+                  <CardDescription>
+                    Upload PDF bestanden voor validatie
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <PDFUploadZone onUpload={handleUpload} isUploading={isUploading} />
+                  
+                  {uploadedFiles.length > 0 && (
+                    <div className="text-sm">
+                      <p className="font-semibold mb-2">Geüploade bestanden ({uploadedFiles.length}):</p>
+                      {uploadedFiles.map((file, idx) => (
+                        <div key={idx} className="flex items-center gap-2 py-1" style={{ color: 'hsl(218 19% 27%)' }}>
+                          <span style={{ color: 'hsl(142 64% 62%)' }}>✓</span>
+                          {file.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-between">
+                <Button 
+                  variant="outline"
+                  onClick={handlePreviousStep}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Vorige
+                </Button>
+                <Button 
+                  onClick={handleSend}
+                  disabled={!canSend || isSending}
+                  className="gap-2"
+                  style={{ background: canSend ? 'hsl(142 64% 62%)' : undefined, color: canSend ? 'hsl(186 100% 10%)' : undefined }}
+                >
+                  Verstuur validatie
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
