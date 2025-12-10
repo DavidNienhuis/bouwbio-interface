@@ -199,6 +199,11 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
               <Badge variant="outline">{data.product.identificatie.norm}</Badge>
             </div>
           )}
+          {data.product.identificatie.bron && (
+            <div className="mt-2 pt-2 border-t">
+              <SourceLink bron={data.product.identificatie.bron} sourceFiles={sourceFiles} />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -221,7 +226,7 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
               <AccordionContent>
                 <div className="space-y-4 pt-2">
                   {Array.isArray(data.scores.emissies.details) ? (
-                    // Array formaat (nieuw format met stof, gemeten_waarde, oordeel)
+                    // Array formaat (nieuw format met stof, gemeten_waarde, grenswaarde, oordeel, bron)
                     <div className="space-y-2">
                       <h4 className="text-sm font-semibold">Emissiewaarden:</h4>
                       <div className="space-y-2">
@@ -231,10 +236,20 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
                               <div className="flex justify-between items-center">
                                 <span className="font-medium">{item.stof}</span>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-mono text-sm">{item.gemeten_waarde}</span>
+                                  <span className="font-mono text-sm">
+                                    {item.gemeten_waarde}
+                                    {item.grenswaarde && (
+                                      <span className="text-muted-foreground"> / {item.grenswaarde}</span>
+                                    )}
+                                  </span>
                                   <Badge variant="outline">{item.oordeel}</Badge>
                                 </div>
                               </div>
+                              {item.bron && (
+                                <div className="mt-2 pt-2 border-t border-border/50">
+                                  <SourceLink bron={item.bron} sourceFiles={sourceFiles} />
+                                </div>
+                              )}
                             </CardContent>
                           </Card>
                         ))}
@@ -357,6 +372,11 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
                                   {getStofStatusBadge(stof.status)}
                                 </div>
                               </div>
+                              {stof.bron && (
+                                <div className="mt-2 pt-2 border-t border-border/50">
+                                  <SourceLink bron={stof.bron} sourceFiles={sourceFiles} />
+                                </div>
+                              )}
                             </CardContent>
                           </Card>
                         ))}
@@ -404,21 +424,36 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
                             <div className="flex justify-between items-start gap-3">
                               <div className="flex items-start gap-2">
                                 <Award className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                                <h4 className="font-semibold text-lg">{cert.naam}</h4>
+                                <h4 className="font-semibold text-lg">{cert.gevonden_term || cert.naam}</h4>
                               </div>
-                              {cert.status_gn22_general && (
-                                <Badge 
-                                  variant={cert.status_gn22_general === 'Ja' ? 'default' : 'secondary'}
-                                  className={cert.status_gn22_general === 'Ja' 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200' 
-                                    : ''}
-                                >
-                                  GN22: {cert.status_gn22_general}
-                                </Badge>
-                              )}
+                              <div className="flex items-center gap-2">
+                                {cert.type_claim && (
+                                  <Badge variant="outline">{cert.type_claim}</Badge>
+                                )}
+                                {(cert.status_gn22 || cert.status_gn22_general) && (
+                                  <Badge 
+                                    variant={(cert.status_gn22 === 'ERKEND' || cert.status_gn22_general === 'Ja') ? 'default' : 'secondary'}
+                                    className={(cert.status_gn22 === 'ERKEND' || cert.status_gn22_general === 'Ja') 
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200' 
+                                      : ''}
+                                  >
+                                    {cert.status_gn22 || `GN22: ${cert.status_gn22_general}`}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                             
-                            {/* Bewijs uit PDF */}
+                            {/* Reden (nieuw format) */}
+                            {cert.reden && (
+                              <Alert className="bg-muted/30">
+                                <Info className="h-4 w-4" />
+                                <AlertDescription className="text-sm">
+                                  {cert.reden}
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                            
+                            {/* Bewijs uit PDF (legacy format) */}
                             {cert.bewijs_uit_pdf && (
                               <div className="pl-7">
                                 <div className="flex items-start gap-2 text-sm text-muted-foreground italic border-l-2 border-muted-foreground/20 pl-3 py-1">
@@ -428,7 +463,7 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
                               </div>
                             )}
                             
-                            {/* Toelichting Norm */}
+                            {/* Toelichting Norm (legacy format) */}
                             {cert.toelichting_norm && (
                               <Alert className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
                                 <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -436,6 +471,13 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
                                   {cert.toelichting_norm}
                                 </AlertDescription>
                               </Alert>
+                            )}
+                            
+                            {/* Bron SourceLink */}
+                            {cert.bron && (
+                              <div className="pt-2 border-t border-border/50">
+                                <SourceLink bron={cert.bron} sourceFiles={sourceFiles} />
+                              </div>
                             )}
                           </CardContent>
                         </Card>

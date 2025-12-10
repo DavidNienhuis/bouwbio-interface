@@ -231,6 +231,7 @@ export interface BouwbiologischAdviesData {
       naam: string | null;
       productgroep: string | null;
       norm: string | null;
+      bron?: Bron;
     };
   };
   scores: {
@@ -241,20 +242,22 @@ export interface BouwbiologischAdviesData {
           component?: string;
           waarde?: number;
           eenheid?: string;
-          bron?: string;
+          bron?: Bron;
         }>;
         gevonden_waarden?: Array<{
           component?: string;
           waarde?: number;
           eenheid?: string;
-          bron?: string;
+          bron?: Bron;
         }>;
         conclusie?: string;
         toelichting?: string;
       } | Array<{
         stof: string;
         gemeten_waarde: string;
+        grenswaarde?: string;
         oordeel: string;
+        bron?: Bron;
       }>;
     };
     toxicologie: {
@@ -266,16 +269,24 @@ export interface BouwbiologischAdviesData {
         naam?: string;
         lijst: string | null;
         status: string;
+        bron?: Bron;
       }>;
     };
     certificaten: {
       status: 'erkend' | 'niet_erkend' | 'geen_certificaten';
       conclusie?: string;
       gevonden_certificaten: Array<{
-        naam: string;
+        // Legacy format
+        naam?: string;
         status_gn22_general?: string;
         bewijs_uit_pdf?: string;
         toelichting_norm?: string;
+        // New format
+        gevonden_term?: string;
+        type_claim?: string;
+        status_gn22?: string;
+        reden?: string;
+        bron?: Bron;
       }>;
     };
     informatie_dekking: 'voldoende' | 'onvoldoende';
