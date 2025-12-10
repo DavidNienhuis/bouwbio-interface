@@ -215,6 +215,7 @@ export type Database = {
           product_type: Json
           result: Json | null
           session_id: string
+          source_files: Json | null
           status: string | null
           user_id: string
         }
@@ -227,6 +228,7 @@ export type Database = {
           product_type: Json
           result?: Json | null
           session_id: string
+          source_files?: Json | null
           status?: string | null
           user_id: string
         }
@@ -239,6 +241,7 @@ export type Database = {
           product_type?: Json
           result?: Json | null
           session_id?: string
+          source_files?: Json | null
           status?: string | null
           user_id?: string
         }

@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, XCircle, AlertTriangle, Info, Shield, FlaskConical, FileText, Award } from "lucide-react";
+import { SourceLink } from "@/components/SourceLink";
+import { useSourceFiles } from "@/components/SourceFilesContext";
 import { VerificatieAuditData } from "@/lib/webhookClient";
 
 interface VerificatieAuditDisplayProps {
@@ -67,6 +69,8 @@ const getRedListBadgeConfig = (check: string) => {
 };
 
 export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) => {
+  const { sourceFiles } = useSourceFiles();
+  
   const statusConfig = getStatusConfig(data.verificatie_audit.status);
   const StatusIcon = statusConfig.icon;
 
@@ -158,9 +162,8 @@ export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) 
                             <span className="ml-2 font-medium">{stof.type}</span>
                           </div>
                         </div>
-                        <div className="text-xs text-muted-foreground pt-1">
-                          <Info className="inline h-3 w-3 mr-1" />
-                          Bron: {stof.bron}
+                        <div className="pt-1">
+                          <SourceLink bron={stof.bron} sourceFiles={sourceFiles} />
                         </div>
                         {stof.opmerking && (
                           <Alert 
@@ -203,7 +206,9 @@ export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) 
                       <div className="flex justify-between items-start">
                         <div>
                           <h4 className="font-medium">{cert.naam}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">{cert.bron}</p>
+                          <div className="mt-1">
+                            <SourceLink bron={cert.bron} sourceFiles={sourceFiles} />
+                          </div>
                         </div>
                         <Badge variant={cert.status === 'erkend' ? 'default' : 'secondary'}>
                           {cert.status}
@@ -256,7 +261,9 @@ export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) 
                               <span className="text-sm text-muted-foreground">Niet gemeten</span>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-2">{emissie.bron}</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            <SourceLink bron={emissie.bron} sourceFiles={sourceFiles} />
+                          </p>
                         </div>
                         <Badge variant={emissie.status === "gevonden" ? "default" : "secondary"}>
                           {emissie.status}
@@ -306,7 +313,9 @@ export const VerificatieAuditDisplay = ({ data }: VerificatieAuditDisplayProps) 
                           <span className="text-xl font-bold">{grens.waarde || grens.limiet}</span>
                           <span className="text-sm text-muted-foreground">{grens.eenheid}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground">{grens.bron}</p>
+                        <div className="mt-1">
+                          <SourceLink bron={grens.bron} sourceFiles={sourceFiles} />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
