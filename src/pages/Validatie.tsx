@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { PDFUploadZone } from "@/components/PDFUploadZone";
 import { sendValidationRequest, ValidationResponse } from "@/lib/webhookClient";
 import { uploadPDFsToStorage, StoredFile } from "@/lib/storageClient";
@@ -23,7 +23,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/Navbar";
 import { ValidationFooter } from "@/components/ValidationFooter";
-import { ArrowLeft, ArrowRight, RotateCcw, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw, CheckCircle2, Download } from "lucide-react";
+import { exportToPDF, generateFilename } from "@/lib/pdfExport";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +50,8 @@ export default function Validatie() {
   const { user } = useAuth();
   
   const [currentStep, setCurrentStep] = useState(1);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
   
   // SessionId gebaseerd op user.id - consistent per gebruiker
   const sessionId = user?.id ? `user_${user.id}` : `guest_${Date.now()}`;
@@ -64,6 +67,25 @@ export default function Validatie() {
   const [storedFiles, setStoredFiles] = useState<StoredFile[]>([]);
   const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
   const [errorData, setErrorData] = useState<{ message: string; rawResponse?: any } | null>(null);
+
+  const handleExportPDF = async () => {
+    if (!resultsRef.current) return;
+    
+    setIsExporting(true);
+    toast.info("PDF wordt gegenereerd...");
+    
+    try {
+      const selectedProduct = productTypes.find(p => p.id === selectedProductType);
+      const filename = generateFilename(selectedProduct?.name);
+      await exportToPDF(resultsRef.current, filename);
+      toast.success("PDF succesvol gedownload!");
+    } catch (error) {
+      console.error("PDF export error:", error);
+      toast.error("PDF export mislukt");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleUpload = async (files: File[]) => {
     setIsUploading(true);
@@ -204,14 +226,27 @@ export default function Validatie() {
                   {validationData ? "Bekijk hieronder de resultaten van uw validatie" : "Er is een fout opgetreden"}
                 </p>
               </div>
-              <Button 
-                onClick={handleReset}
-                className="gap-2"
-                style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-              >
-                <RotateCcw className="w-4 h-4" />
-                Nieuwe validatie
-              </Button>
+              <div className="flex gap-2">
+                {validationData && (
+                  <Button 
+                    onClick={handleExportPDF}
+                    disabled={isExporting}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    {isExporting ? "Exporteren..." : "Exporteer PDF"}
+                  </Button>
+                )}
+                <Button 
+                  onClick={handleReset}
+                  className="gap-2"
+                  style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Nieuwe validatie
+                </Button>
+              </div>
             </div>
 
             {/* Error display */}
@@ -238,45 +273,47 @@ export default function Validatie() {
 
             {/* Results display */}
             {validationData && (
-              <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
-                <CardHeader>
-                  <CardTitle className="font-heading flex items-center gap-2">
-                    <CheckCircle2 className="w-6 h-6" style={{ color: 'hsl(142 64% 62%)' }} />
-                    Validatie Resultaten
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SourceFilesProvider sourceFiles={storedFiles}>
-                    {validationData.type === 'cas_results' && (
-                      <CASResultsDisplay data={validationData.data} />
-                    )}
-                    {validationData.type === 'bouwbiologisch_advies' && (
-                      <BouwbiologischAdviesDisplay data={validationData.data} />
-                    )}
-                    {validationData.type === 'verificatie_audit' && (
-                      <VerificatieAuditDisplay data={validationData.data} />
-                    )}
-                    {validationData.type === 'table' && (
-                      <ResultsTable criteria={validationData.criteria} />
-                    )}
-                    {validationData.type === 'hea02_result' && (
-                      <Hea02ResultDisplay data={validationData.data} />
-                    )}
-                    {validationData.type === 'detailed_product_analysis' && (
-                      <DetailedProductAnalysis data={validationData.data} />
-                    )}
-                    {validationData.type === 'extended_hea02_verdict' && (
-                      <ExtendedHEA02Results data={validationData.data} />
-                    )}
-                    {validationData.type === 'hea02_verdict' && (
-                      <HEA02VerdictResults data={validationData.data} />
-                    )}
-                    {validationData.type === 'classification' && (
-                      <ClassificationResults data={validationData.data} />
-                    )}
-                  </SourceFilesProvider>
-                </CardContent>
-              </Card>
+              <div ref={resultsRef}>
+                <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+                  <CardHeader>
+                    <CardTitle className="font-heading flex items-center gap-2">
+                      <CheckCircle2 className="w-6 h-6" style={{ color: 'hsl(142 64% 62%)' }} />
+                      Validatie Resultaten
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <SourceFilesProvider sourceFiles={storedFiles}>
+                      {validationData.type === 'cas_results' && (
+                        <CASResultsDisplay data={validationData.data} />
+                      )}
+                      {validationData.type === 'bouwbiologisch_advies' && (
+                        <BouwbiologischAdviesDisplay data={validationData.data} />
+                      )}
+                      {validationData.type === 'verificatie_audit' && (
+                        <VerificatieAuditDisplay data={validationData.data} />
+                      )}
+                      {validationData.type === 'table' && (
+                        <ResultsTable criteria={validationData.criteria} />
+                      )}
+                      {validationData.type === 'hea02_result' && (
+                        <Hea02ResultDisplay data={validationData.data} />
+                      )}
+                      {validationData.type === 'detailed_product_analysis' && (
+                        <DetailedProductAnalysis data={validationData.data} />
+                      )}
+                      {validationData.type === 'extended_hea02_verdict' && (
+                        <ExtendedHEA02Results data={validationData.data} />
+                      )}
+                      {validationData.type === 'hea02_verdict' && (
+                        <HEA02VerdictResults data={validationData.data} />
+                      )}
+                      {validationData.type === 'classification' && (
+                        <ClassificationResults data={validationData.data} />
+                      )}
+                    </SourceFilesProvider>
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </div>
         </div>
