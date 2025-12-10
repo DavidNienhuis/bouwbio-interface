@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, XCircle, AlertTriangle, Info, Leaf, FlaskConical, Award, Database, FileText, Shield, Quote } from "lucide-react";
+import { SourceLink } from "@/components/SourceLink";
+import { useSourceFiles } from "@/components/SourceFilesContext";
 import type { BouwbiologischAdviesData } from "@/lib/webhookClient";
 
 interface BouwbiologischAdviesDisplayProps {
@@ -109,6 +111,8 @@ const getStofStatusBadge = (status: string) => {
 };
 
 export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDisplayProps) => {
+  const { sourceFiles } = useSourceFiles();
+  
   return (
     <div className="space-y-6 w-full max-w-5xl mx-auto">
       {/* Hero Advies Card */}
@@ -273,7 +277,9 @@ export const BouwbiologischAdviesDisplay = ({ data }: BouwbiologischAdviesDispla
                                     </span>
                                   </div>
                                   {waarde.bron && (
-                                    <div className="text-xs text-muted-foreground mt-1">Bron: {waarde.bron}</div>
+                                    <div className="mt-1">
+                                      <SourceLink bron={waarde.bron} sourceFiles={sourceFiles} />
+                                    </div>
                                   )}
                                 </CardContent>
                               </Card>

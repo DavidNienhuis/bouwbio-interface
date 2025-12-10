@@ -17,6 +17,8 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react";
+import { SourceLink } from "@/components/SourceLink";
+import { useSourceFiles } from "@/components/SourceFilesContext";
 import type { Hea02Result } from "@/lib/webhookClient";
 
 interface Hea02ResultDisplayProps {
@@ -24,6 +26,8 @@ interface Hea02ResultDisplayProps {
 }
 
 export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
+  const { sourceFiles } = useSourceFiles();
+  
   // Defensive defaults
   const certificaten = data.certificaten || [];
   const emissies = data.emissies || [];
@@ -171,8 +175,8 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {cert.bron}
+                        <TableCell>
+                          <SourceLink bron={cert.bron} sourceFiles={sourceFiles} />
                         </TableCell>
                       </TableRow>
                     );
@@ -259,9 +263,9 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
                     <p className="text-sm">
                       <span className="font-medium">Status:</span> {selectedEmissie.status}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      <span className="font-medium">Bron:</span> {selectedEmissie.bron}
-                    </p>
+                    <div className="text-sm">
+                      <SourceLink bron={selectedEmissie.bron} sourceFiles={sourceFiles} />
+                    </div>
                   </div>
                 </Card>
               )}
@@ -320,9 +324,9 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
                             Functie: {stof.functie}
                           </p>
                           
-                          <p className="text-xs text-muted-foreground">
-                            Bron: {stof.bron}
-                          </p>
+                          <div className="mt-1">
+                            <SourceLink bron={stof.bron} sourceFiles={sourceFiles} />
+                          </div>
                         </div>
                         
                         <div>
@@ -365,7 +369,7 @@ export function Hea02ResultDisplay({ data }: Hea02ResultDisplayProps) {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Bron</p>
-                      <p className="text-sm">{selectedCert.bron}</p>
+                      <SourceLink bron={selectedCert.bron} sourceFiles={sourceFiles} />
                     </div>
                   </div>
                 </Card>

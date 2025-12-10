@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { PDFUploadZone } from "@/components/PDFUploadZone";
 import { sendValidationRequest, ValidationResponse } from "@/lib/webhookClient";
+import { uploadPDFsToStorage, StoredFile } from "@/lib/storageClient";
+import { SourceFilesProvider } from "@/components/SourceFilesContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ResultsTable } from "@/components/ResultsTable";
@@ -60,6 +62,7 @@ export default function Validatie() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [storedFiles, setStoredFiles] = useState<StoredFile[]>([]);
   const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
   const [errorData, setErrorData] = useState<{ message: string; rawResponse?: any } | null>(null);
 
@@ -78,7 +81,7 @@ export default function Validatie() {
     }
   };
 
-  const saveValidation = async (result: ValidationResponse | null, status: string) => {
+  const saveValidation = async (result: ValidationResponse | null, status: string, savedStoredFiles: StoredFile[]) => {
     if (!user) return;
 
     const selectedProduct = productTypes.find(p => p.id === selectedProductType);
@@ -92,6 +95,7 @@ export default function Validatie() {
           certification: selectedCertification,
           product_type: selectedProduct as any,
           file_names: uploadedFiles.map(f => f.name),
+          source_files: savedStoredFiles as any,
           result: result as any,
           status: status,
           product_id: selectedProductId,
@@ -102,21 +106,35 @@ export default function Validatie() {
   };
 
   const handleSend = async () => {
+    if (!user) {
+      toast.error("Je moet ingelogd zijn om te valideren");
+      return;
+    }
+    
     setIsSending(true);
     setErrorData(null);
-    toast.info("Validatie verzenden naar webhook...");
+    
+    let savedStoredFiles: StoredFile[] = [];
     
     try {
       const selectedProduct = productTypes.find(p => p.id === selectedProductType);
       if (!selectedProduct) throw new Error("Product type not found");
       
+      // Stap 1: Upload PDFs naar Supabase Storage
+      toast.info("PDF bestanden opslaan...");
+      savedStoredFiles = await uploadPDFsToStorage(uploadedFiles, user.id, sessionId);
+      setStoredFiles(savedStoredFiles);
+      console.log("✅ PDFs opgeslagen:", savedStoredFiles);
+      
+      // Stap 2: Stuur naar webhook voor validatie
+      toast.info("Validatie uitvoeren...");
       const response = await sendValidationRequest(sessionId, selectedCertification, selectedProduct, uploadedFiles);
       setValidationData(response);
       setErrorData(null);
       toast.success("Validatie ontvangen!");
       setCurrentStep(4); // Go to results
       
-      await saveValidation(response, 'completed');
+      await saveValidation(response, 'completed', savedStoredFiles);
     } catch (error) {
       console.error("❌ [UI] Send error:", error);
       const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
@@ -127,7 +145,7 @@ export default function Validatie() {
       toast.error("Verzenden mislukt - check console voor details");
       setCurrentStep(4); // Also go to results to show error
       
-      await saveValidation(null, 'failed');
+      await saveValidation(null, 'failed', savedStoredFiles);
     } finally {
       setIsSending(false);
     }
@@ -135,6 +153,7 @@ export default function Validatie() {
 
   const handleReset = () => {
     setUploadedFiles([]);
+    setStoredFiles([]);
     setValidationData(null);
     setErrorData(null);
     setSelectedProjectId(null);
@@ -228,33 +247,35 @@ export default function Validatie() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {validationData.type === 'cas_results' && (
-                    <CASResultsDisplay data={validationData.data} />
-                  )}
-                  {validationData.type === 'bouwbiologisch_advies' && (
-                    <BouwbiologischAdviesDisplay data={validationData.data} />
-                  )}
-                  {validationData.type === 'verificatie_audit' && (
-                    <VerificatieAuditDisplay data={validationData.data} />
-                  )}
-                  {validationData.type === 'table' && (
-                    <ResultsTable criteria={validationData.criteria} />
-                  )}
-                  {validationData.type === 'hea02_result' && (
-                    <Hea02ResultDisplay data={validationData.data} />
-                  )}
-                  {validationData.type === 'detailed_product_analysis' && (
-                    <DetailedProductAnalysis data={validationData.data} />
-                  )}
-                  {validationData.type === 'extended_hea02_verdict' && (
-                    <ExtendedHEA02Results data={validationData.data} />
-                  )}
-                  {validationData.type === 'hea02_verdict' && (
-                    <HEA02VerdictResults data={validationData.data} />
-                  )}
-                  {validationData.type === 'classification' && (
-                    <ClassificationResults data={validationData.data} />
-                  )}
+                  <SourceFilesProvider sourceFiles={storedFiles}>
+                    {validationData.type === 'cas_results' && (
+                      <CASResultsDisplay data={validationData.data} />
+                    )}
+                    {validationData.type === 'bouwbiologisch_advies' && (
+                      <BouwbiologischAdviesDisplay data={validationData.data} />
+                    )}
+                    {validationData.type === 'verificatie_audit' && (
+                      <VerificatieAuditDisplay data={validationData.data} />
+                    )}
+                    {validationData.type === 'table' && (
+                      <ResultsTable criteria={validationData.criteria} />
+                    )}
+                    {validationData.type === 'hea02_result' && (
+                      <Hea02ResultDisplay data={validationData.data} />
+                    )}
+                    {validationData.type === 'detailed_product_analysis' && (
+                      <DetailedProductAnalysis data={validationData.data} />
+                    )}
+                    {validationData.type === 'extended_hea02_verdict' && (
+                      <ExtendedHEA02Results data={validationData.data} />
+                    )}
+                    {validationData.type === 'hea02_verdict' && (
+                      <HEA02VerdictResults data={validationData.data} />
+                    )}
+                    {validationData.type === 'classification' && (
+                      <ClassificationResults data={validationData.data} />
+                    )}
+                  </SourceFilesProvider>
                 </CardContent>
               </Card>
             )}
