@@ -50,9 +50,8 @@ export default function Validatie() {
   
   const [currentStep, setCurrentStep] = useState(1);
   
-  const [sessionId] = useState(() => {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  });
+  // SessionId gebaseerd op user.id - consistent per gebruiker
+  const sessionId = user?.id ? `user_${user.id}` : `guest_${Date.now()}`;
   
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(searchParams.get('projectId'));
   const [selectedProductId, setSelectedProductId] = useState<string | null>(searchParams.get('productId'));
