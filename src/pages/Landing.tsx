@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Award, TestTube, FileCheck, ArrowRight, Beaker, CheckCircle } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { ValidationFooter } from '@/components/ValidationFooter';
+import aiValidationHero from '@/assets/ai-validation-hero.png';
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -55,14 +56,12 @@ export default function Landing() {
                 </Button>
               </div>
             </div>
-            <div 
-              className="hidden md:block p-12 text-center"
-              style={{ background: 'rgba(94, 220, 137, 0.1)' }}
-            >
-              <div className="text-8xl mb-4">🏗️</div>
-              <p className="text-white/60 font-heading uppercase text-sm tracking-wider">
-                AI-Gedreven Validatie
-              </p>
+            <div className="hidden md:block overflow-hidden rounded-lg">
+              <img 
+                src={aiValidationHero} 
+                alt="AI-gedreven materiaal validatie" 
+                className="w-full h-auto object-cover"
+              />
             </div>
           </div>
         </div>
