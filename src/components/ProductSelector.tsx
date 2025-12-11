@@ -27,7 +27,7 @@ interface ProductSelectorProps {
   selectedProjectId: string | null;
   selectedProductId: string | null;
   onProjectChange: (projectId: string | null) => void;
-  onProductChange: (productId: string | null) => void;
+  onProductChange: (productId: string | null, eanCode: string | null, productName: string | null) => void;
 }
 
 export function ProductSelector({ 
@@ -53,7 +53,7 @@ export function ProductSelector({
       fetchProducts(selectedProjectId);
     } else {
       setProducts([]);
-      onProductChange(null);
+      onProductChange(null, null, null);
     }
   }, [selectedProjectId]);
 
@@ -117,7 +117,7 @@ export function ProductSelector({
     } else {
       toast.success('Product aangemaakt');
       setProducts(prev => [data, ...prev]);
-      onProductChange(data.id);
+      onProductChange(data.id, data.ean_code, data.name);
       setProductDialogOpen(false);
     }
   };
@@ -184,7 +184,10 @@ export function ProductSelector({
               <div className="flex gap-2">
                 <Select 
                   value={selectedProductId || ''} 
-                  onValueChange={(val) => onProductChange(val || null)}
+                  onValueChange={(val) => {
+                    const product = products.find(p => p.id === val);
+                    onProductChange(val || null, product?.ean_code || null, product?.name || null);
+                  }}
                   disabled={!selectedProjectId}
                 >
                   <SelectTrigger className="flex-1">

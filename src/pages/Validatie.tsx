@@ -17,6 +17,8 @@ import { CASResultsDisplay } from "@/components/CASResultsDisplay";
 import { LoadingModal } from "@/components/LoadingModal";
 import { ProductSelector } from "@/components/ProductSelector";
 import { StepIndicator } from "@/components/StepIndicator";
+import { KnowledgeBankLookup } from "@/components/KnowledgeBankLookup";
+import { KnowledgeBankStatus } from "@/components/KnowledgeBankStatus";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -28,6 +30,7 @@ import { exportToPDF, generateFilename } from "@/lib/pdfExport";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useKnowledgeBank, updateKnowledgeBank } from "@/hooks/useKnowledgeBank";
 
 const productTypes = [
   { id: "1", name: "Binnenverf en vernissen", description: "Binnenverf en vernissen" },
@@ -58,6 +61,9 @@ export default function Validatie() {
   
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(searchParams.get('projectId'));
   const [selectedProductId, setSelectedProductId] = useState<string | null>(searchParams.get('productId'));
+  const [selectedEanCode, setSelectedEanCode] = useState<string | null>(null);
+  const [selectedProductName, setSelectedProductName] = useState<string | null>(null);
+  const [usedKnowledgeBank, setUsedKnowledgeBank] = useState(false);
   
   const [selectedCertification, setSelectedCertification] = useState<string>("");
   const [selectedProductType, setSelectedProductType] = useState<string>("");
@@ -67,6 +73,18 @@ export default function Validatie() {
   const [storedFiles, setStoredFiles] = useState<StoredFile[]>([]);
   const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
   const [errorData, setErrorData] = useState<{ message: string; rawResponse?: any } | null>(null);
+
+  // Knowledge bank lookup
+  const { entry: knowledgeBankEntry, isLoading: isLoadingKnowledgeBank } = useKnowledgeBank(
+    selectedEanCode,
+    selectedCertification
+  );
+
+  const handleProductChange = (productId: string | null, eanCode: string | null, productName: string | null) => {
+    setSelectedProductId(productId);
+    setSelectedEanCode(eanCode);
+    setSelectedProductName(productName);
+  };
 
   const handleExportPDF = async () => {
     if (!resultsRef.current) return;
@@ -156,6 +174,19 @@ export default function Validatie() {
       setCurrentStep(4); // Go to results
       
       await saveValidation(response, 'completed', savedStoredFiles);
+      
+      // Update knowledge bank if we have an EAN code
+      if (selectedEanCode && selectedCertification) {
+        // Extract the result data based on response type
+        const resultData = 'data' in response ? response.data : response;
+        await updateKnowledgeBank(
+          selectedEanCode,
+          selectedProductName,
+          selectedCertification,
+          selectedProduct,
+          resultData
+        );
+      }
     } catch (error) {
       console.error("❌ [UI] Send error:", error);
       const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
@@ -179,10 +210,25 @@ export default function Validatie() {
     setErrorData(null);
     setSelectedProjectId(null);
     setSelectedProductId(null);
+    setSelectedEanCode(null);
+    setSelectedProductName(null);
     setSelectedCertification("");
     setSelectedProductType("");
+    setUsedKnowledgeBank(false);
     setCurrentStep(1);
     toast.info("Sessie gereset");
+  };
+
+  const handleUseKnowledgeBank = () => {
+    if (knowledgeBankEntry?.latest_result) {
+      setValidationData({
+        type: 'bouwbiologisch_advies',
+        data: knowledgeBankEntry.latest_result
+      });
+      setUsedKnowledgeBank(true);
+      setCurrentStep(4);
+      toast.success("Kennisbank data geladen!");
+    }
   };
 
   const canGoToStep2 = selectedCertification === "BREEAM_HEA02";
@@ -313,6 +359,17 @@ export default function Validatie() {
                     </SourceFilesProvider>
                   </CardContent>
                 </Card>
+
+                {/* Knowledge Bank Status - show when data was added */}
+                {selectedEanCode && !usedKnowledgeBank && (
+                  <KnowledgeBankStatus />
+                )}
+                {usedKnowledgeBank && (
+                  <KnowledgeBankStatus 
+                    usedExisting={true} 
+                    validationCount={knowledgeBankEntry?.validation_count} 
+                  />
+                )}
               </div>
             )}
           </div>
@@ -367,8 +424,18 @@ export default function Validatie() {
                 selectedProjectId={selectedProjectId}
                 selectedProductId={selectedProductId}
                 onProjectChange={setSelectedProjectId}
-                onProductChange={setSelectedProductId}
+                onProductChange={handleProductChange}
               />
+
+              {/* Knowledge Bank Lookup */}
+              {selectedEanCode && selectedCertification && (
+                <KnowledgeBankLookup
+                  entry={knowledgeBankEntry}
+                  isLoading={isLoadingKnowledgeBank}
+                  onUseExisting={handleUseKnowledgeBank}
+                  onNewValidation={() => setCurrentStep(2)}
+                />
+              )}
 
               <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
                 <CardHeader>
