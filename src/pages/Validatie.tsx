@@ -167,7 +167,14 @@ export default function Validatie() {
       
       // Stap 2: Stuur naar webhook voor validatie
       toast.info("Validatie uitvoeren...");
-      const response = await sendValidationRequest(sessionId, selectedCertification, selectedProduct, uploadedFiles);
+      const response = await sendValidationRequest(
+        sessionId, 
+        selectedCertification, 
+        selectedProduct, 
+        uploadedFiles,
+        selectedEanCode,
+        selectedProductName
+      );
       setValidationData(response);
       setErrorData(null);
       toast.success("Validatie ontvangen!");
