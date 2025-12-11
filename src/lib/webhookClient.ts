@@ -511,11 +511,15 @@ export const sendValidationRequest = async (
   sessionId: string,
   certification: string,
   productType: { id: string; name: string; description: string },
-  files: File[]
+  files: File[],
+  eanCode?: string | null,
+  productName?: string | null
 ): Promise<ValidationResponse> => {
   console.log('🚀 Sending validation request with', files.length, 'files');
   console.log('🚀 Certification:', certification);
   console.log('🚀 Product Type:', productType);
+  console.log('🚀 EAN Code:', eanCode);
+  console.log('🚀 Product Name:', productName);
   console.log('🚀 Sending request to:', WEBHOOK_URL);
   
   const formData = new FormData();
@@ -524,6 +528,14 @@ export const sendValidationRequest = async (
   formData.append('productTypeId', productType.id);
   formData.append('productTypeName', productType.name);
   formData.append('productTypeDescription', productType.description);
+  
+  // EAN code en productnaam toevoegen indien beschikbaar
+  if (eanCode) {
+    formData.append('eanCode', eanCode);
+  }
+  if (productName) {
+    formData.append('productName', productName);
+  }
   
   // PDF files toevoegen
   files.forEach((file) => {
