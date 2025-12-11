@@ -1,6 +1,73 @@
-import { Database, CheckCircle } from "lucide-react";
+import { Database, CheckCircle, Info } from "lucide-react";
 
-export const KnowledgeBankStatus = () => {
+interface KnowledgeBankStatusProps {
+  usedExisting?: boolean;
+  validationCount?: number;
+}
+
+export const KnowledgeBankStatus = ({ usedExisting = false, validationCount }: KnowledgeBankStatusProps) => {
+  if (usedExisting) {
+    return (
+      <section 
+        className="knowledge rounded-lg overflow-hidden" 
+        style={{ 
+          marginTop: '2rem',
+          background: 'linear-gradient(135deg, hsla(var(--accent), 0.08), hsla(210, 40%, 96%, 0.5))',
+          border: '1px solid hsla(var(--accent), 0.3)',
+          boxShadow: '0 4px 32px rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        <div className="p-6 flex items-start gap-4">
+          <div 
+            className="flex items-center justify-center rounded-lg flex-shrink-0 relative"
+            style={{
+              width: '56px',
+              height: '56px',
+              background: 'linear-gradient(135deg, hsla(var(--accent), 0.2), hsla(210, 40%, 90%, 0.3))',
+              border: '2px solid hsla(var(--accent), 0.3)',
+            }}
+          >
+            <Database className="h-6 w-6" style={{ color: 'hsl(var(--accent))' }} />
+            <Info 
+              className="h-4 w-4 absolute -top-1 -right-1" 
+              style={{ 
+                color: 'hsl(var(--accent))',
+                background: 'hsl(var(--bg))',
+                borderRadius: '50%'
+              }} 
+            />
+          </div>
+          
+          <div className="flex-1 space-y-3">
+            <div>
+              <p 
+                className="mono font-semibold text-lg flex items-center gap-2" 
+                style={{ color: 'hsl(var(--accent))' }}
+              >
+                DATA UIT KENNISBANK GELADEN
+              </p>
+              <p className="mono text-xs mt-1" style={{ color: 'hsl(var(--ink-muted))' }}>
+                EXISTING VALIDATION DATA RETRIEVED
+              </p>
+            </div>
+            <p 
+              style={{ 
+                fontSize: '0.95rem', 
+                color: 'hsl(var(--ink))', 
+                lineHeight: '1.7',
+                maxWidth: '70ch'
+              }}
+            >
+              Deze resultaten komen uit onze kennisbank. Dit product is eerder gevalideerd
+              {validationCount && validationCount > 1 && ` (${validationCount}x)`}. 
+              Voor een nieuwe analyse kunt u een nieuwe validatie starten.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section 
       className="knowledge rounded-lg overflow-hidden" 

@@ -35,6 +35,69 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_bank: {
+        Row: {
+          advies_kleur: string | null
+          advies_label: string | null
+          advies_niveau: string | null
+          certificaten_score: number | null
+          certification: string
+          created_at: string | null
+          ean_code: string
+          emissie_score: number | null
+          first_validated_at: string | null
+          id: string
+          last_validated_at: string | null
+          latest_result: Json | null
+          overall_score: number | null
+          product_name: string | null
+          product_type: Json | null
+          toxicologie_score: number | null
+          updated_at: string | null
+          validation_count: number | null
+        }
+        Insert: {
+          advies_kleur?: string | null
+          advies_label?: string | null
+          advies_niveau?: string | null
+          certificaten_score?: number | null
+          certification: string
+          created_at?: string | null
+          ean_code: string
+          emissie_score?: number | null
+          first_validated_at?: string | null
+          id?: string
+          last_validated_at?: string | null
+          latest_result?: Json | null
+          overall_score?: number | null
+          product_name?: string | null
+          product_type?: Json | null
+          toxicologie_score?: number | null
+          updated_at?: string | null
+          validation_count?: number | null
+        }
+        Update: {
+          advies_kleur?: string | null
+          advies_label?: string | null
+          advies_niveau?: string | null
+          certificaten_score?: number | null
+          certification?: string
+          created_at?: string | null
+          ean_code?: string
+          emissie_score?: number | null
+          first_validated_at?: string | null
+          id?: string
+          last_validated_at?: string | null
+          latest_result?: Json | null
+          overall_score?: number | null
+          product_name?: string | null
+          product_type?: Json | null
+          toxicologie_score?: number | null
+          updated_at?: string | null
+          validation_count?: number | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           created_at: string
@@ -268,6 +331,16 @@ export type Database = {
           metadata: Json
           similarity: number
         }[]
+      }
+      update_knowledge_bank: {
+        Args: {
+          p_certification: string
+          p_ean_code: string
+          p_product_name: string
+          p_product_type: Json
+          p_result: Json
+        }
+        Returns: undefined
       }
     }
     Enums: {
