@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { PDFUploadZone } from "@/components/PDFUploadZone";
 import { sendValidationRequest, ValidationResponse } from "@/lib/webhookClient";
-import { uploadPDFsToStorage, StoredFile } from "@/lib/storageClient";
+import { uploadPDFsToStorage, uploadPDFsToKnowledgeBank, StoredFile } from "@/lib/storageClient";
 import { SourceFilesProvider } from "@/components/SourceFilesContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ import { exportToPDF, generateFilename } from "@/lib/pdfExport";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useKnowledgeBank, updateKnowledgeBank } from "@/hooks/useKnowledgeBank";
+import { useKnowledgeBank, updateKnowledgeBank, checkKnowledgeBankExists } from "@/hooks/useKnowledgeBank";
 
 const productTypes = [
   { id: "1", name: "Binnenverf en vernissen", description: "Binnenverf en vernissen" },
@@ -154,16 +154,35 @@ export default function Validatie() {
     setErrorData(null);
     
     let savedStoredFiles: StoredFile[] = [];
+    let kbSourceFiles: StoredFile[] | null = null;
     
     try {
       const selectedProduct = productTypes.find(p => p.id === selectedProductType);
       if (!selectedProduct) throw new Error("Product type not found");
       
-      // Stap 1: Upload PDFs naar Supabase Storage
+      // Stap 1: Upload PDFs naar Supabase Storage (user folder)
       toast.info("PDF bestanden opslaan...");
       savedStoredFiles = await uploadPDFsToStorage(uploadedFiles, user.id, sessionId);
       setStoredFiles(savedStoredFiles);
       console.log("✅ PDFs opgeslagen:", savedStoredFiles);
+      
+      // Stap 1b: Check of dit de eerste validatie is voor dit EAN+cert
+      // Als ja, upload ook naar Knowledge Bank folder
+      if (selectedEanCode && selectedCertification) {
+        const kbExists = await checkKnowledgeBankExists(selectedEanCode, selectedCertification);
+        
+        if (!kbExists) {
+          toast.info("Eerste validatie voor dit product - opslaan in kennisbank...");
+          kbSourceFiles = await uploadPDFsToKnowledgeBank(
+            uploadedFiles, 
+            selectedEanCode, 
+            selectedCertification
+          );
+          console.log("✅ PDFs opgeslagen in Knowledge Bank:", kbSourceFiles);
+        } else {
+          console.log("ℹ️ Product bestaat al in KB, skip KB upload");
+        }
+      }
       
       // Stap 2: Stuur naar webhook voor validatie
       toast.info("Validatie uitvoeren...");
@@ -191,7 +210,8 @@ export default function Validatie() {
           selectedProductName,
           selectedCertification,
           selectedProduct,
-          resultData
+          resultData,
+          kbSourceFiles // Only set on first validation, null on subsequent
         );
       }
     } catch (error) {
@@ -232,6 +252,10 @@ export default function Validatie() {
         type: 'bouwbiologisch_advies',
         data: knowledgeBankEntry.latest_result
       });
+      // Use KB source files if available
+      if (knowledgeBankEntry.source_files) {
+        setStoredFiles(knowledgeBankEntry.source_files);
+      }
       setUsedKnowledgeBank(true);
       setCurrentStep(4);
       toast.success("Kennisbank data geladen!");

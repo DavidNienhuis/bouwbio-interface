@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { StoredFile } from '@/lib/storageClient';
 
 export interface KnowledgeBankEntry {
   id: string;
@@ -18,6 +19,7 @@ export interface KnowledgeBankEntry {
   certificaten_score: number | null;
   overall_score: number | null;
   latest_result: any;
+  source_files: StoredFile[] | null;
 }
 
 export function useKnowledgeBank(eanCode: string | null, certification: string | null) {
@@ -44,7 +46,12 @@ export function useKnowledgeBank(eanCode: string | null, certification: string |
           .maybeSingle();
 
         if (fetchError) throw fetchError;
-        setEntry(data as KnowledgeBankEntry | null);
+        // Cast source_files from Json to StoredFile[]
+        const entry = data ? {
+          ...data,
+          source_files: (data.source_files as unknown) as StoredFile[] | null
+        } : null;
+        setEntry(entry as KnowledgeBankEntry | null);
       } catch (err) {
         console.error('Knowledge bank fetch error:', err);
         setError(err instanceof Error ? err.message : 'Fout bij ophalen kennisbank');
@@ -65,7 +72,8 @@ export async function updateKnowledgeBank(
   productName: string | null,
   certification: string,
   productType: any,
-  result: any
+  result: any,
+  sourceFiles: StoredFile[] | null = null
 ): Promise<void> {
   try {
     const { error } = await supabase.rpc('update_knowledge_bank', {
@@ -74,11 +82,35 @@ export async function updateKnowledgeBank(
       p_certification: certification,
       p_product_type: productType,
       p_result: result,
+      p_source_files: sourceFiles as unknown as any,
     });
 
     if (error) throw error;
-    console.log('✅ Knowledge bank updated for EAN:', eanCode);
+    console.log('✅ Knowledge bank updated for EAN:', eanCode, sourceFiles ? '(met source files)' : '');
   } catch (err) {
     console.error('Failed to update knowledge bank:', err);
+  }
+}
+
+/**
+ * Check of een EAN+certification combinatie al bestaat in de knowledge bank
+ */
+export async function checkKnowledgeBankExists(
+  eanCode: string,
+  certification: string
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('knowledge_bank')
+      .select('id')
+      .eq('ean_code', eanCode)
+      .eq('certification', certification)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data !== null;
+  } catch (err) {
+    console.error('Error checking knowledge bank:', err);
+    return false;
   }
 }

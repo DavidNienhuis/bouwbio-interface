@@ -62,6 +62,63 @@ export const uploadPDFsToStorage = async (
 };
 
 /**
+ * Upload PDF bestanden naar Knowledge Bank folder in Supabase Storage
+ * Dit wordt alleen aangeroepen bij de EERSTE validatie van een EAN+certification combinatie
+ * @param files - Array van File objects om te uploaden
+ * @param eanCode - EAN code van het product
+ * @param certification - Certificeringstype
+ * @returns Array van StoredFile objecten met metadata
+ */
+export const uploadPDFsToKnowledgeBank = async (
+  files: File[],
+  eanCode: string,
+  certification: string
+): Promise<StoredFile[]> => {
+  const storedFiles: StoredFile[] = [];
+  
+  // Sanitize EAN en certification voor gebruik in pad
+  const sanitizedEan = eanCode.replace(/[^a-zA-Z0-9-]/g, '_');
+  const sanitizedCert = certification.replace(/[^a-zA-Z0-9-]/g, '_');
+  
+  for (const file of files) {
+    const timestamp = Date.now();
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const storagePath = `knowledge_bank/${sanitizedEan}/${sanitizedCert}/${timestamp}_${sanitizedName}`;
+    
+    console.log(`📤 Uploading to Knowledge Bank: ${file.name} → ${storagePath}`);
+    
+    const { data, error } = await supabase.storage
+      .from('Bronnen')
+      .upload(storagePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+    
+    if (error) {
+      console.error(`❌ Failed to upload ${file.name} to KB:`, error);
+      throw new Error(`KB Upload mislukt voor ${file.name}: ${error.message}`);
+    }
+    
+    // Verkrijg de public URL voor de file
+    const { data: urlData } = supabase.storage
+      .from('Bronnen')
+      .getPublicUrl(storagePath);
+    
+    storedFiles.push({
+      original_name: file.name,
+      storage_path: storagePath,
+      storage_url: urlData.publicUrl,
+      size_bytes: file.size,
+      uploaded_at: new Date().toISOString()
+    });
+    
+    console.log(`✅ KB Upload: ${file.name}`);
+  }
+  
+  return storedFiles;
+};
+
+/**
  * Verkrijg een signed URL voor een private file
  * @param storagePath - Het pad in de storage bucket
  * @param expiresIn - Seconden tot de URL verloopt (default: 1 uur)
