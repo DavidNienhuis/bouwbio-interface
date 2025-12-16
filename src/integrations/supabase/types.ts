@@ -52,6 +52,7 @@ export type Database = {
           overall_score: number | null
           product_name: string | null
           product_type: Json | null
+          source_files: Json | null
           toxicologie_score: number | null
           updated_at: string | null
           validation_count: number | null
@@ -72,6 +73,7 @@ export type Database = {
           overall_score?: number | null
           product_name?: string | null
           product_type?: Json | null
+          source_files?: Json | null
           toxicologie_score?: number | null
           updated_at?: string | null
           validation_count?: number | null
@@ -92,6 +94,7 @@ export type Database = {
           overall_score?: number | null
           product_name?: string | null
           product_type?: Json | null
+          source_files?: Json | null
           toxicologie_score?: number | null
           updated_at?: string | null
           validation_count?: number | null
@@ -339,6 +342,7 @@ export type Database = {
           p_product_name: string
           p_product_type: Json
           p_result: Json
+          p_source_files?: Json
         }
         Returns: undefined
       }
