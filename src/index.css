@@ -98,3 +98,206 @@ All colors MUST be HSL.
     letter-spacing: 0;
   }
 }
+
+/* Professional Report Document Styling */
+.report-sheet {
+  background-color: hsl(0 0% 100%);
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 50px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.05);
+  border: 1px solid hsl(218 14% 85%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: hsl(190 16% 12%);
+  -webkit-font-smoothing: antialiased;
+}
+
+.report-header {
+  border-bottom: 2px solid hsl(190 16% 12%);
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.report-header h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 24px;
+  margin: 0 0 5px 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: hsl(190 16% 12%);
+}
+
+.report-header .sub-title {
+  font-family: "SF Mono", Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: hsl(218 19% 27%);
+}
+
+.report-meta {
+  font-family: "SF Mono", Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: right;
+  color: hsl(190 16% 12%);
+}
+
+.section-block {
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-bottom: 1px solid hsl(190 16% 12%);
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+  color: hsl(190 16% 12%);
+}
+
+.tech-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.tech-table th {
+  text-align: left;
+  font-family: "SF Mono", Monaco, Consolas, monospace;
+  font-weight: normal;
+  color: hsl(218 19% 27%);
+  border-bottom: 1px solid hsl(190 16% 12%);
+  padding: 8px 4px;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.tech-table td {
+  padding: 10px 4px;
+  border-bottom: 1px solid hsl(218 14% 85%);
+  vertical-align: top;
+}
+
+.tech-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-mono {
+  font-family: "SF Mono", Monaco, Consolas, monospace;
+  color: hsl(190 16% 12%);
+}
+
+.status-badge {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 10px;
+  border: 1px solid hsl(190 16% 12%);
+  padding: 2px 8px;
+  display: inline-block;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.conform {
+  background: hsl(142 76% 95%);
+  border-color: hsl(142 76% 40%);
+  color: hsl(142 76% 25%);
+}
+
+.status-badge.non-conform {
+  background: hsl(0 84% 97%);
+  border-color: hsl(0 84% 60%);
+  color: hsl(0 84% 40%);
+}
+
+.status-badge.attention {
+  background: hsl(38 100% 95%);
+  border-color: hsl(38 100% 50%);
+  color: hsl(38 100% 30%);
+}
+
+.status-badge.missing {
+  background: hsl(218 14% 95%);
+  border-color: hsl(218 14% 70%);
+  color: hsl(218 19% 40%);
+}
+
+.summary-box {
+  background-color: hsl(180 14% 97%);
+  border: 1px solid hsl(218 14% 85%);
+  padding: 15px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.conclusion-box {
+  border-top: 2px solid hsl(190 16% 12%);
+  padding-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.conclusion-badge {
+  border: 2px solid hsl(190 16% 12%);
+  padding: 10px 20px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.conclusion-badge.approved {
+  background: hsl(142 76% 95%);
+  border-color: hsl(142 76% 40%);
+  color: hsl(142 76% 25%);
+}
+
+.conclusion-badge.rejected {
+  background: hsl(0 84% 97%);
+  border-color: hsl(0 84% 60%);
+  color: hsl(0 84% 40%);
+}
+
+.conclusion-badge.review {
+  background: hsl(38 100% 95%);
+  border-color: hsl(38 100% 50%);
+  color: hsl(38 100% 30%);
+}
+
+.report-footer {
+  margin-top: 60px;
+  border-top: 1px solid hsl(218 14% 85%);
+  padding-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  font-family: "SF Mono", Monaco, Consolas, monospace;
+  font-size: 10px;
+  color: hsl(218 19% 27%);
+}
+
+.source-ref {
+  font-size: 10px;
+  color: hsl(218 19% 50%);
+  margin-top: 4px;
+}
+
+.source-ref:hover {
+  color: hsl(142 64% 45%);
+}
+
+/* Print optimizations */
+@media print {
+  .report-sheet {
+    box-shadow: none;
+    border: none;
+    padding: 20px;
+  }
+}
+
+.print-mode .report-sheet {
+  box-shadow: none;
+}
