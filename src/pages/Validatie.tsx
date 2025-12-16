@@ -12,7 +12,7 @@ import { ExtendedHEA02Results } from "@/components/ExtendedHEA02Results";
 import { Hea02ResultDisplay } from "@/components/Hea02ResultDisplay";
 import { DetailedProductAnalysis } from "@/components/DetailedProductAnalysis";
 import { VerificatieAuditDisplay } from "@/components/VerificatieAuditDisplay";
-import { BouwbiologischAdviesDisplay } from "@/components/BouwbiologischAdviesDisplay";
+import { ValidationReport } from "@/components/ValidationReport";
 import { CASResultsDisplay } from "@/components/CASResultsDisplay";
 import { LoadingModal } from "@/components/LoadingModal";
 import { ProductSelector } from "@/components/ProductSelector";
@@ -351,45 +351,46 @@ export default function Validatie() {
             {/* Results display */}
             {validationData && (
               <div ref={resultsRef}>
-                <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
-                  <CardHeader>
-                    <CardTitle className="font-heading flex items-center gap-2">
-                      <CheckCircle2 className="w-6 h-6" style={{ color: 'hsl(142 64% 62%)' }} />
-                      Validatie Resultaten
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <SourceFilesProvider sourceFiles={storedFiles}>
-                      {validationData.type === 'cas_results' && (
-                        <CASResultsDisplay data={validationData.data} />
-                      )}
-                      {validationData.type === 'bouwbiologisch_advies' && (
-                        <BouwbiologischAdviesDisplay data={validationData.data} />
-                      )}
-                      {validationData.type === 'verificatie_audit' && (
-                        <VerificatieAuditDisplay data={validationData.data} />
-                      )}
-                      {validationData.type === 'table' && (
-                        <ResultsTable criteria={validationData.criteria} />
-                      )}
-                      {validationData.type === 'hea02_result' && (
-                        <Hea02ResultDisplay data={validationData.data} />
-                      )}
-                      {validationData.type === 'detailed_product_analysis' && (
-                        <DetailedProductAnalysis data={validationData.data} />
-                      )}
-                      {validationData.type === 'extended_hea02_verdict' && (
-                        <ExtendedHEA02Results data={validationData.data} />
-                      )}
-                      {validationData.type === 'hea02_verdict' && (
-                        <HEA02VerdictResults data={validationData.data} />
-                      )}
-                      {validationData.type === 'classification' && (
-                        <ClassificationResults data={validationData.data} />
-                      )}
-                    </SourceFilesProvider>
-                  </CardContent>
-                </Card>
+                <SourceFilesProvider sourceFiles={storedFiles}>
+                  {validationData.type === 'bouwbiologisch_advies' ? (
+                    <ValidationReport ref={resultsRef} data={validationData.data} />
+                  ) : (
+                    <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+                      <CardHeader>
+                        <CardTitle className="font-heading flex items-center gap-2">
+                          <CheckCircle2 className="w-6 h-6" style={{ color: 'hsl(142 64% 62%)' }} />
+                          Validatie Resultaten
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {validationData.type === 'cas_results' && (
+                          <CASResultsDisplay data={validationData.data} />
+                        )}
+                        {validationData.type === 'verificatie_audit' && (
+                          <VerificatieAuditDisplay data={validationData.data} />
+                        )}
+                        {validationData.type === 'table' && (
+                          <ResultsTable criteria={validationData.criteria} />
+                        )}
+                        {validationData.type === 'hea02_result' && (
+                          <Hea02ResultDisplay data={validationData.data} />
+                        )}
+                        {validationData.type === 'detailed_product_analysis' && (
+                          <DetailedProductAnalysis data={validationData.data} />
+                        )}
+                        {validationData.type === 'extended_hea02_verdict' && (
+                          <ExtendedHEA02Results data={validationData.data} />
+                        )}
+                        {validationData.type === 'hea02_verdict' && (
+                          <HEA02VerdictResults data={validationData.data} />
+                        )}
+                        {validationData.type === 'classification' && (
+                          <ClassificationResults data={validationData.data} />
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </SourceFilesProvider>
 
                 {/* Knowledge Bank Status - show when data was added */}
                 {selectedEanCode && !usedKnowledgeBank && (
