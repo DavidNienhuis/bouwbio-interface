@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { Layout } from '@/components/Layout';
+import { ArrowLeft } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Ongeldig emailadres'),
@@ -36,7 +37,7 @@ export default function Auth() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate('/');
     }
   }, [user, navigate]);
 
@@ -142,7 +143,15 @@ export default function Auth() {
 
   return (
     <Layout>
-      <div className="flex-1 flex items-center justify-center py-16 px-6">
+      <div className="flex-1 flex flex-col items-center justify-center py-16 px-6">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/')}
+          className="mb-4 self-start max-w-md w-full justify-start"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Terug naar validatie tool
+        </Button>
         <Card className="w-full max-w-md border-border">
           <CardHeader>
             <CardTitle className="font-heading text-2xl">
