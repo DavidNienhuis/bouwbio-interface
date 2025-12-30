@@ -5,16 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Sparkles, X } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 
 interface CreateAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAccountCreated: () => void;
-  onSkip: () => void;
 }
 
-export function CreateAccountModal({ isOpen, onClose, onAccountCreated, onSkip }: CreateAccountModalProps) {
+export function CreateAccountModal({ isOpen, onClose, onAccountCreated }: CreateAccountModalProps) {
   const { signUp, signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
@@ -58,12 +57,12 @@ export function CreateAccountModal({ isOpen, onClose, onAccountCreated, onSkip }
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-heading">
             <Sparkles className="w-5 h-5 text-primary" />
-            {isLogin ? "Log in om te bewaren" : "Bewaar je resultaten"}
+            {isLogin ? "Log in om te starten" : "Maak account aan om te starten"}
           </DialogTitle>
           <DialogDescription>
             {isLogin 
-              ? "Log in met je bestaande account om je validatie te bewaren."
-              : "Maak een gratis account aan om je validatie te bewaren en 1 gratis credit te ontvangen voor toekomstige validaties."
+              ? "Log in met je bestaande account om je analyse te starten."
+              : "Maak een gratis account aan om je analyse te starten. Je ontvangt 1 gratis credit."
             }
           </DialogDescription>
         </DialogHeader>
@@ -114,7 +113,7 @@ export function CreateAccountModal({ isOpen, onClose, onAccountCreated, onSkip }
             disabled={isLoading}
           >
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {isLogin ? "Inloggen" : "Account aanmaken"}
+            {isLogin ? "Inloggen & starten" : "Account aanmaken & starten"}
           </Button>
 
           <div className="text-center text-sm text-muted-foreground">
@@ -143,16 +142,6 @@ export function CreateAccountModal({ isOpen, onClose, onAccountCreated, onSkip }
             )}
           </div>
         </form>
-
-        <div className="mt-4 pt-4 border-t border-border">
-          <button
-            type="button"
-            onClick={onSkip}
-            className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Nee bedankt, resultaten niet bewaren
-          </button>
-        </div>
       </DialogContent>
     </Dialog>
   );
