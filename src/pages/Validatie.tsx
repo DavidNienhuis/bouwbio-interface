@@ -19,6 +19,9 @@ import { ProductSelector } from "@/components/ProductSelector";
 import { StepIndicator } from "@/components/StepIndicator";
 import { KnowledgeBankLookup } from "@/components/KnowledgeBankLookup";
 import { KnowledgeBankStatus } from "@/components/KnowledgeBankStatus";
+import { CreateAccountModal } from "@/components/CreateAccountModal";
+import { NoCreditsModal } from "@/components/NoCreditsModal";
+import { CreditsIndicator } from "@/components/CreditsIndicator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -49,14 +52,15 @@ const steps = [
 export default function Validatie() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, credits, deductCredit, refetchCredits } = useAuth();
   
   const [currentStep, setCurrentStep] = useState(1);
   const resultsRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   
-  // SessionId gebaseerd op user.id - consistent per gebruiker
-  const sessionId = user?.id ? `user_${user.id}` : `guest_${Date.now()}`;
+  // Guest session for non-authenticated users
+  const [guestSessionId] = useState(() => `guest_${Date.now()}`);
+  const sessionId = user?.id ? `user_${user.id}` : guestSessionId;
   
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(searchParams.get('projectId'));
   const [selectedProductId, setSelectedProductId] = useState<string | null>(searchParams.get('productId'));
@@ -72,6 +76,14 @@ export default function Validatie() {
   const [storedFiles, setStoredFiles] = useState<StoredFile[]>([]);
   const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
   const [errorData, setErrorData] = useState<{ message: string; rawResponse?: any } | null>(null);
+
+  // Modal states for guest flow
+  const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
+  const [showNoCreditsModal, setShowNoCreditsModal] = useState(false);
+  const [pendingGuestValidation, setPendingGuestValidation] = useState<{
+    result: ValidationResponse | null;
+    storedFiles: StoredFile[];
+  } | null>(null);
 
   // Knowledge bank lookup
   const { entry: knowledgeBankEntry, isLoading: isLoadingKnowledgeBank } = useKnowledgeBank(
@@ -144,8 +156,9 @@ export default function Validatie() {
   };
 
   const handleSend = async () => {
-    if (!user) {
-      toast.error("Je moet ingelogd zijn om te valideren");
+    // Check credits for logged-in users
+    if (user && credits <= 0) {
+      setShowNoCreditsModal(true);
       return;
     }
     
@@ -159,31 +172,30 @@ export default function Validatie() {
       const selectedProduct = productTypes.find(p => p.id === selectedProductType);
       if (!selectedProduct) throw new Error("Product type not found");
       
-      // Stap 1: Upload PDFs naar Supabase Storage (user folder)
-      toast.info("PDF bestanden opslaan...");
-      savedStoredFiles = await uploadPDFsToStorage(uploadedFiles, user.id, sessionId);
-      setStoredFiles(savedStoredFiles);
-      console.log("✅ PDFs opgeslagen:", savedStoredFiles);
-      
-      // Stap 1b: Check of dit de eerste validatie is voor dit EAN+cert
-      // Als ja, upload ook naar Knowledge Bank folder
-      if (selectedEanCode && selectedCertification) {
-        const kbExists = await checkKnowledgeBankExists(selectedEanCode, selectedCertification);
+      // For logged-in users: upload to storage
+      if (user) {
+        toast.info("PDF bestanden opslaan...");
+        savedStoredFiles = await uploadPDFsToStorage(uploadedFiles, user.id, sessionId);
+        setStoredFiles(savedStoredFiles);
+        console.log("✅ PDFs opgeslagen:", savedStoredFiles);
         
-        if (!kbExists) {
-          toast.info("Eerste validatie voor dit product - opslaan in kennisbank...");
-          kbSourceFiles = await uploadPDFsToKnowledgeBank(
-            uploadedFiles, 
-            selectedEanCode, 
-            selectedCertification
-          );
-          console.log("✅ PDFs opgeslagen in Knowledge Bank:", kbSourceFiles);
-        } else {
-          console.log("ℹ️ Product bestaat al in KB, skip KB upload");
+        // Check knowledge bank for first validation
+        if (selectedEanCode && selectedCertification) {
+          const kbExists = await checkKnowledgeBankExists(selectedEanCode, selectedCertification);
+          
+          if (!kbExists) {
+            toast.info("Eerste validatie voor dit product - opslaan in kennisbank...");
+            kbSourceFiles = await uploadPDFsToKnowledgeBank(
+              uploadedFiles, 
+              selectedEanCode, 
+              selectedCertification
+            );
+            console.log("✅ PDFs opgeslagen in Knowledge Bank:", kbSourceFiles);
+          }
         }
       }
       
-      // Stap 2: Stuur naar webhook voor validatie
+      // Execute validation
       toast.info("Validatie uitvoeren...");
       const response = await sendValidationRequest(
         sessionId, 
@@ -196,22 +208,29 @@ export default function Validatie() {
       setValidationData(response);
       setErrorData(null);
       toast.success("Validatie ontvangen!");
-      setCurrentStep(4); // Go to results
+      setCurrentStep(4);
       
-      await saveValidation(response, 'completed', savedStoredFiles);
-      
-      // Update knowledge bank if we have an EAN code
-      if (selectedEanCode && selectedCertification) {
-        // Extract the result data based on response type
-        const resultData = 'data' in response ? response.data : response;
-        await updateKnowledgeBank(
-          selectedEanCode,
-          selectedProductName,
-          selectedCertification,
-          selectedProduct,
-          resultData,
-          kbSourceFiles // Only set on first validation, null on subsequent
-        );
+      // For logged-in users: deduct credit and save
+      if (user) {
+        await deductCredit();
+        await saveValidation(response, 'completed', savedStoredFiles);
+        
+        // Update knowledge bank if we have an EAN code
+        if (selectedEanCode && selectedCertification) {
+          const resultData = 'data' in response ? response.data : response;
+          await updateKnowledgeBank(
+            selectedEanCode,
+            selectedProductName,
+            selectedCertification,
+            selectedProduct,
+            resultData,
+            kbSourceFiles
+          );
+        }
+      } else {
+        // Guest user: show account creation modal
+        setPendingGuestValidation({ result: response, storedFiles: savedStoredFiles });
+        setShowCreateAccountModal(true);
       }
     } catch (error) {
       console.error("❌ [UI] Send error:", error);
@@ -221,12 +240,32 @@ export default function Validatie() {
         rawResponse: (error as any).rawResponse
       });
       toast.error("Verzenden mislukt - check console voor details");
-      setCurrentStep(4); // Also go to results to show error
+      setCurrentStep(4);
       
-      await saveValidation(null, 'failed', savedStoredFiles);
+      if (user) {
+        await saveValidation(null, 'failed', savedStoredFiles);
+      }
     } finally {
       setIsSending(false);
     }
+  };
+
+  const handleAccountCreated = async () => {
+    setShowCreateAccountModal(false);
+    
+    // After account creation, refetch credits and save the pending validation
+    await refetchCredits();
+    
+    if (pendingGuestValidation) {
+      toast.success("Account aangemaakt! Je validatie wordt opgeslagen...");
+      setPendingGuestValidation(null);
+    }
+  };
+
+  const handleSkipAccountCreation = () => {
+    setShowCreateAccountModal(false);
+    setPendingGuestValidation(null);
+    toast.info("Resultaten worden niet opgeslagen. Maak een account aan om volgende keer te bewaren.");
   };
 
   const handleReset = () => {
@@ -289,6 +328,17 @@ export default function Validatie() {
   if (currentStep === 4) {
     return (
       <Layout>
+        <CreditsIndicator />
+        <CreateAccountModal
+          isOpen={showCreateAccountModal}
+          onClose={() => setShowCreateAccountModal(false)}
+          onAccountCreated={handleAccountCreated}
+          onSkip={handleSkipAccountCreation}
+        />
+        <NoCreditsModal
+          isOpen={showNoCreditsModal}
+          onClose={() => setShowNoCreditsModal(false)}
+        />
         <div className="flex-1 py-12 px-6" style={{ background: 'hsl(var(--muted))' }}>
         
         <div className="flex-1 py-12 px-6">
@@ -414,6 +464,11 @@ export default function Validatie() {
   // Wizard View (Steps 1-3)
   return (
     <Layout>
+      <CreditsIndicator />
+      <NoCreditsModal
+        isOpen={showNoCreditsModal}
+        onClose={() => setShowNoCreditsModal(false)}
+      />
       <LoadingModal 
         isOpen={isSending} 
         message="Validatie uitvoeren..."

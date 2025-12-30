@@ -8,11 +8,14 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  credits: number;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  deductCredit: () => Promise<boolean>;
+  refetchCredits: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,7 +24,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [credits, setCredits] = useState(0);
   const navigate = useNavigate();
+
+  const fetchCredits = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching credits:', error);
+        return;
+      }
+      
+      setCredits(data?.credits ?? 0);
+    } catch (error) {
+      console.error('Error fetching credits:', error);
+    }
+  };
+
+  const refetchCredits = async () => {
+    if (user) {
+      await fetchCredits(user.id);
+    }
+  };
+
+  const deductCredit = async (): Promise<boolean> => {
+    if (!user || credits <= 0) return false;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ credits: credits - 1 })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error deducting credit:', error);
+        return false;
+      }
+
+      setCredits(prev => prev - 1);
+      return true;
+    } catch (error) {
+      console.error('Error deducting credit:', error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -30,6 +81,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Fetch credits when user logs in
+        if (session?.user) {
+          setTimeout(() => {
+            fetchCredits(session.user.id);
+          }, 0);
+        } else {
+          setCredits(0);
+        }
       }
     );
 
@@ -38,6 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      if (session?.user) {
+        fetchCredits(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -72,7 +136,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!error) {
       toast.success('Welkom terug!');
-      navigate('/dashboard');
     }
 
     return { error };
@@ -82,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/`,
       }
     });
 
@@ -105,12 +168,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
+    setCredits(0);
     toast.success('Je bent uitgelogd');
     navigate('/');
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signInWithGoogle, resetPassword, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      loading, 
+      credits,
+      signUp, 
+      signIn, 
+      signInWithGoogle, 
+      resetPassword, 
+      signOut,
+      deductCredit,
+      refetchCredits
+    }}>
       {children}
     </AuthContext.Provider>
   );
