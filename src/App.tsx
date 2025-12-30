@@ -7,7 +7,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { EmbeddedProvider } from "@/contexts/EmbeddedContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieConsent } from "@/components/CookieConsent";
-import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Validatie from "./pages/Validatie";
