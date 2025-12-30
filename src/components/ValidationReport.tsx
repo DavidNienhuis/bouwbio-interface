@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { SourceLink } from "@/components/SourceLink";
 import { useSourceFiles } from "@/components/SourceFilesContext";
-import type { BouwbiologischAdviesData } from "@/lib/webhookClient";
+import type { BouwbiologischAdviesData, Bron } from "@/lib/webhookClient";
 
 interface ValidationReportProps {
   data: BouwbiologischAdviesData;
@@ -22,6 +22,17 @@ const formatDate = () => {
     month: '2-digit',
     year: 'numeric'
   });
+};
+
+// Compact source text for PDF (not clickable)
+const getCompactSourceText = (bron: Bron): string => {
+  if (typeof bron === 'object' && bron !== null) {
+    const filename = bron.bestand?.split('/').pop() || bron.bestand || '';
+    const shortName = filename.length > 25 ? filename.substring(0, 22) + '...' : filename;
+    return bron.pagina ? `[${shortName} p.${bron.pagina}]` : `[${shortName}]`;
+  }
+  const str = String(bron);
+  return str.length > 25 ? `[${str.substring(0, 22)}...]` : `[${str}]`;
 };
 
 const getStatusBadgeClass = (status: string): string => {
@@ -76,6 +87,18 @@ const getConclusionText = (niveau: string | number, kleur: string): string => {
   return 'NADER ONDERZOEK';
 };
 
+// Source reference component - renders both versions, CSS controls visibility
+const SourceRef = ({ bron, sourceFiles }: { bron: Bron; sourceFiles: any[] }) => {
+  return (
+    <>
+      <div className="source-ref">
+        <SourceLink bron={bron} sourceFiles={sourceFiles} variant="text" />
+      </div>
+      <span className="source-ref-print">{getCompactSourceText(bron)}</span>
+    </>
+  );
+};
+
 export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps>(
   ({ data, reportId }, ref) => {
     const { sourceFiles } = useSourceFiles();
@@ -106,9 +129,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
                 <td style={{ fontWeight: 'bold' }}>
                   {data.product.identificatie.naam || 'Niet gespecificeerd'}
                   {data.product.identificatie.bron && (
-                    <div className="source-ref">
-                      <SourceLink bron={data.product.identificatie.bron} sourceFiles={sourceFiles} variant="text" />
-                    </div>
+                    <SourceRef bron={data.product.identificatie.bron} sourceFiles={sourceFiles} />
                   )}
                 </td>
               </tr>
@@ -128,15 +149,15 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
 
         {/* Section 2: Toxicology */}
         <section className="section-block">
-          <div className="section-title">2. Toxicologische Screening & Prioriteitsstoffen</div>
+          <div className="section-title">2. Toxicologische Screening</div>
           {data.scores.toxicologie.gecheckte_stoffen && data.scores.toxicologie.gecheckte_stoffen.length > 0 ? (
             <table className="tech-table">
               <thead>
                 <tr>
-                  <th style={{ width: '15%' }}>CAS-Nummer</th>
-                  <th style={{ width: '40%' }}>Chemische Benaming</th>
-                  <th style={{ width: '25%' }}>Classificatie</th>
-                  <th style={{ width: '20%' }}>Status</th>
+                  <th style={{ width: '15%' }}>CAS-Nr</th>
+                  <th style={{ width: '40%' }}>Benaming</th>
+                  <th style={{ width: '20%' }}>Classificatie</th>
+                  <th style={{ width: '25%' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -145,11 +166,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
                     <td className="data-mono">{stof.cas}</td>
                     <td>
                       {stof.naam || `Stof ${idx + 1}`}
-                      {stof.bron && (
-                        <div className="source-ref">
-                          <SourceLink bron={stof.bron} sourceFiles={sourceFiles} variant="text" />
-                        </div>
-                      )}
+                      {stof.bron && <SourceRef bron={stof.bron} sourceFiles={sourceFiles} />}
                     </td>
                     <td>
                       <span className={`status-badge ${getStatusBadgeClass(stof.lijst || 'clean')}`}>
@@ -158,7 +175,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
                     </td>
                     <td>
                       {stof.status === 'HIT' ? (
-                        <span className="status-badge non-conform">🚨 GEDETECTEERD</span>
+                        <span className="status-badge non-conform">GEDETECTEERD</span>
                       ) : (
                         <span style={{ color: 'hsl(218 19% 50%)' }}>Geen hit</span>
                       )}
@@ -169,12 +186,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
             </table>
           ) : (
             <div className="summary-box">
-              <strong>Geen stoffen gevonden:</strong> Er zijn geen chemische stoffen geïdentificeerd in de aangeleverde documentatie.
-            </div>
-          )}
-          {data.scores.toxicologie.samenvatting && (
-            <div className="summary-box" style={{ marginTop: '15px' }}>
-              <strong>Samenvatting:</strong> {data.scores.toxicologie.samenvatting}
+              Geen stoffen geïdentificeerd in documentatie.
             </div>
           )}
         </section>
@@ -187,7 +199,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
               <thead>
                 <tr>
                   <th>Metric</th>
-                  <th>Gemeten Waarde</th>
+                  <th>Gemeten</th>
                   <th>Grenswaarde</th>
                   <th>Resultaat</th>
                 </tr>
@@ -197,11 +209,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
                   <tr key={idx}>
                     <td>
                       {item.stof}
-                      {item.bron && (
-                        <div className="source-ref">
-                          <SourceLink bron={item.bron} sourceFiles={sourceFiles} variant="text" />
-                        </div>
-                      )}
+                      {item.bron && <SourceRef bron={item.bron} sourceFiles={sourceFiles} />}
                     </td>
                     <td className="data-mono">{item.gemeten_waarde || '--'}</td>
                     <td className="data-mono">{item.grenswaarde || 'N.v.t.'}</td>
@@ -216,24 +224,22 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
             </table>
           ) : (
             <div className="summary-box">
-              <strong>Emissiegegevens:</strong> {
-                !Array.isArray(data.scores.emissies.details) && data.scores.emissies.details?.toelichting
-                  ? data.scores.emissies.details.toelichting
-                  : 'Geen emissiewaarden beschikbaar in de aangeleverde documentatie.'
-              }
+              {!Array.isArray(data.scores.emissies.details) && data.scores.emissies.details?.toelichting
+                ? data.scores.emissies.details.toelichting
+                : 'Geen emissiewaarden beschikbaar.'}
             </div>
           )}
         </section>
 
         {/* Section 4: Certificates */}
         <section className="section-block">
-          <div className="section-title">4. Validatie Certificaten & Claims</div>
+          <div className="section-title">4. Certificaten & Claims</div>
           {data.scores.certificaten.gevonden_certificaten && data.scores.certificaten.gevonden_certificaten.length > 0 ? (
             <table className="tech-table">
               <thead>
                 <tr>
-                  <th style={{ width: '30%' }}>Document / Certificaat</th>
-                  <th style={{ width: '50%' }}>Beoordeling conform GN22</th>
+                  <th style={{ width: '30%' }}>Document</th>
+                  <th style={{ width: '50%' }}>Beoordeling GN22</th>
                   <th style={{ width: '20%' }}>Validatie</th>
                 </tr>
               </thead>
@@ -242,15 +248,9 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
                   <tr key={idx}>
                     <td>
                       {cert.gevonden_term || cert.naam || `Certificaat ${idx + 1}`}
-                      {cert.bron && (
-                        <div className="source-ref">
-                          <SourceLink bron={cert.bron} sourceFiles={sourceFiles} variant="text" />
-                        </div>
-                      )}
+                      {cert.bron && <SourceRef bron={cert.bron} sourceFiles={sourceFiles} />}
                     </td>
-                    <td>
-                      {cert.reden || cert.type_claim || cert.toelichting_norm || 'Beoordeeld volgens BREEAM-NL GN22 criteria.'}
-                    </td>
+                    <td>{cert.reden || cert.type_claim || cert.toelichting_norm || 'Beoordeeld volgens GN22.'}</td>
                     <td>
                       <span className={`status-badge ${getStatusBadgeClass(cert.status_gn22 || cert.status_gn22_general || 'onbekend')}`}>
                         {getStatusText(cert.status_gn22 || cert.status_gn22_general || 'onbekend')}
@@ -262,25 +262,20 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
             </table>
           ) : (
             <div className="summary-box">
-              <strong>Geen certificaten:</strong> Er zijn geen geldige certificaten of claims aangetroffen in de documentatie.
+              Geen certificaten aangetroffen.
             </div>
           )}
         </section>
 
-        {/* Conclusion */}
+        {/* Conclusion - compact in print mode */}
         <section className="section-block conclusion-box">
           <div>
-            <h3 style={{ fontFamily: 'Georgia, serif', margin: 0, fontSize: '16px' }}>
+            <h3 style={{ fontFamily: 'Georgia, serif', margin: 0, fontSize: '16px' }} className="conclusion-title">
               EINDCONCLUSIE: NIVEAU {data.advies.niveau}
             </h3>
-            <p style={{ fontSize: '12px', marginTop: '5px', color: 'hsl(218 19% 40%)' }}>
-              Status: "{data.advies.label}"
+            <p style={{ fontSize: '12px', marginTop: '4px', color: 'hsl(218 19% 40%)' }}>
+              {data.advies.label}
             </p>
-            {data.advies.bouwbioloog_toelichting && (
-              <p style={{ fontSize: '11px', marginTop: '10px', maxWidth: '500px', lineHeight: '1.5' }}>
-                {data.advies.bouwbioloog_toelichting}
-              </p>
-            )}
           </div>
           <div>
             <span className={`conclusion-badge ${getConclusionBadgeClass(data.advies.niveau)}`}>
@@ -291,8 +286,8 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
 
         {/* Footer */}
         <footer className="report-footer">
-          <div>Gegenereerd door BouwBio Validatie Systeem v1.0</div>
-          <div>Dit document dient als interne rapportage en is geen officieel certificaat.</div>
+          <div>BouwBio Validatie v1.0</div>
+          <div>Interne rapportage, geen officieel certificaat.</div>
         </footer>
       </div>
     );
