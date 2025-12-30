@@ -30,8 +30,8 @@ const App = () => (
         <EmbeddedProvider>
           <AuthProvider>
             <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Landing />} />
+              {/* Main validation tool - no auth required (guest flow) */}
+              <Route path="/" element={<Validatie />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/voorwaarden" element={<Terms />} />
@@ -46,10 +46,10 @@ const App = () => (
                 } 
               />
               <Route 
-                path="/validatie" 
+                path="/profiel" 
                 element={
                   <ProtectedRoute>
-                    <Validatie />
+                    <Profile />
                   </ProtectedRoute>
                 } 
               />

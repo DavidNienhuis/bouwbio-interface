@@ -143,6 +143,7 @@ export type Database = {
         Row: {
           company_name: string | null
           created_at: string | null
+          credits: number
           full_name: string | null
           id: string
           onboarding_completed: boolean | null
@@ -152,6 +153,7 @@ export type Database = {
         Insert: {
           company_name?: string | null
           created_at?: string | null
+          credits?: number
           full_name?: string | null
           id: string
           onboarding_completed?: boolean | null
@@ -161,6 +163,7 @@ export type Database = {
         Update: {
           company_name?: string | null
           created_at?: string | null
+          credits?: number
           full_name?: string | null
           id?: string
           onboarding_completed?: boolean | null
