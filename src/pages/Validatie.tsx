@@ -288,8 +288,8 @@ export default function Validatie() {
   // Results View (Step 4)
   if (currentStep === 4) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
-        <Navbar />
+      <Layout>
+        <div className="flex-1 py-12 px-6" style={{ background: 'hsl(var(--muted))' }}>
         
         <div className="flex-1 py-12 px-6">
           <div className="container mx-auto max-w-4xl">
@@ -406,23 +406,21 @@ export default function Validatie() {
           </div>
         </div>
 
-        <ValidationFooter />
-      </div>
+        </div>
+      </Layout>
     );
   }
 
   // Wizard View (Steps 1-3)
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
-      <Navbar />
-      
+    <Layout>
       <LoadingModal 
         isOpen={isSending} 
         message="Validatie uitvoeren..."
         estimatedTime={60}
       />
       
-      <div className="flex-1 py-12 px-6">
+      <div className="flex-1 py-12 px-6" style={{ background: 'hsl(var(--muted))' }}>
         <div className="container mx-auto max-w-4xl">
           <div className="mb-8">
             <Button 
@@ -612,8 +610,6 @@ export default function Validatie() {
           )}
         </div>
       </div>
-
-      <ValidationFooter />
-    </div>
+    </Layout>
   );
 }
