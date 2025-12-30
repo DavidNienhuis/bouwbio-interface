@@ -5,6 +5,7 @@ import { uploadPDFsToStorage, uploadPDFsToKnowledgeBank, StoredFile } from "@/li
 import { SourceFilesProvider } from "@/components/SourceFilesContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ResultsTable } from "@/components/ResultsTable";
 import { ClassificationResults } from "@/components/ClassificationResults";
 import { HEA02VerdictResults } from "@/components/HEA02VerdictResults";
@@ -15,10 +16,7 @@ import { VerificatieAuditDisplay } from "@/components/VerificatieAuditDisplay";
 import { ValidationReport } from "@/components/ValidationReport";
 import { CASResultsDisplay } from "@/components/CASResultsDisplay";
 import { LoadingModal } from "@/components/LoadingModal";
-import { ProductSelector } from "@/components/ProductSelector";
 import { StepIndicator } from "@/components/StepIndicator";
-import { KnowledgeBankLookup } from "@/components/KnowledgeBankLookup";
-import { KnowledgeBankStatus } from "@/components/KnowledgeBankStatus";
 import { CreateAccountModal } from "@/components/CreateAccountModal";
 import { NoCreditsModal } from "@/components/NoCreditsModal";
 import { CreditsIndicator } from "@/components/CreditsIndicator";
@@ -27,12 +25,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Layout } from "@/components/Layout";
-import { ArrowLeft, ArrowRight, RotateCcw, CheckCircle2, Download } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw, CheckCircle2, Download, Sparkles } from "lucide-react";
 import { exportToPDF, generateFilename } from "@/lib/pdfExport";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useKnowledgeBank, updateKnowledgeBank, checkKnowledgeBankExists } from "@/hooks/useKnowledgeBank";
+import { updateKnowledgeBank, checkKnowledgeBankExists } from "@/hooks/useKnowledgeBank";
 
 const productTypes = [
   { id: "1", name: "Binnenverf en vernissen", description: "Binnenverf en vernissen" },
@@ -43,15 +41,15 @@ const productTypes = [
 ];
 
 const steps = [
-  { id: 1, label: "Setup" },
+  { id: 1, label: "Certificering" },
   { id: 2, label: "Productgroep" },
-  { id: 3, label: "Upload" },
-  { id: 4, label: "Resultaten" },
+  { id: 3, label: "Product" },
+  { id: 4, label: "Upload" },
+  { id: 5, label: "Resultaten" },
 ];
 
 export default function Validatie() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { user, credits, deductCredit, refetchCredits } = useAuth();
   
   const [currentStep, setCurrentStep] = useState(1);
@@ -62,13 +60,11 @@ export default function Validatie() {
   const [guestSessionId] = useState(() => `guest_${Date.now()}`);
   const sessionId = user?.id ? `user_${user.id}` : guestSessionId;
   
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(searchParams.get('projectId'));
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(searchParams.get('productId'));
-  const [selectedEanCode, setSelectedEanCode] = useState<string | null>(null);
-  const [selectedProductName, setSelectedProductName] = useState<string | null>(null);
-  const [usedKnowledgeBank, setUsedKnowledgeBank] = useState(false);
+  // Product info
+  const [productName, setProductName] = useState("");
+  const [eanCode, setEanCode] = useState("");
   
-  const [selectedCertification, setSelectedCertification] = useState<string>("");
+  const [selectedCertification, setSelectedCertification] = useState<string>("BREEAM_HEA02");
   const [selectedProductType, setSelectedProductType] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -77,25 +73,12 @@ export default function Validatie() {
   const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
   const [errorData, setErrorData] = useState<{ message: string; rawResponse?: any } | null>(null);
 
-  // Modal states for guest flow
+  // Modal states
   const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
   const [showNoCreditsModal, setShowNoCreditsModal] = useState(false);
-  const [pendingGuestValidation, setPendingGuestValidation] = useState<{
-    result: ValidationResponse | null;
-    storedFiles: StoredFile[];
-  } | null>(null);
-
-  // Knowledge bank lookup
-  const { entry: knowledgeBankEntry, isLoading: isLoadingKnowledgeBank } = useKnowledgeBank(
-    selectedEanCode,
-    selectedCertification
-  );
-
-  const handleProductChange = (productId: string | null, eanCode: string | null, productName: string | null) => {
-    setSelectedProductId(productId);
-    setSelectedEanCode(eanCode);
-    setSelectedProductName(productName);
-  };
+  
+  // Store pending validation data for after account creation
+  const [pendingValidation, setPendingValidation] = useState(false);
 
   const handleExportPDF = async () => {
     if (!resultsRef.current) return;
@@ -131,37 +114,37 @@ export default function Validatie() {
     }
   };
 
-  const saveValidation = async (result: ValidationResponse | null, status: string, savedStoredFiles: StoredFile[]) => {
-    if (!user) return;
+  const createDefaultProjectAndProduct = async (userId: string) => {
+    // Create default project
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .insert({
+        user_id: userId,
+        name: 'Mijn Eerste Project',
+        description: 'Automatisch aangemaakt bij je eerste validatie'
+      })
+      .select()
+      .single();
 
-    const selectedProduct = productTypes.find(p => p.id === selectedProductType);
-    
-    try {
-      await supabase
-        .from('validations')
-        .insert({
-          user_id: user.id,
-          session_id: sessionId,
-          certification: selectedCertification,
-          product_type: selectedProduct as any,
-          file_names: uploadedFiles.map(f => f.name),
-          source_files: savedStoredFiles as any,
-          result: result as any,
-          status: status,
-          product_id: selectedProductId,
-        });
-    } catch (error) {
-      console.error('Error saving validation:', error);
-    }
+    if (projectError) throw projectError;
+
+    // Create product under the project
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .insert({
+        project_id: project.id,
+        name: productName,
+        ean_code: eanCode || null
+      })
+      .select()
+      .single();
+
+    if (productError) throw productError;
+
+    return { project, product };
   };
 
-  const handleSend = async () => {
-    // Check credits for logged-in users
-    if (user && credits <= 0) {
-      setShowNoCreditsModal(true);
-      return;
-    }
-    
+  const executeValidation = async (userId: string, productId: string) => {
     setIsSending(true);
     setErrorData(null);
     
@@ -172,26 +155,24 @@ export default function Validatie() {
       const selectedProduct = productTypes.find(p => p.id === selectedProductType);
       if (!selectedProduct) throw new Error("Product type not found");
       
-      // For logged-in users: upload to storage
-      if (user) {
-        toast.info("PDF bestanden opslaan...");
-        savedStoredFiles = await uploadPDFsToStorage(uploadedFiles, user.id, sessionId);
-        setStoredFiles(savedStoredFiles);
-        console.log("✅ PDFs opgeslagen:", savedStoredFiles);
+      // Upload to storage
+      toast.info("PDF bestanden opslaan...");
+      savedStoredFiles = await uploadPDFsToStorage(uploadedFiles, userId, sessionId);
+      setStoredFiles(savedStoredFiles);
+      console.log("✅ PDFs opgeslagen:", savedStoredFiles);
+      
+      // Check knowledge bank for first validation
+      if (eanCode && selectedCertification) {
+        const kbExists = await checkKnowledgeBankExists(eanCode, selectedCertification);
         
-        // Check knowledge bank for first validation
-        if (selectedEanCode && selectedCertification) {
-          const kbExists = await checkKnowledgeBankExists(selectedEanCode, selectedCertification);
-          
-          if (!kbExists) {
-            toast.info("Eerste validatie voor dit product - opslaan in kennisbank...");
-            kbSourceFiles = await uploadPDFsToKnowledgeBank(
-              uploadedFiles, 
-              selectedEanCode, 
-              selectedCertification
-            );
-            console.log("✅ PDFs opgeslagen in Knowledge Bank:", kbSourceFiles);
-          }
+        if (!kbExists) {
+          toast.info("Eerste validatie voor dit product - opslaan in kennisbank...");
+          kbSourceFiles = await uploadPDFsToKnowledgeBank(
+            uploadedFiles, 
+            eanCode, 
+            selectedCertification
+          );
+          console.log("✅ PDFs opgeslagen in Knowledge Bank:", kbSourceFiles);
         }
       }
       
@@ -202,35 +183,43 @@ export default function Validatie() {
         selectedCertification, 
         selectedProduct, 
         uploadedFiles,
-        selectedEanCode,
-        selectedProductName
+        eanCode || null,
+        productName
       );
       setValidationData(response);
       setErrorData(null);
       toast.success("Validatie ontvangen!");
-      setCurrentStep(4);
+      setCurrentStep(5);
       
-      // For logged-in users: deduct credit and save
-      if (user) {
-        await deductCredit();
-        await saveValidation(response, 'completed', savedStoredFiles);
-        
-        // Update knowledge bank if we have an EAN code
-        if (selectedEanCode && selectedCertification) {
-          const resultData = 'data' in response ? response.data : response;
-          await updateKnowledgeBank(
-            selectedEanCode,
-            selectedProductName,
-            selectedCertification,
-            selectedProduct,
-            resultData,
-            kbSourceFiles
-          );
-        }
-      } else {
-        // Guest user: show account creation modal
-        setPendingGuestValidation({ result: response, storedFiles: savedStoredFiles });
-        setShowCreateAccountModal(true);
+      // Deduct credit and save
+      await deductCredit();
+      
+      // Save validation to database
+      await supabase
+        .from('validations')
+        .insert({
+          user_id: userId,
+          session_id: sessionId,
+          certification: selectedCertification,
+          product_type: selectedProduct as any,
+          file_names: uploadedFiles.map(f => f.name),
+          source_files: savedStoredFiles as any,
+          result: response as any,
+          status: 'completed',
+          product_id: productId,
+        });
+      
+      // Update knowledge bank if we have an EAN code
+      if (eanCode && selectedCertification) {
+        const resultData = 'data' in response ? response.data : response;
+        await updateKnowledgeBank(
+          eanCode,
+          productName,
+          selectedCertification,
+          selectedProduct,
+          resultData,
+          kbSourceFiles
+        );
       }
     } catch (error) {
       console.error("❌ [UI] Send error:", error);
@@ -240,32 +229,87 @@ export default function Validatie() {
         rawResponse: (error as any).rawResponse
       });
       toast.error("Verzenden mislukt - check console voor details");
-      setCurrentStep(4);
-      
-      if (user) {
-        await saveValidation(null, 'failed', savedStoredFiles);
-      }
+      setCurrentStep(5);
     } finally {
       setIsSending(false);
     }
   };
 
+  const handleStartAnalysis = async () => {
+    // Not logged in? Show account modal
+    if (!user) {
+      setPendingValidation(true);
+      setShowCreateAccountModal(true);
+      return;
+    }
+
+    // Logged in? Check credits
+    if (credits <= 0) {
+      setShowNoCreditsModal(true);
+      return;
+    }
+
+    // Check if user has a project, if not create one
+    const { data: projects } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('user_id', user.id)
+      .limit(1);
+
+    let projectId: string;
+    let productId: string;
+
+    if (!projects || projects.length === 0) {
+      // Create default project and product
+      const { project, product } = await createDefaultProjectAndProduct(user.id);
+      projectId = project.id;
+      productId = product.id;
+    } else {
+      // Create product under existing project
+      const { data: product, error } = await supabase
+        .from('products')
+        .insert({
+          project_id: projects[0].id,
+          name: productName,
+          ean_code: eanCode || null
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      projectId = projects[0].id;
+      productId = product.id;
+    }
+
+    // Execute validation
+    await executeValidation(user.id, productId);
+  };
+
   const handleAccountCreated = async () => {
     setShowCreateAccountModal(false);
     
-    // After account creation, refetch credits and save the pending validation
+    // Wait for auth state to update
     await refetchCredits();
     
-    if (pendingGuestValidation) {
-      toast.success("Account aangemaakt! Je validatie wordt opgeslagen...");
-      setPendingGuestValidation(null);
+    // Get the new user
+    const { data: { user: newUser } } = await supabase.auth.getUser();
+    
+    if (newUser && pendingValidation) {
+      toast.success("Account aangemaakt! Validatie wordt gestart...");
+      
+      try {
+        // Create project and product for new user
+        const { project, product } = await createDefaultProjectAndProduct(newUser.id);
+        
+        // Execute the validation
+        await executeValidation(newUser.id, product.id);
+      } catch (error) {
+        console.error("Error after account creation:", error);
+        toast.error("Er ging iets mis bij het starten van de validatie");
+      }
     }
-  };
-
-  const handleSkipAccountCreation = () => {
-    setShowCreateAccountModal(false);
-    setPendingGuestValidation(null);
-    toast.info("Resultaten worden niet opgeslagen. Maak een account aan om volgende keer te bewaren.");
+    
+    setPendingValidation(false);
   };
 
   const handleReset = () => {
@@ -273,75 +317,47 @@ export default function Validatie() {
     setStoredFiles([]);
     setValidationData(null);
     setErrorData(null);
-    setSelectedProjectId(null);
-    setSelectedProductId(null);
-    setSelectedEanCode(null);
-    setSelectedProductName(null);
-    setSelectedCertification("");
+    setProductName("");
+    setEanCode("");
+    setSelectedCertification("BREEAM_HEA02");
     setSelectedProductType("");
-    setUsedKnowledgeBank(false);
     setCurrentStep(1);
     toast.info("Sessie gereset");
   };
 
-  const handleUseKnowledgeBank = () => {
-    if (knowledgeBankEntry?.latest_result) {
-      setValidationData({
-        type: 'bouwbiologisch_advies',
-        data: knowledgeBankEntry.latest_result
-      });
-      // Use KB source files if available
-      if (knowledgeBankEntry.source_files) {
-        setStoredFiles(knowledgeBankEntry.source_files);
-      }
-      setUsedKnowledgeBank(true);
-      setCurrentStep(4);
-      toast.success("Kennisbank data geladen!");
-    }
-  };
-
-  const canGoToStep2 = selectedCertification === "BREEAM_HEA02";
+  const canGoToStep2 = selectedCertification !== "";
   const canGoToStep3 = canGoToStep2 && selectedProductType !== "";
-  const canSend = canGoToStep3 && uploadedFiles.length > 0;
+  const canGoToStep4 = canGoToStep3 && productName.trim() !== "";
+  const canSend = canGoToStep4 && uploadedFiles.length > 0;
 
   const handleNextStep = () => {
     if (currentStep === 1 && canGoToStep2) {
       setCurrentStep(2);
     } else if (currentStep === 2 && canGoToStep3) {
       setCurrentStep(3);
+    } else if (currentStep === 3 && canGoToStep4) {
+      setCurrentStep(4);
     }
   };
 
   const handlePreviousStep = () => {
-    if (currentStep > 1 && currentStep < 4) {
+    if (currentStep > 1 && currentStep < 5) {
       setCurrentStep(currentStep - 1);
     }
   };
 
   const handleStepClick = (step: number) => {
-    if (step < currentStep && currentStep !== 4) {
+    if (step < currentStep && currentStep !== 5) {
       setCurrentStep(step);
     }
   };
 
-  // Results View (Step 4)
-  if (currentStep === 4) {
+  // Results View (Step 5)
+  if (currentStep === 5) {
     return (
       <Layout>
         <CreditsIndicator />
-        <CreateAccountModal
-          isOpen={showCreateAccountModal}
-          onClose={() => setShowCreateAccountModal(false)}
-          onAccountCreated={handleAccountCreated}
-          onSkip={handleSkipAccountCreation}
-        />
-        <NoCreditsModal
-          isOpen={showNoCreditsModal}
-          onClose={() => setShowNoCreditsModal(false)}
-        />
         <div className="flex-1 py-12 px-6" style={{ background: 'hsl(var(--muted))' }}>
-        
-        <div className="flex-1 py-12 px-6">
           <div className="container mx-auto max-w-4xl">
             <div className="mb-8 flex items-center justify-between">
               <div>
@@ -374,6 +390,19 @@ export default function Validatie() {
                 </Button>
               </div>
             </div>
+
+            {user && (
+              <div className="mb-6">
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate('/projecten')}
+                  className="gap-2"
+                >
+                  Bekijk je projecten
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
 
             {/* Error display */}
             {errorData && (
@@ -440,31 +469,26 @@ export default function Validatie() {
                     </Card>
                   )}
                 </SourceFilesProvider>
-
-                {/* Knowledge Bank Status - show when data was added */}
-                {selectedEanCode && !usedKnowledgeBank && (
-                  <KnowledgeBankStatus />
-                )}
-                {usedKnowledgeBank && (
-                  <KnowledgeBankStatus 
-                    usedExisting={true} 
-                    validationCount={knowledgeBankEntry?.validation_count} 
-                  />
-                )}
               </div>
             )}
           </div>
-        </div>
-
         </div>
       </Layout>
     );
   }
 
-  // Wizard View (Steps 1-3)
+  // Wizard View (Steps 1-4)
   return (
     <Layout>
       <CreditsIndicator />
+      <CreateAccountModal
+        isOpen={showCreateAccountModal}
+        onClose={() => {
+          setShowCreateAccountModal(false);
+          setPendingValidation(false);
+        }}
+        onAccountCreated={handleAccountCreated}
+      />
       <NoCreditsModal
         isOpen={showNoCreditsModal}
         onClose={() => setShowNoCreditsModal(false)}
@@ -477,20 +501,19 @@ export default function Validatie() {
       
       <div className="flex-1 py-12 px-6" style={{ background: 'hsl(var(--muted))' }}>
         <div className="container mx-auto max-w-4xl">
-          <div className="mb-8">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/dashboard')}
-              className="mb-4 gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Terug naar Dashboard
-            </Button>
-            <h1 className="font-heading font-medium text-4xl" style={{ color: 'hsl(190 16% 12%)' }}>
-              Validatie Tool
-            </h1>
-            <p className="text-lg mt-2" style={{ color: 'hsl(218 19% 27%)' }}>
-              BREEAM HEA02 Validatie met PDF Upload
+          {/* Hero Header */}
+          <div className="mb-8 text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Sparkles className="w-8 h-8" style={{ color: 'hsl(142 64% 62%)' }} />
+              <h1 className="font-heading font-medium text-4xl" style={{ color: 'hsl(190 16% 12%)' }}>
+                Product Analyse Tool
+              </h1>
+            </div>
+            <p className="text-lg" style={{ color: 'hsl(218 19% 27%)' }}>
+              Analyseer je bouwproducten op BREEAM HEA02 compliance met AI
+            </p>
+            <p className="text-sm mt-2" style={{ color: 'hsl(218 19% 27% / 0.7)' }}>
+              Powered by Bouwbioloog Zwolle
             </p>
           </div>
 
@@ -501,31 +524,14 @@ export default function Validatie() {
             onStepClick={handleStepClick}
           />
 
-          {/* Step 1: Setup */}
+          {/* Step 1: Certification */}
           {currentStep === 1 && (
             <div className="space-y-6">
-              <ProductSelector
-                selectedProjectId={selectedProjectId}
-                selectedProductId={selectedProductId}
-                onProjectChange={setSelectedProjectId}
-                onProductChange={handleProductChange}
-              />
-
-              {/* Knowledge Bank Lookup */}
-              {selectedEanCode && selectedCertification && (
-                <KnowledgeBankLookup
-                  entry={knowledgeBankEntry}
-                  isLoading={isLoadingKnowledgeBank}
-                  onUseExisting={handleUseKnowledgeBank}
-                  onNewValidation={() => setCurrentStep(2)}
-                />
-              )}
-
               <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
                 <CardHeader>
                   <CardTitle className="font-heading">Kies certificeringssysteem</CardTitle>
                   <CardDescription>
-                    Selecteer het certificeringssysteem waarmee u wilt valideren
+                    Selecteer het certificeringssysteem waarmee je wilt valideren
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -576,7 +582,7 @@ export default function Validatie() {
                       {productTypes.map((product) => (
                         <div 
                           key={product.id} 
-                          className="flex items-start space-x-3 p-4 transition-colors cursor-pointer"
+                          className="flex items-start space-x-3 p-4 rounded-lg transition-colors cursor-pointer"
                           style={{ border: '1px solid hsl(218 14% 85%)' }}
                           onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(142 64% 62% / 0.05)'}
                           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
@@ -615,14 +621,72 @@ export default function Validatie() {
             </div>
           )}
 
-          {/* Step 3: Upload */}
+          {/* Step 3: Product Name */}
           {currentStep === 3 && (
             <div className="space-y-6">
               <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
                 <CardHeader>
-                  <CardTitle className="font-heading">Upload PDF</CardTitle>
+                  <CardTitle className="font-heading">Product informatie</CardTitle>
                   <CardDescription>
-                    Upload PDF bestanden voor validatie
+                    Voer de naam van je product in
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="productName">Productnaam *</Label>
+                    <Input
+                      id="productName"
+                      placeholder="Bijv. Sigma Siloxan Primer"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="eanCode">EAN Code (optioneel)</Label>
+                    <Input
+                      id="eanCode"
+                      placeholder="Bijv. 8711401234567"
+                      value={eanCode}
+                      onChange={(e) => setEanCode(e.target.value)}
+                    />
+                    <p className="text-xs" style={{ color: 'hsl(218 19% 27% / 0.7)' }}>
+                      Met een EAN code kunnen resultaten worden opgezocht in de kennisbank
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-between">
+                <Button 
+                  variant="outline"
+                  onClick={handlePreviousStep}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Vorige
+                </Button>
+                <Button 
+                  onClick={handleNextStep}
+                  disabled={!canGoToStep4}
+                  className="gap-2"
+                  style={{ background: canGoToStep4 ? 'hsl(142 64% 62%)' : undefined, color: canGoToStep4 ? 'hsl(186 100% 10%)' : undefined }}
+                >
+                  Volgende
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Upload */}
+          {currentStep === 4 && (
+            <div className="space-y-6">
+              <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+                <CardHeader>
+                  <CardTitle className="font-heading">Upload PDF bestanden</CardTitle>
+                  <CardDescription>
+                    Upload de productdocumentatie voor analyse
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -652,13 +716,13 @@ export default function Validatie() {
                   Vorige
                 </Button>
                 <Button 
-                  onClick={handleSend}
+                  onClick={handleStartAnalysis}
                   disabled={!canSend || isSending}
                   className="gap-2"
                   style={{ background: canSend ? 'hsl(142 64% 62%)' : undefined, color: canSend ? 'hsl(186 100% 10%)' : undefined }}
                 >
-                  Verstuur validatie
-                  <ArrowRight className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4" />
+                  Start Analyse
                 </Button>
               </div>
             </div>
