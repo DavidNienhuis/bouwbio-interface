@@ -1,36 +1,24 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, TestTube, FileCheck, ArrowRight, Beaker, CheckCircle } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
-import { ValidationFooter } from '@/components/ValidationFooter';
+import { Award, FileCheck, ArrowRight, Beaker, CheckCircle } from 'lucide-react';
+import { Layout } from '@/components/Layout';
 import aiValidationHero from '@/assets/ai-validation-hero.png';
 
 export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
-      <Navbar />
-
+    <Layout>
       {/* Hero Section */}
-      <section 
-        className="py-24 px-6"
-        style={{ background: 'hsl(186 100% 10%)' }}
-      >
+      <section className="py-24 px-6 bg-card">
         <div className="container mx-auto max-w-7xl">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h1 
-                className="font-heading font-medium text-5xl leading-tight mb-6"
-                style={{ color: '#FFFFFF', letterSpacing: '0.02em' }}
-              >
+              <h1 className="font-heading font-normal text-5xl leading-tight mb-6 text-foreground">
                 Valideer uw bouwmaterialen met AI
               </h1>
-              <p 
-                className="text-lg mb-8 leading-relaxed"
-                style={{ color: 'rgba(255, 255, 255, 0.8)' }}
-              >
+              <p className="text-lg mb-8 leading-relaxed text-muted-foreground">
                 Automatische BREEAM HEA02 validatie, toxicologie checks en certificaat verificatie. 
                 Upload PDF's en ontvang binnen minuten een compleet rapport.
               </p>
@@ -47,10 +35,7 @@ export default function Landing() {
                   size="lg" 
                   variant="outline"
                   onClick={() => navigate('/auth')}
-                  style={{ 
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    color: 'rgba(255, 255, 255, 0.9)'
-                  }}
+                  className="border-border text-muted-foreground hover:text-primary hover:border-primary"
                 >
                   Login
                 </Button>
@@ -68,24 +53,21 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-6">
+      <section id="features" className="py-20 px-6 bg-background">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
-            <h2 className="font-heading font-medium text-4xl mb-4" style={{ color: 'hsl(190 16% 12%)' }}>
+            <h2 className="font-heading font-normal text-4xl mb-4 text-foreground">
               Wat Bouwbioloog doet
             </h2>
-            <p className="text-lg max-w-2xl mx-auto" style={{ color: 'hsl(218 19% 27%)' }}>
+            <p className="text-lg max-w-2xl mx-auto text-muted-foreground">
               Een compleet platform voor duurzame materiaal validatie
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+            <Card className="border-border">
               <CardHeader>
-                <div 
-                  className="w-12 h-12 flex items-center justify-center mb-4"
-                  style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-                >
+                <div className="w-12 h-12 flex items-center justify-center mb-4 bg-primary text-primary-foreground">
                   <Award className="w-6 h-6" />
                 </div>
                 <CardTitle className="font-heading">BREEAM HEA02 Validatie</CardTitle>
@@ -94,29 +76,26 @@ export default function Landing() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-sm" style={{ color: 'hsl(218 19% 27%)' }}>
+                <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" style={{ color: 'hsl(142 64% 62%)' }} />
+                    <CheckCircle className="w-4 h-4 text-primary" />
                     Certificaat verificatie
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" style={{ color: 'hsl(142 64% 62%)' }} />
+                    <CheckCircle className="w-4 h-4 text-primary" />
                     Emissiewaarden controle
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" style={{ color: 'hsl(142 64% 62%)' }} />
+                    <CheckCircle className="w-4 h-4 text-primary" />
                     Normatieve grenswaarden
                   </li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+            <Card className="border-border">
               <CardHeader>
-                <div 
-                  className="w-12 h-12 flex items-center justify-center mb-4"
-                  style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-                >
+                <div className="w-12 h-12 flex items-center justify-center mb-4 bg-primary text-primary-foreground">
                   <Beaker className="w-6 h-6" />
                 </div>
                 <CardTitle className="font-heading">Toxicologie Check</CardTitle>
@@ -125,29 +104,26 @@ export default function Landing() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-sm" style={{ color: 'hsl(218 19% 27%)' }}>
+                <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" style={{ color: 'hsl(142 64% 62%)' }} />
+                    <CheckCircle className="w-4 h-4 text-primary" />
                     Banned substances detectie
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" style={{ color: 'hsl(142 64% 62%)' }} />
+                    <CheckCircle className="w-4 h-4 text-primary" />
                     Priority chemicals
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" style={{ color: 'hsl(142 64% 62%)' }} />
+                    <CheckCircle className="w-4 h-4 text-primary" />
                     Watch list monitoring
                   </li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+            <Card className="border-border">
               <CardHeader>
-                <div 
-                  className="w-12 h-12 flex items-center justify-center mb-4"
-                  style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-                >
+                <div className="w-12 h-12 flex items-center justify-center mb-4 bg-primary text-primary-foreground">
                   <FileCheck className="w-6 h-6" />
                 </div>
                 <CardTitle className="font-heading">Snelle Rapporten</CardTitle>
@@ -156,17 +132,17 @@ export default function Landing() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-sm" style={{ color: 'hsl(218 19% 27%)' }}>
+                <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" style={{ color: 'hsl(142 64% 62%)' }} />
+                    <CheckCircle className="w-4 h-4 text-primary" />
                     Multi-PDF upload
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" style={{ color: 'hsl(142 64% 62%)' }} />
+                    <CheckCircle className="w-4 h-4 text-primary" />
                     Gestructureerde output
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" style={{ color: 'hsl(142 64% 62%)' }} />
+                    <CheckCircle className="w-4 h-4 text-primary" />
                     Export mogelijkheden
                   </li>
                 </ul>
@@ -177,59 +153,50 @@ export default function Landing() {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 px-6" style={{ background: 'hsl(0 0% 100%)' }}>
+      <section className="py-20 px-6 bg-card">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
-            <h2 className="font-heading font-medium text-4xl mb-4" style={{ color: 'hsl(190 16% 12%)' }}>
+            <h2 className="font-heading font-normal text-4xl mb-4 text-foreground">
               Hoe het werkt
             </h2>
-            <p className="text-lg max-w-2xl mx-auto" style={{ color: 'hsl(218 19% 27%)' }}>
+            <p className="text-lg max-w-2xl mx-auto text-muted-foreground">
               In drie simpele stappen naar een volledig validatierapport
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12">
             <div className="text-center">
-              <div 
-                className="w-16 h-16 flex items-center justify-center text-2xl font-heading font-bold mx-auto mb-6"
-                style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-              >
+              <div className="w-16 h-16 flex items-center justify-center text-2xl font-heading font-bold mx-auto mb-6 bg-primary text-primary-foreground">
                 1
               </div>
-              <h3 className="font-heading text-xl mb-3" style={{ color: 'hsl(190 16% 12%)' }}>
+              <h3 className="font-heading text-xl mb-3 text-foreground">
                 Upload PDF's
               </h3>
-              <p style={{ color: 'hsl(218 19% 27%)' }}>
+              <p className="text-muted-foreground">
                 Sleep uw materiaal documenten naar het uploadgebied. Meerdere bestanden tegelijk mogelijk.
               </p>
             </div>
 
             <div className="text-center">
-              <div 
-                className="w-16 h-16 flex items-center justify-center text-2xl font-heading font-bold mx-auto mb-6"
-                style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-              >
+              <div className="w-16 h-16 flex items-center justify-center text-2xl font-heading font-bold mx-auto mb-6 bg-primary text-primary-foreground">
                 2
               </div>
-              <h3 className="font-heading text-xl mb-3" style={{ color: 'hsl(190 16% 12%)' }}>
+              <h3 className="font-heading text-xl mb-3 text-foreground">
                 AI Analyse
               </h3>
-              <p style={{ color: 'hsl(218 19% 27%)' }}>
+              <p className="text-muted-foreground">
                 Onze AI analyseert certificaten, emissies en toxicologie volgens BREEAM HEA02 normen.
               </p>
             </div>
 
             <div className="text-center">
-              <div 
-                className="w-16 h-16 flex items-center justify-center text-2xl font-heading font-bold mx-auto mb-6"
-                style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-              >
+              <div className="w-16 h-16 flex items-center justify-center text-2xl font-heading font-bold mx-auto mb-6 bg-primary text-primary-foreground">
                 3
               </div>
-              <h3 className="font-heading text-xl mb-3" style={{ color: 'hsl(190 16% 12%)' }}>
+              <h3 className="font-heading text-xl mb-3 text-foreground">
                 Ontvang Rapport
               </h3>
-              <p style={{ color: 'hsl(218 19% 27%)' }}>
+              <p className="text-muted-foreground">
                 Krijg direct een gedetailleerd rapport met alle resultaten en aanbevelingen.
               </p>
             </div>
@@ -238,35 +205,24 @@ export default function Landing() {
       </section>
 
       {/* CTA Section */}
-      <section 
-        className="py-20 px-6"
-        style={{ background: 'hsl(186 100% 10%)' }}
-      >
+      <section className="py-20 px-6 bg-primary">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 
-            className="font-heading font-medium text-4xl mb-6"
-            style={{ color: '#FFFFFF' }}
-          >
+          <h2 className="font-heading font-normal text-4xl mb-6 text-primary-foreground">
             Klaar om te beginnen?
           </h2>
-          <p 
-            className="text-lg mb-8"
-            style={{ color: 'rgba(255, 255, 255, 0.8)' }}
-          >
+          <p className="text-lg mb-8 text-primary-foreground/80">
             Maak vandaag nog een gratis account aan en start met valideren
           </p>
           <Button 
             size="lg" 
             onClick={() => navigate('/auth?mode=signup')}
-            className="text-base"
+            className="text-base bg-card text-foreground hover:bg-card/90"
           >
             Gratis Account Aanmaken
             <ArrowRight className="ml-2 w-5 h-5" />
           </Button>
         </div>
       </section>
-
-      <ValidationFooter />
-    </div>
+    </Layout>
   );
 }

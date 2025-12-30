@@ -23,8 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Navbar } from "@/components/Navbar";
-import { ValidationFooter } from "@/components/ValidationFooter";
+import { Layout } from "@/components/Layout";
 import { ArrowLeft, ArrowRight, RotateCcw, CheckCircle2, Download } from "lucide-react";
 import { exportToPDF, generateFilename } from "@/lib/pdfExport";
 import { useNavigate, useSearchParams } from "react-router-dom";

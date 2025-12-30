@@ -5,8 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileCheck, User, ArrowRight, Clock, Calendar, Trash2, FolderOpen } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
-import { ValidationFooter } from '@/components/ValidationFooter';
+import { Layout } from '@/components/Layout';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { GuidedTour } from '@/components/GuidedTour';
 import { format } from 'date-fns';
@@ -131,17 +130,17 @@ export default function Dashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'hsl(142 64% 62%)';
+        return 'hsl(var(--primary))';
       case 'pending':
-        return 'hsl(45 93% 47%)';
+        return 'hsl(var(--warning))';
       default:
-        return 'hsl(218 14% 85%)';
+        return 'hsl(var(--border))';
     }
   };
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
-    fetchProfile(); // Refresh profile to get updated state
+    fetchProfile();
   };
 
   const handleTourComplete = () => {
@@ -150,9 +149,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
-      <Navbar />
-
+    <Layout>
       {/* Onboarding Wizard */}
       {user && showOnboarding && (
         <OnboardingWizard
@@ -177,10 +174,10 @@ export default function Dashboard() {
         <div className="container mx-auto max-w-7xl">
           {/* Welcome Header */}
           <div className="mb-12">
-            <h1 className="font-heading font-medium text-4xl mb-2" style={{ color: 'hsl(190 16% 12%)' }}>
+            <h1 className="font-heading font-normal text-4xl mb-2 text-foreground">
               Welkom terug{profile?.full_name ? `, ${profile.full_name}` : ''}
             </h1>
-            <p className="text-lg" style={{ color: 'hsl(218 19% 27%)' }}>
+            <p className="text-lg text-muted-foreground">
               {user?.email}
             </p>
           </div>
@@ -189,20 +186,16 @@ export default function Dashboard() {
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             <Card 
               data-tour="projects"
-              className="cursor-pointer transition-all hover:shadow-lg"
-              style={{ border: '1px solid hsl(218 14% 85%)' }}
+              className="cursor-pointer transition-all hover:shadow-lg border-border"
               onClick={() => navigate('/projecten')}
             >
               <CardHeader>
-                <div 
-                  className="w-12 h-12 flex items-center justify-center mb-4"
-                  style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-                >
+                <div className="w-12 h-12 flex items-center justify-center mb-4 bg-primary text-primary-foreground">
                   <FolderOpen className="w-6 h-6" />
                 </div>
                 <CardTitle className="font-heading flex items-center justify-between">
                   Projecten
-                  <ArrowRight className="w-5 h-5" style={{ color: 'hsl(142 64% 62%)' }} />
+                  <ArrowRight className="w-5 h-5 text-primary" />
                 </CardTitle>
                 <CardDescription>
                   Beheer je projecten en producten met EAN codes
@@ -212,20 +205,16 @@ export default function Dashboard() {
 
             <Card 
               data-tour="new-validation"
-              className="cursor-pointer transition-all hover:shadow-lg"
-              style={{ border: '1px solid hsl(218 14% 85%)' }}
+              className="cursor-pointer transition-all hover:shadow-lg border-border"
               onClick={() => navigate('/validatie')}
             >
               <CardHeader>
-                <div 
-                  className="w-12 h-12 flex items-center justify-center mb-4"
-                  style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-                >
+                <div className="w-12 h-12 flex items-center justify-center mb-4 bg-primary text-primary-foreground">
                   <FileCheck className="w-6 h-6" />
                 </div>
                 <CardTitle className="font-heading flex items-center justify-between">
                   Nieuwe Validatie
-                  <ArrowRight className="w-5 h-5" style={{ color: 'hsl(142 64% 62%)' }} />
+                  <ArrowRight className="w-5 h-5 text-primary" />
                 </CardTitle>
                 <CardDescription>
                   Start een nieuwe BREEAM HEA02 validatie met PDF upload
@@ -235,20 +224,16 @@ export default function Dashboard() {
 
             <Card 
               data-tour="profile"
-              className="cursor-pointer transition-all hover:shadow-lg"
-              style={{ border: '1px solid hsl(218 14% 85%)' }}
+              className="cursor-pointer transition-all hover:shadow-lg border-border"
               onClick={() => navigate('/profiel')}
             >
               <CardHeader>
-                <div 
-                  className="w-12 h-12 flex items-center justify-center mb-4"
-                  style={{ background: 'hsl(142 64% 62%)', color: 'hsl(186 100% 10%)' }}
-                >
+                <div className="w-12 h-12 flex items-center justify-center mb-4 bg-primary text-primary-foreground">
                   <User className="w-6 h-6" />
                 </div>
                 <CardTitle className="font-heading flex items-center justify-between">
                   Mijn Profiel
-                  <ArrowRight className="w-5 h-5" style={{ color: 'hsl(142 64% 62%)' }} />
+                  <ArrowRight className="w-5 h-5 text-primary" />
                 </CardTitle>
                 <CardDescription>
                   Beheer je account instellingen en profiel informatie
@@ -258,7 +243,7 @@ export default function Dashboard() {
           </div>
 
           {/* Validation History */}
-          <Card data-tour="history" style={{ border: '1px solid hsl(218 14% 85%)' }}>
+          <Card data-tour="history" className="border-border">
             <CardHeader>
               <CardTitle className="font-heading flex items-center gap-2">
                 <Clock className="w-5 h-5" />
@@ -284,8 +269,7 @@ export default function Dashboard() {
                   {validations.map((validation) => (
                     <div 
                       key={validation.id}
-                      className="flex items-center justify-between p-4 rounded-lg"
-                      style={{ background: 'hsl(180 14% 97%)', border: '1px solid hsl(218 14% 85%)' }}
+                      className="flex items-center justify-between p-4 rounded-lg bg-background border border-border"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -297,7 +281,7 @@ export default function Dashboard() {
                             {validation.product_type?.name || 'Onbekend product'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4 text-sm" style={{ color: 'hsl(218 19% 27%)' }}>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {format(new Date(validation.created_at), 'dd MMM yyyy, HH:mm', { locale: nl })}
@@ -323,8 +307,6 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
-
-      <ValidationFooter />
-    </div>
+    </Layout>
   );
 }

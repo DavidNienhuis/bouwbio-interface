@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Navbar } from '@/components/Navbar';
-import { ValidationFooter } from '@/components/ValidationFooter';
+import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -139,8 +138,7 @@ export default function ProjectDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
-        <Navbar />
+      <Layout>
         <div className="flex-1 py-12 px-6">
           <div className="container mx-auto max-w-7xl">
             <Skeleton className="h-10 w-64 mb-4" />
@@ -152,15 +150,12 @@ export default function ProjectDetail() {
             </div>
           </div>
         </div>
-        <ValidationFooter />
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
-      <Navbar />
-
+    <Layout>
       <div className="flex-1 py-12 px-6">
         <div className="container mx-auto max-w-7xl">
           <div className="mb-8">
@@ -174,7 +169,7 @@ export default function ProjectDetail() {
             </Button>
 
             {editing ? (
-              <Card className="mb-8" style={{ border: '1px solid hsl(218 14% 85%)' }}>
+              <Card className="mb-8 border-border">
                 <CardHeader>
                   <CardTitle className="font-heading">Project bewerken</CardTitle>
                 </CardHeader>
@@ -210,11 +205,11 @@ export default function ProjectDetail() {
             ) : (
               <div className="flex items-start justify-between mb-8">
                 <div>
-                  <h1 className="font-heading font-medium text-4xl" style={{ color: 'hsl(190 16% 12%)' }}>
+                  <h1 className="font-heading font-normal text-4xl text-foreground">
                     {project?.name}
                   </h1>
                   {project?.description && (
-                    <p className="text-lg mt-2" style={{ color: 'hsl(218 19% 27%)' }}>
+                    <p className="text-lg mt-2 text-muted-foreground">
                       {project.description}
                     </p>
                   )}
@@ -227,7 +222,7 @@ export default function ProjectDetail() {
             )}
 
             <div className="flex items-center justify-between mb-6">
-              <h2 className="font-heading text-2xl" style={{ color: 'hsl(190 16% 12%)' }}>
+              <h2 className="font-heading text-2xl text-foreground">
                 Producten ({products.length})
               </h2>
               <Button onClick={() => setDialogOpen(true)} className="gap-2">
@@ -238,16 +233,13 @@ export default function ProjectDetail() {
           </div>
 
           {products.length === 0 ? (
-            <Card className="text-center py-12" style={{ border: '1px solid hsl(218 14% 85%)' }}>
+            <Card className="text-center py-12 border-border">
               <CardContent className="space-y-4">
-                <div 
-                  className="w-16 h-16 mx-auto flex items-center justify-center"
-                  style={{ background: 'hsl(142 64% 62% / 0.1)' }}
-                >
-                  <Package className="w-8 h-8" style={{ color: 'hsl(142 64% 62%)' }} />
+                <div className="w-16 h-16 mx-auto flex items-center justify-center bg-primary/10">
+                  <Package className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="font-heading text-xl">Nog geen producten</h3>
-                <p style={{ color: 'hsl(218 19% 27%)' }}>
+                <p className="text-muted-foreground">
                   Voeg je eerste product toe aan dit project
                 </p>
                 <Button onClick={() => setDialogOpen(true)} className="gap-2">
@@ -276,8 +268,6 @@ export default function ProjectDetail() {
         onOpenChange={setDialogOpen}
         onSubmit={handleCreateProduct}
       />
-
-      <ValidationFooter />
-    </div>
+    </Layout>
   );
 }
