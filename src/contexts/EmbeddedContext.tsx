@@ -15,18 +15,8 @@ interface EmbeddedProviderProps {
 }
 
 export function EmbeddedProvider({ children }: EmbeddedProviderProps) {
-  const [isEmbedded, setIsEmbedded] = useState(false);
-
-  useEffect(() => {
-    // Detect embedded mode via:
-    // 1. URL parameter: ?embedded=true
-    // 2. window !== window.parent (running in iframe)
-    const params = new URLSearchParams(window.location.search);
-    const embeddedParam = params.get('embedded') === 'true';
-    const inIframe = window !== window.parent;
-    
-    setIsEmbedded(embeddedParam || inIframe);
-  }, []);
+  // App is always in embedded mode (used exclusively as iframe)
+  const isEmbedded = true;
 
   return (
     <EmbeddedContext.Provider value={{ isEmbedded }}>
