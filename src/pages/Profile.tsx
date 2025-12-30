@@ -6,8 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Navbar } from '@/components/Navbar';
-import { ValidationFooter } from '@/components/ValidationFooter';
+import { Layout } from '@/components/Layout';
 import { ArrowLeft, Save, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -97,9 +96,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
-      <Navbar />
-
+    <Layout>
       <div className="flex-1 py-12 px-6">
         <div className="container mx-auto max-w-2xl">
           <div className="mb-8">
@@ -111,16 +108,16 @@ export default function Profile() {
               <ArrowLeft className="w-4 h-4" />
               Terug naar Dashboard
             </Button>
-            <h1 className="font-heading font-medium text-4xl" style={{ color: 'hsl(190 16% 12%)' }}>
+            <h1 className="font-heading font-normal text-4xl text-foreground">
               Mijn Profiel
             </h1>
-            <p className="text-lg mt-2" style={{ color: 'hsl(218 19% 27%)' }}>
+            <p className="text-lg mt-2 text-muted-foreground">
               Beheer je account gegevens
             </p>
           </div>
 
           <div className="space-y-6">
-            <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle className="font-heading">Profiel Informatie</CardTitle>
                 <CardDescription>
@@ -138,7 +135,7 @@ export default function Profile() {
                       disabled 
                       className="bg-muted"
                     />
-                    <p className="text-xs" style={{ color: 'hsl(218 19% 27%)' }}>
+                    <p className="text-xs text-muted-foreground">
                       Email kan niet worden gewijzigd
                     </p>
                   </div>
@@ -174,7 +171,7 @@ export default function Profile() {
             </Card>
 
             {/* Tour Section */}
-            <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle className="font-heading">Rondleiding</CardTitle>
                 <CardDescription>
@@ -193,7 +190,7 @@ export default function Profile() {
               </CardContent>
             </Card>
 
-            <Card style={{ border: '1px solid hsl(218 14% 85%)' }}>
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle className="font-heading">Account Acties</CardTitle>
                 <CardDescription>
@@ -204,7 +201,7 @@ export default function Profile() {
                 <Button 
                   variant="outline" 
                   onClick={() => signOut()}
-                  style={{ borderColor: 'hsl(0 84% 60%)', color: 'hsl(0 84% 60%)' }}
+                  className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                 >
                   Uitloggen
                 </Button>
@@ -213,8 +210,6 @@ export default function Profile() {
           </div>
         </div>
       </div>
-
-      <ValidationFooter />
-    </div>
+    </Layout>
   );
 }

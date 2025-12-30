@@ -4,43 +4,44 @@
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
+Bouwbiologie Zwolle Huisstijl - Oranje/Goud accent, lichte achtergrond
 */
 
 @layer base {
   :root {
-    /* Primary Colors - Duurzaam Petrol/Groen */
-    --bg: 180 14% 97%;
+    /* Primary Colors - Bouwbiologie Zwolle Oranje/Goud */
+    --bg: 0 0% 98%;
     --panel: 0 0% 100%;
-    --ink: 190 16% 12%;
-    --accent: 142 64% 62%;
-    --accent-dark: 186 100% 10%;
-    --muted: 218 19% 27%;
-    --line: 218 14% 85%;
+    --ink: 0 0% 15%;
+    --accent: 38 78% 56%;
+    --accent-dark: 38 78% 45%;
+    --muted: 0 0% 45%;
+    --line: 0 0% 85%;
     
     /* Component colors */
-    --background: 180 14% 97%;
-    --foreground: 190 16% 12%;
+    --background: 0 0% 98%;
+    --foreground: 0 0% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 190 16% 12%;
+    --card-foreground: 0 0% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 190 16% 12%;
-    --primary: 142 64% 62%;
-    --primary-foreground: 190 16% 12%;
-    --secondary: 186 100% 10%;
+    --popover-foreground: 0 0% 15%;
+    --primary: 38 78% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 180 45% 35%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 218 14% 85%;
-    --muted-foreground: 218 19% 27%;
-    --accent: 142 64% 62%;
-    --accent-foreground: 190 16% 12%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 38 78% 56%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 218 14% 85%;
+    --border: 0 0% 85%;
     --input: 0 0% 100%;
-    --ring: 142 64% 62%;
-    --radius: 0rem;
+    --ring: 38 78% 56%;
+    --radius: 0.25rem;
     
     /* Status colors - Professional */
-    --success: 142 76% 40%;
+    --success: 38 78% 56%;
     --success-foreground: 0 0% 100%;
     --warning: 38 100% 50%;
     --warning-foreground: 0 0% 100%;
@@ -50,18 +51,18 @@ All colors MUST be HSL.
     /* Subtle shadows */
     --shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
 
-    --sidebar-background: 217 27% 10%;
-    --sidebar-foreground: 210 20% 93%;
-    --sidebar-primary: 80 61% 64%;
-    --sidebar-primary-foreground: 217 32% 6%;
-    --sidebar-accent: 217 20% 15%;
-    --sidebar-accent-foreground: 210 20% 93%;
-    --sidebar-border: 217 20% 14%;
-    --sidebar-ring: 80 61% 64%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 15%;
+    --sidebar-primary: 38 78% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 95%;
+    --sidebar-accent-foreground: 0 0% 15%;
+    --sidebar-border: 0 0% 85%;
+    --sidebar-ring: 38 78% 56%;
   }
 
   .dark {
-    /* Dark mode uses same colors as default since we're dark-first */
+    /* Dark mode uses same colors as default */
   }
 }
 
@@ -71,10 +72,9 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply text-foreground;
-    background: hsl(180 14% 97%);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    color: hsl(218 19% 27%);
+    @apply text-foreground bg-background;
+    font-family: 'Helvetica Neue', Helvetica, Arial, -apple-system, BlinkMacSystemFont, sans-serif;
+    color: hsl(0 0% 25%);
     line-height: 1.6;
     min-height: 100vh;
     margin: 0;
@@ -84,11 +84,11 @@ All colors MUST be HSL.
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    letter-spacing: 0.02em;
-    font-weight: 500;
+    font-family: 'Helvetica Neue', Helvetica, Arial, -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: 0.01em;
+    font-weight: 400;
     line-height: 1.3;
-    color: hsl(190 16% 12%);
+    color: hsl(0 0% 15%);
   }
   
   .mono {
@@ -99,6 +99,15 @@ All colors MUST be HSL.
   }
 }
 
+/* Embedded mode - no extra padding */
+.embedded-mode {
+  min-height: auto;
+}
+
+.embedded-mode main {
+  padding-top: 0;
+}
+
 /* Professional Report Document Styling */
 .report-sheet {
   background-color: hsl(0 0% 100%);
@@ -106,14 +115,14 @@ All colors MUST be HSL.
   margin: 0 auto;
   padding: 40px 50px;
   box-shadow: 0 0 15px rgba(0,0,0,0.05);
-  border: 1px solid hsl(218 14% 85%);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: hsl(190 16% 12%);
+  border: 1px solid hsl(0 0% 85%);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: hsl(0 0% 15%);
   -webkit-font-smoothing: antialiased;
 }
 
 .report-header {
-  border-bottom: 2px solid hsl(190 16% 12%);
+  border-bottom: 2px solid hsl(0 0% 15%);
   padding-bottom: 20px;
   margin-bottom: 30px;
   display: flex;
@@ -127,13 +136,13 @@ All colors MUST be HSL.
   margin: 0 0 5px 0;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: hsl(190 16% 12%);
+  color: hsl(0 0% 15%);
 }
 
 .report-header .sub-title {
   font-family: "SF Mono", Monaco, Consolas, monospace;
   font-size: 11px;
-  color: hsl(218 19% 27%);
+  color: hsl(0 0% 45%);
 }
 
 .report-meta {
@@ -141,7 +150,7 @@ All colors MUST be HSL.
   font-size: 11px;
   line-height: 1.4;
   text-align: right;
-  color: hsl(190 16% 12%);
+  color: hsl(0 0% 15%);
 }
 
 .section-block {
@@ -153,10 +162,10 @@ All colors MUST be HSL.
   font-size: 14px;
   font-weight: bold;
   text-transform: uppercase;
-  border-bottom: 1px solid hsl(190 16% 12%);
+  border-bottom: 1px solid hsl(0 0% 15%);
   padding-bottom: 5px;
   margin-bottom: 15px;
-  color: hsl(190 16% 12%);
+  color: hsl(0 0% 15%);
 }
 
 .tech-table {
@@ -169,8 +178,8 @@ All colors MUST be HSL.
   text-align: left;
   font-family: "SF Mono", Monaco, Consolas, monospace;
   font-weight: normal;
-  color: hsl(218 19% 27%);
-  border-bottom: 1px solid hsl(190 16% 12%);
+  color: hsl(0 0% 45%);
+  border-bottom: 1px solid hsl(0 0% 15%);
   padding: 8px 4px;
   text-transform: uppercase;
   font-size: 10px;
@@ -178,7 +187,7 @@ All colors MUST be HSL.
 
 .tech-table td {
   padding: 10px 4px;
-  border-bottom: 1px solid hsl(218 14% 85%);
+  border-bottom: 1px solid hsl(0 0% 85%);
   vertical-align: top;
 }
 
@@ -188,23 +197,23 @@ All colors MUST be HSL.
 
 .data-mono {
   font-family: "SF Mono", Monaco, Consolas, monospace;
-  color: hsl(190 16% 12%);
+  color: hsl(0 0% 15%);
 }
 
 .status-badge {
   font-weight: bold;
   text-transform: uppercase;
   font-size: 10px;
-  border: 1px solid hsl(190 16% 12%);
+  border: 1px solid hsl(0 0% 15%);
   padding: 2px 8px;
   display: inline-block;
   letter-spacing: 0.5px;
 }
 
 .status-badge.conform {
-  background: hsl(142 76% 95%);
-  border-color: hsl(142 76% 40%);
-  color: hsl(142 76% 25%);
+  background: hsl(38 78% 95%);
+  border-color: hsl(38 78% 56%);
+  color: hsl(38 78% 35%);
 }
 
 .status-badge.non-conform {
@@ -220,21 +229,21 @@ All colors MUST be HSL.
 }
 
 .status-badge.missing {
-  background: hsl(218 14% 95%);
-  border-color: hsl(218 14% 70%);
-  color: hsl(218 19% 40%);
+  background: hsl(0 0% 95%);
+  border-color: hsl(0 0% 70%);
+  color: hsl(0 0% 40%);
 }
 
 .summary-box {
-  background-color: hsl(180 14% 97%);
-  border: 1px solid hsl(218 14% 85%);
+  background-color: hsl(0 0% 97%);
+  border: 1px solid hsl(0 0% 85%);
   padding: 15px;
   font-size: 13px;
   line-height: 1.6;
 }
 
 .conclusion-box {
-  border-top: 2px solid hsl(190 16% 12%);
+  border-top: 2px solid hsl(0 0% 15%);
   padding-top: 20px;
   display: flex;
   justify-content: space-between;
@@ -242,7 +251,7 @@ All colors MUST be HSL.
 }
 
 .conclusion-badge {
-  border: 2px solid hsl(190 16% 12%);
+  border: 2px solid hsl(0 0% 15%);
   padding: 10px 20px;
   font-weight: bold;
   letter-spacing: 1px;
@@ -251,9 +260,9 @@ All colors MUST be HSL.
 }
 
 .conclusion-badge.approved {
-  background: hsl(142 76% 95%);
-  border-color: hsl(142 76% 40%);
-  color: hsl(142 76% 25%);
+  background: hsl(38 78% 95%);
+  border-color: hsl(38 78% 56%);
+  color: hsl(38 78% 35%);
 }
 
 .conclusion-badge.rejected {
@@ -270,23 +279,23 @@ All colors MUST be HSL.
 
 .report-footer {
   margin-top: 60px;
-  border-top: 1px solid hsl(218 14% 85%);
+  border-top: 1px solid hsl(0 0% 85%);
   padding-top: 20px;
   display: flex;
   justify-content: space-between;
   font-family: "SF Mono", Monaco, Consolas, monospace;
   font-size: 10px;
-  color: hsl(218 19% 27%);
+  color: hsl(0 0% 45%);
 }
 
 .source-ref {
   font-size: 10px;
-  color: hsl(218 19% 50%);
+  color: hsl(0 0% 50%);
   margin-top: 4px;
 }
 
 .source-ref:hover {
-  color: hsl(142 64% 45%);
+  color: hsl(38 78% 45%);
 }
 
 /* Compact source reference for PDF - hidden by default */
@@ -294,7 +303,7 @@ All colors MUST be HSL.
   display: none;
   font-family: "SF Mono", Monaco, Consolas, monospace;
   font-size: 9px;
-  color: hsl(218 19% 50%);
+  color: hsl(0 0% 50%);
   margin-left: 6px;
 }
 

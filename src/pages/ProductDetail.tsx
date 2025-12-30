@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Navbar } from '@/components/Navbar';
-import { ValidationFooter } from '@/components/ValidationFooter';
+import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -125,31 +124,27 @@ export default function ProductDetail() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'hsl(142 64% 62%)';
-      case 'pending': return 'hsl(45 93% 47%)';
-      default: return 'hsl(218 14% 85%)';
+      case 'completed': return 'hsl(var(--primary))';
+      case 'pending': return 'hsl(var(--warning))';
+      default: return 'hsl(var(--border))';
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
-        <Navbar />
+      <Layout>
         <div className="flex-1 py-12 px-6">
           <div className="container mx-auto max-w-4xl">
             <Skeleton className="h-10 w-64 mb-4" />
             <Skeleton className="h-6 w-96 mb-8" />
           </div>
         </div>
-        <ValidationFooter />
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
-      <Navbar />
-
+    <Layout>
       <div className="flex-1 py-12 px-6">
         <div className="container mx-auto max-w-4xl">
           <div className="mb-8">
@@ -163,7 +158,7 @@ export default function ProductDetail() {
             </Button>
 
             {editing ? (
-              <Card className="mb-8" style={{ border: '1px solid hsl(218 14% 85%)' }}>
+              <Card className="mb-8 border-border">
                 <CardHeader>
                   <CardTitle className="font-heading">Product bewerken</CardTitle>
                 </CardHeader>
@@ -205,7 +200,7 @@ export default function ProductDetail() {
                 </CardContent>
               </Card>
             ) : (
-              <Card className="mb-8" style={{ border: '1px solid hsl(218 14% 85%)' }}>
+              <Card className="mb-8 border-border">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
@@ -225,14 +220,14 @@ export default function ProductDetail() {
                 </CardHeader>
                 {product?.description && (
                   <CardContent>
-                    <p style={{ color: 'hsl(218 19% 27%)' }}>{product.description}</p>
+                    <p className="text-muted-foreground">{product.description}</p>
                   </CardContent>
                 )}
               </Card>
             )}
 
             <div className="flex items-center justify-between mb-6">
-              <h2 className="font-heading text-2xl" style={{ color: 'hsl(190 16% 12%)' }}>
+              <h2 className="font-heading text-2xl text-foreground">
                 Validaties ({validations.length})
               </h2>
               <Button 
@@ -245,16 +240,13 @@ export default function ProductDetail() {
             </div>
 
             {validations.length === 0 ? (
-              <Card className="text-center py-12" style={{ border: '1px solid hsl(218 14% 85%)' }}>
+              <Card className="text-center py-12 border-border">
                 <CardContent className="space-y-4">
-                  <div 
-                    className="w-16 h-16 mx-auto flex items-center justify-center"
-                    style={{ background: 'hsl(142 64% 62% / 0.1)' }}
-                  >
-                    <FileCheck className="w-8 h-8" style={{ color: 'hsl(142 64% 62%)' }} />
+                  <div className="w-16 h-16 mx-auto flex items-center justify-center bg-primary/10">
+                    <FileCheck className="w-8 h-8 text-primary" />
                   </div>
                   <h3 className="font-heading text-xl">Nog geen validaties</h3>
-                  <p style={{ color: 'hsl(218 19% 27%)' }}>
+                  <p className="text-muted-foreground">
                     Start je eerste validatie voor dit product
                   </p>
                   <Button 
@@ -269,7 +261,7 @@ export default function ProductDetail() {
             ) : (
               <div className="space-y-3">
                 {validations.map((validation) => (
-                  <Card key={validation.id} style={{ border: '1px solid hsl(218 14% 85%)' }}>
+                  <Card key={validation.id} className="border-border">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -282,7 +274,7 @@ export default function ProductDetail() {
                               {validation.product_type?.name || 'Onbekend'}
                             </span>
                           </div>
-                          <div className="flex items-center gap-4 text-sm" style={{ color: 'hsl(218 19% 27%)' }}>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               {format(new Date(validation.created_at), 'dd MMM yyyy, HH:mm', { locale: nl })}
@@ -307,8 +299,6 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-
-      <ValidationFooter />
-    </div>
+    </Layout>
   );
 }

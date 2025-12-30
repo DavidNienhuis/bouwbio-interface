@@ -9,13 +9,7 @@ export function Navbar() {
   const navigate = useNavigate();
 
   return (
-    <nav 
-      className="border-b sticky top-0 z-50"
-      style={{ 
-        background: 'hsl(186 100% 10%)',
-        borderColor: 'hsl(186 100% 15%)'
-      }}
-    >
+    <nav className="border-b border-border sticky top-0 z-50 bg-card">
       <div className="container mx-auto px-6 py-4 max-w-7xl">
         <div className="flex items-center justify-between">
           <Link to={user ? '/dashboard' : '/'} className="flex items-center gap-3">
@@ -24,10 +18,7 @@ export function Navbar() {
               alt="Bouwbioloog logo" 
               className="h-10 w-auto"
             />
-            <span 
-              className="font-heading font-medium text-lg uppercase tracking-wider"
-              style={{ color: '#FFFFFF' }}
-            >
+            <span className="font-heading font-medium text-lg uppercase tracking-wider text-foreground">
               Bouwbioloog
             </span>
           </Link>
@@ -37,37 +28,25 @@ export function Navbar() {
               <>
                 <Link 
                   to="/dashboard" 
-                  className="font-heading text-sm uppercase tracking-wider transition-colors"
-                  style={{ color: 'rgba(255, 255, 255, 0.9)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(142 64% 62%)'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
+                  className="font-heading text-sm uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors"
                 >
                   Dashboard
                 </Link>
                 <Link 
                   to="/projecten" 
-                  className="font-heading text-sm uppercase tracking-wider transition-colors"
-                  style={{ color: 'rgba(255, 255, 255, 0.9)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(142 64% 62%)'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
+                  className="font-heading text-sm uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors"
                 >
                   Projecten
                 </Link>
                 <Link 
                   to="/validatie" 
-                  className="font-heading text-sm uppercase tracking-wider transition-colors"
-                  style={{ color: 'rgba(255, 255, 255, 0.9)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(142 64% 62%)'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
+                  className="font-heading text-sm uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors"
                 >
                   Validatie
                 </Link>
                 <Link 
                   to="/profiel" 
-                  className="font-heading text-sm uppercase tracking-wider transition-colors"
-                  style={{ color: 'rgba(255, 255, 255, 0.9)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(142 64% 62%)'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
+                  className="font-heading text-sm uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors"
                 >
                   Profiel
                 </Link>
@@ -75,11 +54,7 @@ export function Navbar() {
                   variant="outline" 
                   size="sm" 
                   onClick={() => signOut()}
-                  className="gap-2"
-                  style={{ 
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    color: 'rgba(255, 255, 255, 0.9)'
-                  }}
+                  className="gap-2 border-border text-muted-foreground hover:text-primary hover:border-primary"
                 >
                   <LogOut className="w-4 h-4" />
                   Uitloggen
@@ -89,10 +64,7 @@ export function Navbar() {
               <>
                 <Link 
                   to="/#features" 
-                  className="font-heading text-sm uppercase tracking-wider transition-colors"
-                  style={{ color: 'rgba(255, 255, 255, 0.9)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(142 64% 62%)'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
+                  className="font-heading text-sm uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors"
                 >
                   Features
                 </Link>
@@ -100,10 +72,7 @@ export function Navbar() {
                   variant="outline" 
                   size="sm"
                   onClick={() => navigate('/auth')}
-                  style={{ 
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    color: 'rgba(255, 255, 255, 0.9)'
-                  }}
+                  className="border-border text-muted-foreground hover:text-primary hover:border-primary"
                 >
                   Login
                 </Button>

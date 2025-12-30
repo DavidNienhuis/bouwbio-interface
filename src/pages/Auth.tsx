@@ -5,11 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Navbar } from '@/components/Navbar';
-import { ValidationFooter } from '@/components/ValidationFooter';
+import { Layout } from '@/components/Layout';
 
 const loginSchema = z.object({
   email: z.string().email('Ongeldig emailadres'),
@@ -143,11 +141,9 @@ export default function Auth() {
 
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(180 14% 97%)' }}>
-      <Navbar />
-      
+    <Layout>
       <div className="flex-1 flex items-center justify-center py-16 px-6">
-        <Card className="w-full max-w-md" style={{ border: '1px solid hsl(218 14% 85%)' }}>
+        <Card className="w-full max-w-md border-border">
           <CardHeader>
             <CardTitle className="font-heading text-2xl">
               {mode === 'login' && 'Inloggen'}
@@ -181,8 +177,7 @@ export default function Auth() {
                     <button
                       type="button"
                       onClick={() => setMode('forgot')}
-                      className="text-xs underline"
-                      style={{ color: 'hsl(142 64% 62%)' }}
+                      className="text-xs underline text-primary"
                     >
                       Wachtwoord vergeten?
                     </button>
@@ -203,8 +198,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => setMode('signup')}
-                    className="font-medium underline"
-                    style={{ color: 'hsl(142 64% 62%)' }}
+                    className="font-medium underline text-primary"
                   >
                     Registreer hier
                   </button>
@@ -253,8 +247,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => setMode('login')}
-                    className="font-medium underline"
-                    style={{ color: 'hsl(142 64% 62%)' }}
+                    className="font-medium underline text-primary"
                   >
                     Log hier in
                   </button>
@@ -283,8 +276,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => setMode('login')}
-                    className="font-medium underline"
-                    style={{ color: 'hsl(142 64% 62%)' }}
+                    className="font-medium underline text-primary"
                   >
                     Terug naar login
                   </button>
@@ -294,8 +286,6 @@ export default function Auth() {
           </CardContent>
         </Card>
       </div>
-
-      <ValidationFooter />
-    </div>
+    </Layout>
   );
 }
