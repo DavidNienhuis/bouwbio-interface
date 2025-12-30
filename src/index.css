@@ -289,6 +289,47 @@ All colors MUST be HSL.
   color: hsl(142 64% 45%);
 }
 
+/* Compact source reference for PDF - hidden by default */
+.source-ref-print {
+  display: none;
+  font-family: "SF Mono", Monaco, Consolas, monospace;
+  font-size: 9px;
+  color: hsl(218 19% 50%);
+  margin-left: 6px;
+}
+
+/* Print mode optimizations */
+.print-mode .source-ref {
+  display: none;
+}
+
+.print-mode .source-ref-print {
+  display: inline;
+}
+
+.print-mode .section-block {
+  margin-bottom: 20px;
+}
+
+.print-mode .summary-box {
+  padding: 10px;
+  font-size: 11px;
+}
+
+.print-mode .tech-table th,
+.print-mode .tech-table td {
+  padding: 6px 4px;
+  font-size: 11px;
+}
+
+.print-mode .report-footer {
+  margin-top: 30px;
+}
+
+.print-mode .conclusion-title {
+  font-size: 14px;
+}
+
 /* Print optimizations */
 @media print {
   .report-sheet {
@@ -296,8 +337,4 @@ All colors MUST be HSL.
     border: none;
     padding: 20px;
   }
-}
-
-.print-mode .report-sheet {
-  box-shadow: none;
 }
