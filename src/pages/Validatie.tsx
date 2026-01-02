@@ -72,7 +72,7 @@ export default function Validatie() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [storedFiles, setStoredFiles] = useState<StoredFile[]>([]);
   const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
-  const [errorData, setErrorData] = useState<{ message: string; rawResponse?: any } | null>(null);
+  const [errorData, setErrorData] = useState<ValidationError | null>(null);
 
   // Modal states
   const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
