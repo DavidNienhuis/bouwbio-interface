@@ -318,6 +318,7 @@ Bouwbiologie Zwolle Huisstijl - Oranje/Goud accent, lichte achtergrond
 
 .print-mode .section-block {
   margin-bottom: 20px;
+  page-break-inside: avoid;
 }
 
 .print-mode .summary-box {
@@ -331,8 +332,19 @@ Bouwbiologie Zwolle Huisstijl - Oranje/Goud accent, lichte achtergrond
   font-size: 11px;
 }
 
+/* For very long tables in print mode, allow breaks but keep rows together */
+.print-mode .tech-table {
+  page-break-inside: auto;
+}
+
+.print-mode .tech-table tr {
+  page-break-inside: avoid;
+  page-break-after: auto;
+}
+
 .print-mode .report-footer {
   margin-top: 30px;
+  page-break-before: auto;
 }
 
 .print-mode .conclusion-title {
@@ -345,5 +357,31 @@ Bouwbiologie Zwolle Huisstijl - Oranje/Goud accent, lichte achtergrond
     box-shadow: none;
     border: none;
     padding: 20px;
+    page-break-after: auto;
+  }
+
+  /* Prevent breaking inside these elements */
+  .section-block,
+  .tech-table tr,
+  .summary-box,
+  .conclusion-box {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Allow page breaks between sections */
+  .section-block {
+    page-break-after: auto;
+  }
+
+  /* Keep table headers with content */
+  .tech-table thead {
+    display: table-header-group;
+  }
+
+  /* Keep footer at bottom of last page */
+  .report-footer {
+    page-break-before: auto;
+    page-break-inside: avoid;
   }
 }

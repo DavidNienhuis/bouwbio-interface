@@ -103,7 +103,25 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
   ({ data, reportId }, ref) => {
     const { sourceFiles } = useSourceFiles();
     const id = reportId || generateReportId();
-    
+
+    // Safety check: ensure data exists
+    if (!data) {
+      return (
+        <div ref={ref} className="report-sheet">
+          <div className="section-block">
+            <p style={{ color: 'hsl(0 84% 60%)', fontWeight: 'bold' }}>
+              Fout: Geen validatie data beschikbaar
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Safety checks for required data structure
+    const product = data.product || {};
+    const scores = data.scores || {};
+    const advies = data.advies || {};
+
     return (
       <div ref={ref} className="report-sheet">
         {/* Header */}
@@ -127,20 +145,20 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
               <tr>
                 <td style={{ width: '25%', fontWeight: 500 }}>Handelsnaam</td>
                 <td style={{ fontWeight: 'bold' }}>
-                  {data.product.identificatie.naam || 'Niet gespecificeerd'}
-                  {data.product.identificatie.bron && (
-                    <SourceRef bron={data.product.identificatie.bron} sourceFiles={sourceFiles} />
+                  {product.identificatie?.naam || 'Niet gespecificeerd'}
+                  {product.identificatie?.bron && (
+                    <SourceRef bron={product.identificatie.bron} sourceFiles={sourceFiles} />
                   )}
                 </td>
               </tr>
               <tr>
                 <td>Productgroep</td>
-                <td>{data.product.identificatie.productgroep || 'Niet gespecificeerd'}</td>
+                <td>{product.identificatie?.productgroep || 'Niet gespecificeerd'}</td>
               </tr>
-              {data.product.identificatie.norm && (
+              {product.identificatie?.norm && (
                 <tr>
                   <td>Referentienorm</td>
-                  <td className="data-mono">{data.product.identificatie.norm}</td>
+                  <td className="data-mono">{product.identificatie.norm}</td>
                 </tr>
               )}
             </tbody>
@@ -150,7 +168,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
         {/* Section 2: Toxicology */}
         <section className="section-block">
           <div className="section-title">2. Toxicologische Screening</div>
-          {data.scores.toxicologie.gecheckte_stoffen && data.scores.toxicologie.gecheckte_stoffen.length > 0 ? (
+          {scores.toxicologie?.gecheckte_stoffen && scores.toxicologie.gecheckte_stoffen.length > 0 ? (
             <table className="tech-table">
               <thead>
                 <tr>
@@ -161,7 +179,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
                 </tr>
               </thead>
               <tbody>
-                {data.scores.toxicologie.gecheckte_stoffen.map((stof, idx) => (
+                {scores.toxicologie.gecheckte_stoffen.map((stof, idx) => (
                   <tr key={idx}>
                     <td className="data-mono">{stof.cas}</td>
                     <td>
@@ -194,7 +212,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
         {/* Section 3: Emissions */}
         <section className="section-block">
           <div className="section-title">3. Emissiekarakteristieken (VOS)</div>
-          {Array.isArray(data.scores.emissies.details) && data.scores.emissies.details.length > 0 ? (
+          {Array.isArray(scores.emissies?.details) && scores.emissies.details.length > 0 ? (
             <table className="tech-table">
               <thead>
                 <tr>
@@ -205,7 +223,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
                 </tr>
               </thead>
               <tbody>
-                {data.scores.emissies.details.map((item, idx) => (
+                {scores.emissies.details.map((item, idx) => (
                   <tr key={idx}>
                     <td>
                       {item.stof}
@@ -224,8 +242,8 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
             </table>
           ) : (
             <div className="summary-box">
-              {!Array.isArray(data.scores.emissies.details) && data.scores.emissies.details?.toelichting
-                ? data.scores.emissies.details.toelichting
+              {!Array.isArray(scores.emissies?.details) && scores.emissies?.details?.toelichting
+                ? scores.emissies.details.toelichting
                 : 'Geen emissiewaarden beschikbaar.'}
             </div>
           )}
@@ -234,7 +252,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
         {/* Section 4: Certificates */}
         <section className="section-block">
           <div className="section-title">4. Certificaten & Claims</div>
-          {data.scores.certificaten.gevonden_certificaten && data.scores.certificaten.gevonden_certificaten.length > 0 ? (
+          {scores.certificaten?.gevonden_certificaten && scores.certificaten.gevonden_certificaten.length > 0 ? (
             <table className="tech-table">
               <thead>
                 <tr>
@@ -244,7 +262,7 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
                 </tr>
               </thead>
               <tbody>
-                {data.scores.certificaten.gevonden_certificaten.map((cert, idx) => (
+                {scores.certificaten.gevonden_certificaten.map((cert, idx) => (
                   <tr key={idx}>
                     <td>
                       {cert.gevonden_term || cert.naam || `Certificaat ${idx + 1}`}
@@ -271,15 +289,15 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
         <section className="section-block conclusion-box">
           <div>
             <h3 style={{ fontFamily: 'Georgia, serif', margin: 0, fontSize: '16px' }} className="conclusion-title">
-              EINDCONCLUSIE: NIVEAU {data.advies.niveau}
+              EINDCONCLUSIE: NIVEAU {advies.niveau || 'N/A'}
             </h3>
             <p style={{ fontSize: '12px', marginTop: '4px', color: 'hsl(218 19% 40%)' }}>
-              {data.advies.label}
+              {advies.label || 'Geen advies beschikbaar'}
             </p>
           </div>
           <div>
-            <span className={`conclusion-badge ${getConclusionBadgeClass(data.advies.niveau)}`}>
-              {getConclusionText(data.advies.niveau, data.advies.kleur)}
+            <span className={`conclusion-badge ${getConclusionBadgeClass(advies.niveau || 0)}`}>
+              {getConclusionText(advies.niveau || 0, advies.kleur || '')}
             </span>
           </div>
         </section>
