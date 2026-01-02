@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, X, AlertTriangle, Quote } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, X, AlertTriangle, Quote, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getSignedUrl, StoredFile } from "@/lib/storageClient";
 import { toast } from "sonner";
+import { highlightCitationInPDF, type HighlightResult } from "@/lib/pdf/highlight";
 
 // PDF.js worker configuratie
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -35,17 +36,17 @@ export const PDFViewerModal = ({
   const [scale, setScale] = useState<number>(1.0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [citaatFound, setCitaatFound] = useState<boolean | null>(null);
+  const [highlightResult, setHighlightResult] = useState<HighlightResult | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const textLayerRef = useRef<HTMLDivElement>(null);
+  const pageContainerRef = useRef<HTMLDivElement>(null);
 
   // Load PDF URL when modal opens
   useEffect(() => {
     if (isOpen && storedFile) {
       setIsLoading(true);
       setLoadError(null);
-      setCitaatFound(null);
-      
+      setHighlightResult(null);
+
       getSignedUrl(storedFile.storage_path)
         .then((url) => {
           setPdfUrl(url);
@@ -65,105 +66,55 @@ export const PDFViewerModal = ({
     setCurrentPage(initialPage);
   }, [initialPage]);
 
-  // Highlight citaat text in the PDF
-  const highlightCitaat = useCallback(() => {
-    if (!citaat || !textLayerRef.current) return;
-    
-    // Remove existing highlights
-    const existingHighlights = document.querySelectorAll('.pdf-highlight');
-    existingHighlights.forEach(el => el.classList.remove('pdf-highlight'));
-    
-    // Find and highlight the citaat text
-    const textLayer = textLayerRef.current.querySelector('.react-pdf__Page__textContent');
-    if (!textLayer) return;
-    
-    const textSpans = textLayer.querySelectorAll('span');
-    let found = false;
-    
-    // Normalize search text
-    const searchText = citaat.toLowerCase().replace(/\s+/g, ' ').trim();
-    
-    // Build full text with proper position mapping between normalized and original text
-    let fullText = '';
-    let normalizedText = '';
-    const charMap: number[] = []; // Maps normalized position -> original position
-    
-    textSpans.forEach((span) => {
-      const text = span.textContent || '';
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const normalizedChar = char.toLowerCase();
-        
-        // For whitespace: collapse multiple spaces in normalized version
-        if (/\s/.test(char)) {
-          if (!normalizedText.endsWith(' ') && normalizedText.length > 0) {
-            charMap.push(fullText.length);
-            normalizedText += ' ';
-          }
-          fullText += char;
-        } else {
-          charMap.push(fullText.length);
-          normalizedText += normalizedChar;
-          fullText += char;
-        }
-      }
-    });
-    
-    // Find citaat in normalized text
-    const citaatIndex = normalizedText.indexOf(searchText);
-    
-    if (citaatIndex !== -1) {
-      // Map normalized positions back to original positions
-      const originalStart = charMap[citaatIndex] ?? 0;
-      const citaatEndIndex = Math.min(citaatIndex + searchText.length - 1, charMap.length - 1);
-      const originalEnd = (charMap[citaatEndIndex] ?? fullText.length - 1) + 1;
-      
-      // Track current position in original text and highlight matching spans
-      let currentPos = 0;
-      let firstHighlighted = false;
-      
-      textSpans.forEach((span) => {
-        const spanText = span.textContent || '';
-        const spanStart = currentPos;
-        const spanEnd = currentPos + spanText.length;
-        
-        // Check if this span overlaps with the citaat in original text
-        if (spanStart < originalEnd && spanEnd > originalStart) {
-          (span as HTMLElement).classList.add('pdf-highlight');
-          found = true;
-          
-          // Scroll to first highlighted element
-          if (!firstHighlighted) {
-            firstHighlighted = true;
-            setTimeout(() => {
-              (span as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-          }
-        }
-        
-        currentPos = spanEnd;
-      });
-    }
-    
-    setCitaatFound(found);
-    
-    if (!found && citaat) {
-      console.warn('Citaat niet gevonden in PDF tekst:', citaat);
-      console.debug('Gezocht (normalized):', searchText);
-      console.debug('Beschikbare tekst (eerste 300 chars):', normalizedText.substring(0, 300));
-    }
-  }, [citaat]);
-
-  // Apply highlighting after page renders
+  // Apply robust highlighting after page renders
+  // Uses MutationObserver + RAF for reliable timing, fuzzy matching for robustness
   useEffect(() => {
-    if (!isLoading && citaat) {
-      // Wait for text layer to render
-      const timer = setTimeout(() => {
-        highlightCitaat();
-      }, 500);
-      return () => clearTimeout(timer);
+    if (!isLoading && citaat && pageContainerRef.current) {
+      // Run highlight asynchronously
+      highlightCitationInPDF(pageContainerRef.current, citaat, 'pdf-highlight')
+        .then((result) => {
+          setHighlightResult(result);
+
+          // Show toast feedback based on match type
+          if (result.success) {
+            if (result.matchType === 'fuzzy') {
+              toast.info(
+                `Citaat gevonden met ${Math.round((result.confidence || 0) * 100)}% zekerheid`,
+                { duration: 3000 }
+              );
+            }
+          } else {
+            toast.warning(result.message || 'Citaat niet gevonden, pagina geopend', {
+              duration: 4000
+            });
+          }
+
+          // Debug logging
+          if (!result.success) {
+            console.warn('[PDF Highlight] Match failed:', result.message);
+            console.debug('[PDF Highlight] Citation:', citaat.substring(0, 200));
+          } else {
+            console.log(
+              `[PDF Highlight] ${result.matchType} match, confidence: ${result.confidence?.toFixed(2)}`
+            );
+          }
+        })
+        .catch((error) => {
+          console.error('[PDF Highlight] Error:', error);
+          setHighlightResult({
+            success: false,
+            highlightedElements: [],
+            message: 'Highlight fout opgetreden'
+          });
+        });
     }
-  }, [isLoading, currentPage, citaat, highlightCitaat]);
+
+    // Cleanup highlights when page changes
+    return () => {
+      const highlights = document.querySelectorAll('.pdf-highlight');
+      highlights.forEach(el => el.classList.remove('pdf-highlight'));
+    };
+  }, [isLoading, currentPage, citaat]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -256,7 +207,7 @@ export const PDFViewerModal = ({
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : pdfUrl ? (
-            <div ref={textLayerRef} className="py-4">
+            <div ref={pageContainerRef} className="py-4">
               <Document
                 file={pdfUrl}
                 onLoadSuccess={onDocumentLoadSuccess}
@@ -285,19 +236,41 @@ export const PDFViewerModal = ({
 
         {/* Footer with navigation and citaat */}
         <div className="border-t flex-shrink-0">
-          {/* Citaat display */}
+          {/* Citaat display with match feedback */}
           {citaat && (
-            <div className={`p-3 border-b ${citaatFound === false ? 'bg-yellow-50 dark:bg-yellow-950/20' : 'bg-blue-50 dark:bg-blue-950/20'}`}>
+            <div className={`p-3 border-b ${
+              highlightResult?.success
+                ? 'bg-green-50 dark:bg-green-950/20'
+                : highlightResult === null
+                ? 'bg-blue-50 dark:bg-blue-950/20'
+                : 'bg-amber-50 dark:bg-amber-950/20'
+            }`}>
               <div className="flex items-start gap-2">
-                <Quote className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                {highlightResult?.success ? (
+                  <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-600" />
+                ) : (
+                  <Quote className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Gezochte tekst:</p>
-                  <p className="text-sm italic truncate">{citaat}</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    Gezochte tekst:
+                    {highlightResult?.success && highlightResult.matchType === 'fuzzy' && (
+                      <span className="ml-2 text-xs text-green-700 dark:text-green-400">
+                        (fuzzy match, {Math.round((highlightResult.confidence || 0) * 100)}%)
+                      </span>
+                    )}
+                    {highlightResult?.success && highlightResult.matchType === 'exact' && (
+                      <span className="ml-2 text-xs text-green-700 dark:text-green-400">
+                        (exact match)
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-sm italic line-clamp-2">{citaat}</p>
                 </div>
-                {citaatFound === false && (
+                {highlightResult?.success === false && (
                   <Alert variant="default" className="py-1 px-2 bg-transparent border-0">
-                    <AlertDescription className="text-xs text-yellow-700 dark:text-yellow-300">
-                      Tekst niet gevonden op deze pagina
+                    <AlertDescription className="text-xs text-amber-700 dark:text-amber-300">
+                      Niet gevonden
                     </AlertDescription>
                   </Alert>
                 )}
@@ -334,18 +307,43 @@ export const PDFViewerModal = ({
         </div>
       </DialogContent>
       
-      {/* CSS for highlighting */}
+      {/* Audit-grade professional highlighting - subtle, no infinite animations */}
       <style>{`
         .pdf-highlight {
-          background-color: #fef08a !important;
+          background-color: rgba(226, 232, 240, 0.7) !important;
+          border-bottom: 2px solid rgba(100, 116, 139, 0.5);
           border-radius: 2px;
-          box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.4);
-          animation: highlight-pulse 1.5s ease-in-out infinite;
+          padding: 1px 0;
+          animation: highlight-attention-once 0.8s ease-out;
         }
-        
-        @keyframes highlight-pulse {
-          0%, 100% { background-color: #fef08a; }
-          50% { background-color: #fde047; }
+
+        /* Single attention pulse on load, then stays static */
+        @keyframes highlight-attention-once {
+          0% {
+            background-color: rgba(226, 232, 240, 1);
+            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.3);
+          }
+          100% {
+            background-color: rgba(226, 232, 240, 0.7);
+            box-shadow: none;
+          }
+        }
+
+        /* Dark mode support */
+        .dark .pdf-highlight {
+          background-color: rgba(51, 65, 85, 0.6) !important;
+          border-bottom: 2px solid rgba(148, 163, 184, 0.5);
+        }
+
+        @keyframes highlight-attention-once {
+          0% {
+            background-color: rgba(51, 65, 85, 1);
+            box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.3);
+          }
+          100% {
+            background-color: rgba(51, 65, 85, 0.6);
+            box-shadow: none;
+          }
         }
       `}</style>
     </Dialog>
