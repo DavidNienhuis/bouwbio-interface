@@ -267,13 +267,13 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
           )}
         </section>
 
-        {/* Conclusion - compact in print mode */}
+        {/* Conclusion - audit-ready neutral presentation */}
         <section className="section-block conclusion-box">
           <div>
-            <h3 style={{ fontFamily: 'Georgia, serif', margin: 0, fontSize: '16px' }} className="conclusion-title">
+            <h3 className="conclusion-title">
               EINDCONCLUSIE: NIVEAU {data.advies.niveau}
             </h3>
-            <p style={{ fontSize: '12px', marginTop: '4px', color: 'hsl(218 19% 40%)' }}>
+            <p style={{ fontSize: '10pt', marginTop: '6px', color: 'hsl(0 0% 40%)', lineHeight: '1.5' }}>
               {data.advies.label}
             </p>
           </div>
@@ -284,10 +284,15 @@ export const ValidationReport = forwardRef<HTMLDivElement, ValidationReportProps
           </div>
         </section>
 
-        {/* Footer */}
+        {/* Professional Footer with Disclaimer */}
         <footer className="report-footer">
-          <div>BouwBio Validatie v1.0</div>
-          <div>Interne rapportage, geen officieel certificaat.</div>
+          <div className="report-footer-disclaimer">
+            Deze validatierapportage is gebaseerd op beschikbare productdocumentatie en dient als technische onderbouwing.
+            Geen officieel certificaat. Voor definitieve conformiteitsbeoordeling dient aanvullende verificatie plaats te vinden.
+          </div>
+          <div className="report-footer-page">
+            Rapport {id} | BouwBio Validatie
+          </div>
         </footer>
       </div>
     );
