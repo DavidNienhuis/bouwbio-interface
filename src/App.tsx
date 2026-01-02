@@ -16,6 +16,7 @@ import Terms from "./pages/Terms";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProductDetail from "./pages/ProductDetail";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,15 +77,23 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/projecten/:id/producten/:productId" 
+              <Route
+                path="/projecten/:id/producten/:productId"
                 element={
                   <ProtectedRoute>
                     <ProductDetail />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <Admin />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>

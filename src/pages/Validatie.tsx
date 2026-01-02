@@ -30,7 +30,7 @@ import { exportToPDF, generateFilename } from "@/lib/pdfExport";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { runValidation } from "@/lib/validation/validationService";
+import { startValidationAuto, checkValidationStatus } from "@/lib/validation/validationOrchestrator";
 import { ProductType, ValidationError } from "@/lib/validation/types";
 
 const productTypes: ProductType[] = [
@@ -73,6 +73,12 @@ export default function Validatie() {
   const [storedFiles, setStoredFiles] = useState<StoredFile[]>([]);
   const [validationData, setValidationData] = useState<ValidationResponse | null>(null);
   const [errorData, setErrorData] = useState<{ message: string; rawResponse?: any } | null>(null);
+
+  // Queue state
+  const [queueId, setQueueId] = useState<string | null>(null);
+  const [queueStatus, setQueueStatus] = useState<string | null>(null);
+  const [queueAttempts, setQueueAttempts] = useState<number>(0);
+  const [queueMaxAttempts, setQueueMaxAttempts] = useState<number>(3);
 
   // Modal states
   const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
@@ -148,13 +154,14 @@ export default function Validatie() {
   const executeValidation = async (userId: string, productId: string) => {
     setIsSending(true);
     setErrorData(null);
+    setQueueStatus(null);
 
     try {
       const selectedProduct = productTypes.find(p => p.id === selectedProductType);
       if (!selectedProduct) throw new Error("Product type not found");
 
-      // Run validation via service
-      const result = await runValidation({
+      // Start validation (auto-chooses queue or direct mode)
+      const result = await startValidationAuto({
         userId,
         sessionId,
         productId,
@@ -166,11 +173,23 @@ export default function Validatie() {
         deductCredit,
       });
 
-      // Update UI with results
-      setValidationData(result.validationData);
-      setStoredFiles(result.storedFiles);
-      setErrorData(null);
-      setCurrentStep(5);
+      if (result.mode === 'queue' && result.queueId) {
+        // Queue mode - start polling for status
+        setQueueId(result.queueId);
+        setQueueStatus('pending');
+        setCurrentStep(5);
+        setIsSending(false);
+
+        // Start polling
+        pollQueueStatus(result.queueId);
+      } else if (result.mode === 'direct' && result.result) {
+        // Direct mode - show results immediately
+        setValidationData(result.result.validationData);
+        setStoredFiles(result.result.storedFiles);
+        setErrorData(null);
+        setCurrentStep(5);
+        setIsSending(false);
+      }
     } catch (error) {
       console.error("❌ [UI] Send error:", error);
       const validationError = error as ValidationError;
@@ -180,9 +199,58 @@ export default function Validatie() {
       });
       toast.error("Verzenden mislukt - check console voor details");
       setCurrentStep(5);
-    } finally {
       setIsSending(false);
     }
+  };
+
+  // Poll queue status until completion
+  const pollQueueStatus = async (qId: string) => {
+    const pollInterval = 2000; // Poll every 2 seconds
+    const maxPolls = 180; // 6 minutes max
+    let pollCount = 0;
+
+    const poll = async () => {
+      try {
+        const status = await checkValidationStatus(qId);
+
+        setQueueStatus(status.status);
+        setQueueAttempts(status.attempts || 0);
+        setQueueMaxAttempts(status.maxAttempts || 3);
+
+        if (status.status === 'completed' && status.validationId) {
+          // Fetch the completed validation
+          const { data: validation } = await supabase
+            .from('validations')
+            .select('*, source_files')
+            .eq('id', status.validationId)
+            .single();
+
+          if (validation) {
+            setValidationData(validation.result as any);
+            setStoredFiles(validation.source_files as any);
+            toast.success('Validatie succesvol afgerond!');
+          }
+        } else if (status.status === 'failed') {
+          setErrorData({
+            message: status.errorLog || 'Validatie mislukt na meerdere pogingen',
+          });
+          toast.error('Validatie mislukt');
+        } else if (status.status === 'processing' || status.status === 'pending') {
+          // Continue polling
+          pollCount++;
+          if (pollCount < maxPolls) {
+            setTimeout(poll, pollInterval);
+          } else {
+            toast.error('Validatie timeout - neem contact op met support');
+          }
+        }
+      } catch (error) {
+        console.error('Queue polling error:', error);
+        toast.error('Fout bij ophalen status');
+      }
+    };
+
+    poll();
   };
 
   const handleStartAnalysis = async () => {
@@ -267,6 +335,9 @@ export default function Validatie() {
     setStoredFiles([]);
     setValidationData(null);
     setErrorData(null);
+    setQueueId(null);
+    setQueueStatus(null);
+    setQueueAttempts(0);
     setProductName("");
     setEanCode("");
     setSelectedCertification("BREEAM_HEA02");
@@ -352,6 +423,46 @@ export default function Validatie() {
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
+            )}
+
+            {/* Queue status display */}
+            {queueStatus && queueStatus !== 'completed' && !validationData && (
+              <Card style={{ border: '2px solid hsl(142 64% 62%)' }}>
+                <CardHeader>
+                  <CardTitle className="font-heading flex items-center gap-2">
+                    {queueStatus === 'pending' && '⏳ Validatie in wachtrij'}
+                    {queueStatus === 'processing' && '⚙️ Validatie wordt uitgevoerd'}
+                    {queueStatus === 'failed' && '❌ Validatie mislukt'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-sm">
+                      <strong>Status:</strong> {queueStatus === 'pending' ? 'Wachten op verwerking' : queueStatus === 'processing' ? 'Wordt verwerkt' : 'Mislukt'}
+                    </p>
+                    {queueAttempts > 0 && (
+                      <p className="text-sm">
+                        <strong>Poging:</strong> {queueAttempts} van {queueMaxAttempts}
+                      </p>
+                    )}
+                    <div className="mt-4">
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className="h-2 rounded-full transition-all duration-500"
+                          style={{
+                            width: queueStatus === 'processing' ? '50%' : '10%',
+                            background: 'hsl(142 64% 62%)'
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      De validatie wordt op de achtergrond verwerkt. Dit kan enkele minuten duren.
+                      {queueAttempts > 1 && ' Er wordt automatisch opnieuw geprobeerd bij fouten.'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Error display */}
