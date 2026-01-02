@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { PDFUploadZone } from "@/components/PDFUploadZone";
-import { sendValidationRequest, ValidationResponse } from "@/lib/webhookClient";
-import { uploadPDFsToStorage, uploadPDFsToKnowledgeBank, StoredFile } from "@/lib/storageClient";
+import { ValidationResponse } from "@/lib/webhookClient";
+import { StoredFile } from "@/lib/storageClient";
 import { SourceFilesProvider } from "@/components/SourceFilesContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -30,9 +30,10 @@ import { exportToPDF, generateFilename } from "@/lib/pdfExport";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { updateKnowledgeBank, checkKnowledgeBankExists } from "@/hooks/useKnowledgeBank";
+import { runValidation } from "@/lib/validation/validationService";
+import { ProductType, ValidationError } from "@/lib/validation/types";
 
-const productTypes = [
+const productTypes: ProductType[] = [
   { id: "1", name: "Binnenverf en vernissen", description: "Binnenverf en vernissen" },
   { id: "2", name: "Houtachtige plaatmaterialen", description: "Houtachtige plaatmaterialen, inclusief spaanplaat, houtvezelplaat, MDF, OSB, cementgebonden vezelplaat, triplex, massief houten panelen en akoestische platen. Ook houten vloeren, zoals parket vallen hieronder, alsmede houtconstructies zoals gelamineerd hout." },
   { id: "3", name: "Vloerafwerking", description: "Vloerafwerking, inclusief vinyl, linoleum, kurk, rubber, tapijt en houten laminaatvloeren. Ook gietvloeren." },
@@ -147,86 +148,35 @@ export default function Validatie() {
   const executeValidation = async (userId: string, productId: string) => {
     setIsSending(true);
     setErrorData(null);
-    
-    let savedStoredFiles: StoredFile[] = [];
-    let kbSourceFiles: StoredFile[] | null = null;
-    
+
     try {
       const selectedProduct = productTypes.find(p => p.id === selectedProductType);
       if (!selectedProduct) throw new Error("Product type not found");
-      
-      // Upload to storage
-      toast.info("PDF bestanden opslaan...");
-      savedStoredFiles = await uploadPDFsToStorage(uploadedFiles, userId, sessionId);
-      setStoredFiles(savedStoredFiles);
-      console.log("✅ PDFs opgeslagen:", savedStoredFiles);
-      
-      // Check knowledge bank for first validation
-      if (eanCode && selectedCertification) {
-        const kbExists = await checkKnowledgeBankExists(eanCode, selectedCertification);
-        
-        if (!kbExists) {
-          toast.info("Eerste validatie voor dit product - opslaan in kennisbank...");
-          kbSourceFiles = await uploadPDFsToKnowledgeBank(
-            uploadedFiles, 
-            eanCode, 
-            selectedCertification
-          );
-          console.log("✅ PDFs opgeslagen in Knowledge Bank:", kbSourceFiles);
-        }
-      }
-      
-      // Execute validation
-      toast.info("Validatie uitvoeren...");
-      const response = await sendValidationRequest(
-        sessionId, 
-        selectedCertification, 
-        selectedProduct, 
+
+      // Run validation via service
+      const result = await runValidation({
+        userId,
+        sessionId,
+        productId,
+        productName,
+        eanCode: eanCode || null,
+        selectedCertification,
+        selectedProductType: selectedProduct,
         uploadedFiles,
-        eanCode || null,
-        productName
-      );
-      setValidationData(response);
+        deductCredit,
+      });
+
+      // Update UI with results
+      setValidationData(result.validationData);
+      setStoredFiles(result.storedFiles);
       setErrorData(null);
-      toast.success("Validatie ontvangen!");
       setCurrentStep(5);
-      
-      // Deduct credit and save
-      await deductCredit();
-      
-      // Save validation to database
-      await supabase
-        .from('validations')
-        .insert({
-          user_id: userId,
-          session_id: sessionId,
-          certification: selectedCertification,
-          product_type: selectedProduct as any,
-          file_names: uploadedFiles.map(f => f.name),
-          source_files: savedStoredFiles as any,
-          result: response as any,
-          status: 'completed',
-          product_id: productId,
-        });
-      
-      // Update knowledge bank if we have an EAN code
-      if (eanCode && selectedCertification) {
-        const resultData = 'data' in response ? response.data : response;
-        await updateKnowledgeBank(
-          eanCode,
-          productName,
-          selectedCertification,
-          selectedProduct,
-          resultData,
-          kbSourceFiles
-        );
-      }
     } catch (error) {
       console.error("❌ [UI] Send error:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
+      const validationError = error as ValidationError;
       setErrorData({
-        message: errorMessage,
-        rawResponse: (error as any).rawResponse
+        message: validationError.message,
+        rawResponse: validationError.rawResponse
       });
       toast.error("Verzenden mislukt - check console voor details");
       setCurrentStep(5);
