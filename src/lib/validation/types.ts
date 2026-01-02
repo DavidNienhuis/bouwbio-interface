@@ -39,5 +39,5 @@ export interface RunValidationResult {
  */
 export interface ValidationError {
   message: string;
-  rawResponse?: any;
+  rawResponse?: unknown;
 }

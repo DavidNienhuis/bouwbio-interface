@@ -15,6 +15,7 @@ import {
   RunValidationResult,
   ValidationError,
 } from "./types";
+import { Json } from "@/integrations/supabase/types";
 
 /**
  * Orchestrates the complete validation flow:
@@ -99,10 +100,10 @@ export async function runValidation(
         user_id: userId,
         session_id: sessionId,
         certification: selectedCertification,
-        product_type: selectedProductType as any,
+        product_type: selectedProductType as unknown as Json,
         file_names: uploadedFiles.map((f) => f.name),
-        source_files: savedStoredFiles as any,
-        result: validationData as any,
+        source_files: savedStoredFiles as unknown as Json,
+        result: validationData as unknown as Json,
         status: "completed",
         product_id: productId,
       })
@@ -139,7 +140,10 @@ export async function runValidation(
       error instanceof Error ? error.message : "Onbekende fout";
     const validationError: ValidationError = {
       message: errorMessage,
-      rawResponse: (error as any).rawResponse,
+      rawResponse:
+        typeof error === "object" && error !== null && "rawResponse" in error
+          ? error.rawResponse
+          : undefined,
     };
     throw validationError;
   }

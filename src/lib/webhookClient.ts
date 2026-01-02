@@ -142,7 +142,7 @@ export interface DetailedProductAnalysis {
   emissies: {
     methode: string;
     testrapport_aanwezig: boolean;
-    parameters: any[];
+    parameters: unknown[];
   };
   beoordeling: {
     route: string;
@@ -321,7 +321,7 @@ const stripMarkdownCodeBlock = (text: string): string => {
 };
 
 // Helper functie om validation data uit verschillende response formaten te halen
-const extractValidationData = (data: any): ValidationResponse => {
+const extractValidationData = (data: unknown): ValidationResponse => {
   let workingData = data;
   
   // Detecteer CAS Results array format EERST (voordat we array unpacking doen!)
