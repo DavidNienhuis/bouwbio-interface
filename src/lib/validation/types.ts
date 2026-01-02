@@ -22,7 +22,7 @@ export interface RunValidationInput {
   selectedCertification: string;
   selectedProductType: ProductType;
   uploadedFiles: File[];
-  deductCredit: () => Promise<void>;
+  deductCredit: () => Promise<boolean>;
 }
 
 /**

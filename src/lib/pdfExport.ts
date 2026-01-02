@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-// PDF export utility for validation results
+// PDF export utility for validation results with proper multi-page support
 
 export const exportToPDF = async (
   element: HTMLElement, 
@@ -29,8 +29,6 @@ export const exportToPDF = async (
   // Remove print-mode class
   element.classList.remove('print-mode');
   
-  const imgData = canvas.toDataURL('image/png', 1.0);
-  
   // A4 dimensions in mm with margins
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -39,25 +37,50 @@ export const exportToPDF = async (
   // Add margins
   const margin = 10;
   const contentWidth = pdfWidth - (margin * 2);
+  const contentHeight = pdfHeight - (margin * 2);
   
-  // Calculate image dimensions to fit A4 with margins
+  // Calculate scale factor: how many canvas pixels per mm
   const imgWidth = contentWidth;
-  const imgHeight = (canvas.height * contentWidth) / canvas.width;
+  const scaleFactor = canvas.width / imgWidth;
   
-  // Handle multi-page PDFs if content is longer than one page
-  let heightLeft = imgHeight;
-  let position = margin;
+  // Calculate how many canvas pixels fit on one page
+  const pageHeightInPx = contentHeight * scaleFactor;
   
-  // First page
-  pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-  heightLeft -= (pdfHeight - margin * 2);
+  // Calculate total pages needed
+  const totalPages = Math.ceil(canvas.height / pageHeightInPx);
   
-  // Additional pages if needed
-  while (heightLeft > 0) {
-    position = margin - (imgHeight - heightLeft);
-    pdf.addPage();
-    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-    heightLeft -= (pdfHeight - margin * 2);
+  for (let page = 0; page < totalPages; page++) {
+    if (page > 0) {
+      pdf.addPage();
+    }
+    
+    // Calculate slice boundaries for this page
+    const sliceY = page * pageHeightInPx;
+    const sliceHeight = Math.min(pageHeightInPx, canvas.height - sliceY);
+    
+    // Create a temporary canvas for this page slice
+    const pageCanvas = document.createElement('canvas');
+    pageCanvas.width = canvas.width;
+    pageCanvas.height = sliceHeight;
+    
+    const ctx = pageCanvas.getContext('2d');
+    if (ctx) {
+      // Draw only the relevant portion from the source canvas
+      ctx.drawImage(
+        canvas,
+        0, sliceY,                    // Source x, y
+        canvas.width, sliceHeight,    // Source width, height
+        0, 0,                         // Dest x, y
+        canvas.width, sliceHeight     // Dest width, height
+      );
+    }
+    
+    // Convert this page slice to image data
+    const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
+    const imgHeight = sliceHeight / scaleFactor;
+    
+    // Add this slice as an image to the current PDF page
+    pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, imgHeight);
   }
   
   pdf.save(filename);
