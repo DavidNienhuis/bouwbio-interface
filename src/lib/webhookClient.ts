@@ -342,9 +342,10 @@ const extractValidationData = (data: unknown): ValidationResponse => {
   }
   
   // Als er een "output" key is, pak die
-  if (workingData?.output) {
+  const dataWithOutput = workingData as Record<string, unknown> | null;
+  if (dataWithOutput?.output) {
     console.log('Found "output" key, extracting');
-    workingData = workingData.output;
+    workingData = dataWithOutput.output;
     
     // Parse als het een string is
     if (typeof workingData === 'string') {
@@ -355,40 +356,45 @@ const extractValidationData = (data: unknown): ValidationResponse => {
     }
   }
 
+  // Cast to record for property access
+  const d = workingData as Record<string, unknown> | null;
+
   // Detecteer BouwbiologischAdviesData format (hoogste prioriteit - nieuwe format met advies)
-  if (workingData?.scores && workingData?.advies && workingData?.product?.identificatie) {
+  if (d?.scores && d?.advies && (d?.product as Record<string, unknown>)?.identificatie) {
     console.log('✅ Detected BouwbiologischAdviesData format');
     return {
       type: 'bouwbiologisch_advies',
-      data: workingData as BouwbiologischAdviesData
+      data: d as unknown as BouwbiologischAdviesData
     };
   }
 
   // Detecteer VerificatieAuditData format (met red list checking)
-  if (workingData?.verificatie_audit && workingData?.product?.identificatie && workingData?.product?.inhoudstoffen_cas) {
+  const dProduct = d?.product as Record<string, unknown> | undefined;
+  if (d?.verificatie_audit && dProduct?.identificatie && dProduct?.inhoudstoffen_cas) {
     console.log('✅ Detected VerificatieAuditData format');
     return {
       type: 'verificatie_audit',
-      data: workingData as VerificatieAuditData
+      data: d as unknown as VerificatieAuditData
     };
   }
 
   // Detecteer Detailed Product Analysis format
-  if (workingData?.norm && workingData?.productnaam && workingData?.beoordeling) {
+  if (d?.norm && d?.productnaam && d?.beoordeling) {
     console.log('✅ Detected DetailedProductAnalysis format');
     return {
       type: 'detailed_product_analysis',
-      data: workingData as DetailedProductAnalysis
+      data: d as unknown as DetailedProductAnalysis
     };
   }
 
   // Detecteer nieuwe Hea02Result format
   // Data komt binnen als array met 1 element
   if (Array.isArray(workingData) && workingData.length > 0) {
-    const firstItem = workingData[0];
+    const firstItem = workingData[0] as Record<string, unknown>;
+    const sam = firstItem?.samenvatting as Record<string, unknown> | undefined;
     if (
-      firstItem?.samenvatting?.status && 
-      firstItem?.samenvatting?.reden &&
+      sam?.status && 
+      sam?.reden &&
       (firstItem.certificaten || firstItem.emissies || firstItem.stoffen)
     ) {
       console.log('✅ Detected Hea02Result format (array structure)');
@@ -405,66 +411,67 @@ const extractValidationData = (data: unknown): ValidationResponse => {
   }
   
   // Fallback: check if workingData itself has the structure (with required fields only)
+  const dSam = d?.samenvatting as Record<string, unknown> | undefined;
   if (
-    workingData?.samenvatting?.status && 
-    workingData?.samenvatting?.reden &&
-    (workingData.certificaten || workingData.emissies || workingData.stoffen)
+    dSam?.status && 
+    dSam?.reden &&
+    (d?.certificaten || d?.emissies || d?.stoffen)
   ) {
     console.log('✅ Detected Hea02Result format');
-    console.log('🔍 Debug - samenvatting:', workingData.samenvatting);
-    console.log('🔍 Debug - certificaten:', workingData.certificaten);
-    console.log('🔍 Debug - emissies:', workingData.emissies);
-    console.log('🔍 Debug - stoffen:', workingData.stoffen);
+    console.log('🔍 Debug - samenvatting:', d.samenvatting);
+    console.log('🔍 Debug - certificaten:', d.certificaten);
+    console.log('🔍 Debug - emissies:', d.emissies);
+    console.log('🔍 Debug - stoffen:', d.stoffen);
     return {
       type: 'hea02_result',
       data: {
-        samenvatting: workingData.samenvatting,
-        certificaten: workingData.certificaten || [],
-        emissies: workingData.emissies || [],
-        stoffen: workingData.stoffen || []
+        samenvatting: d.samenvatting,
+        certificaten: d.certificaten || [],
+        emissies: d.emissies || [],
+        stoffen: d.stoffen || []
       } as Hea02Result
     };
   }
   
   // Detecteer extended format (tweede prioriteit)
-  if (workingData?.product && workingData?.verificatie_audit) {
+  if (d?.product && d?.verificatie_audit) {
     console.log('Found extended HEA02 verification audit format');
     return {
       type: 'extended_hea02_verdict',
-      data: workingData as ExtendedHEA02VerdictData
+      data: d as unknown as ExtendedHEA02VerdictData
     };
   }
   
   // Detecteer format: HEA02 Verdict format
-  if (workingData?.product && workingData?.hea02_verdict) {
+  if (d?.product && d?.hea02_verdict) {
     console.log('Found HEA02 verdict format');
     return {
       type: 'hea02_verdict',
-      data: workingData as HEA02VerdictData
+      data: d as unknown as HEA02VerdictData
     };
   }
   
   // Detecteer format: Classification format
-  if (workingData?.classification && workingData?.reasoning) {
+  if (d?.classification && d?.reasoning) {
     console.log('Found classification format');
     return {
       type: 'classification',
       data: {
-        classification: workingData.classification,
-        confidence: workingData.confidence || 0,
-        reasoning: workingData.reasoning,
-        evidence_quotes: workingData.evidence_quotes || [],
-        recommended_action: workingData.recommended_action || ''
+        classification: d.classification as string,
+        confidence: (d.confidence as number) || 0,
+        reasoning: d.reasoning as string,
+        evidence_quotes: (d.evidence_quotes as string[]) || [],
+        recommended_action: (d.recommended_action as string) || ''
       }
     };
   }
   
   // Detecteer format: Table format
-  if (workingData?.criteria && Array.isArray(workingData.criteria)) {
-    console.log('Found criteria array with', workingData.criteria.length, 'items');
+  if (d?.criteria && Array.isArray(d.criteria)) {
+    console.log('Found criteria array with', d.criteria.length, 'items');
     return { 
       type: 'table',
-      criteria: workingData.criteria 
+      criteria: d.criteria as CriteriaData[]
     };
   }
   
