@@ -1,7 +1,6 @@
 import { toast } from "sonner";
 import type { RunValidationInput, RunValidationResult } from "./types";
 import { runValidation } from "./validationService";
-import { addToQueue, getQueueStatus, type FileReference } from "./queueService";
 
 /**
  * Validation mode configuration
@@ -30,7 +29,7 @@ export interface StartValidationResult {
  * Default configuration - use queue mode for resilience
  */
 const DEFAULT_CONFIG: ValidationConfig = {
-  mode: 'queue',
+  mode: 'direct',  // Changed from 'queue' - queue tables don't exist in database
   maxRetries: 3,
   enableToasts: true,
 };
@@ -70,54 +69,15 @@ export async function startValidation(
 
 /**
  * Start validation in queue mode (async with retry)
+ * NOTE: Queue mode is disabled - database tables don't exist
  */
 async function startQueueValidation(
   input: RunValidationInput,
   config: ValidationConfig
 ): Promise<StartValidationResult> {
-  const { enableToasts, maxRetries } = config;
-
-  try {
-    if (enableToasts) {
-      toast.info("Validatie wordt voorbereid...");
-    }
-
-    // Convert File objects to references for queue storage
-    const fileRefs: FileReference[] = input.uploadedFiles.map((file) => ({
-      name: file.name,
-      size: file.size,
-      type: file.type,
-    }));
-
-    // Add to queue
-    const queueId = await addToQueue({
-      userId: input.userId,
-      productId: input.productId,
-      inputData: input,
-      fileRefs,
-      maxAttempts: maxRetries,
-    });
-
-    if (enableToasts) {
-      toast.success("Validatie is toegevoegd aan de wachtrij");
-      toast.info("U ontvangt een melding wanneer de validatie klaar is", {
-        duration: 5000,
-      });
-    }
-
-    return {
-      mode: 'queue',
-      queueId,
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
-
-    if (enableToasts) {
-      toast.error(`Fout bij toevoegen aan wachtrij: ${errorMessage}`);
-    }
-
-    throw error;
-  }
+  // Queue mode is not available - fall back to direct mode
+  console.warn('Queue mode requested but not available. Using direct mode.');
+  return startDirectValidation(input, config);
 }
 
 /**
@@ -157,27 +117,23 @@ async function startDirectValidation(
 
 /**
  * Check validation status (for queue mode)
+ * NOTE: Queue mode is disabled - always returns not_found
  */
-export async function checkValidationStatus(queueId: string) {
-  const status = await getQueueStatus(queueId);
-
-  if (!status) {
-    return {
-      status: 'not_found',
-      message: 'Validatie niet gevonden',
-    };
-  }
-
+export async function checkValidationStatus(_queueId: string): Promise<{
+  status: string;
+  message?: string;
+  attempts?: number;
+  maxAttempts?: number;
+  validationId?: string | null;
+  errorLog?: string | null;
+}> {
   return {
-    status: status.status,
-    attempts: status.attempts,
-    maxAttempts: status.max_attempts,
-    lastAttemptAt: status.last_attempt_at,
-    nextRetryAt: status.next_retry_at,
-    validationId: status.validation_id,
-    errorLog: status.error_log,
-    createdAt: status.created_at,
-    completedAt: status.completed_at,
+    status: 'not_found',
+    message: 'Queue system not implemented',
+    attempts: 0,
+    maxAttempts: 0,
+    validationId: null,
+    errorLog: null,
   };
 }
 
