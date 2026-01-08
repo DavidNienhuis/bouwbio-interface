@@ -1,8 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, FileCheck, FolderOpen, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import logo from '@/assets/logo.png';
-
 import {
   Sidebar,
   SidebarContent,
@@ -45,19 +43,12 @@ export function AppSidebar() {
       className="border-r border-sidebar-border"
       collapsible="icon"
     >
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
-          <img 
-            src={logo} 
-            alt="Logo" 
-            className="h-8 w-8 object-contain flex-shrink-0"
-          />
-          {!collapsed && (
-            <span className="font-medium text-sidebar-foreground text-sm">
-              Validatie Tool
-            </span>
-          )}
-        </div>
+      <SidebarHeader className="border-b border-sidebar-border p-3">
+        {!collapsed && (
+          <span className="font-medium text-sidebar-foreground text-sm">
+            Validatie Tool
+          </span>
+        )}
       </SidebarHeader>
 
       <SidebarContent className="p-2">
