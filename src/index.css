@@ -108,6 +108,13 @@ Bouwbiologie Zwolle Huisstijl - Oranje/Goud accent, lichte achtergrond
   padding-top: 0;
 }
 
+/* Embedded with sidebar - accounts for external navbar */
+.embedded-with-sidebar {
+  --external-navbar-height: 70px;
+  margin-top: var(--external-navbar-height);
+  min-height: calc(100vh - var(--external-navbar-height));
+}
+
 /* Professional Audit-Ready Report Document Styling */
 .report-sheet {
   background-color: hsl(0 0% 100%);
