@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Layout } from "@/components/Layout";
-import { ArrowLeft, ArrowRight, RotateCcw, CheckCircle2, Download, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw, CheckCircle2, Download } from "lucide-react";
 import { exportToPDF, generateFilename } from "@/lib/pdfExport";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -378,7 +378,7 @@ export default function Validatie() {
     return (
       <Layout>
         <CreditsIndicator />
-        <div className="flex-1 py-12 px-6" style={{ background: 'hsl(var(--muted))' }}>
+        <div className="flex-1 py-12 px-6" style={{ background: 'white' }}>
           <div className="container mx-auto max-w-4xl">
             <div className="mb-8 flex items-center justify-between">
               <div>
@@ -560,12 +560,11 @@ export default function Validatie() {
         estimatedTime={60}
       />
       
-      <div className="flex-1 py-12 px-6" style={{ background: 'hsl(var(--muted))' }}>
+      <div className="flex-1 py-12 px-6" style={{ background: 'white' }}>
         <div className="container mx-auto max-w-4xl">
           {/* Hero Header */}
           <div className="mb-8 text-center">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Sparkles className="w-8 h-8" style={{ color: 'hsl(142 64% 62%)' }} />
+            <div className="mb-4">
               <h1 className="font-heading font-medium text-4xl" style={{ color: 'hsl(190 16% 12%)' }}>
                 Product Analyse Tool
               </h1>
@@ -603,10 +602,10 @@ export default function Validatie() {
                     <SelectContent>
                       <SelectItem value="BREEAM_HEA02">BREEAM HEA02</SelectItem>
                       <SelectItem value="EU_TAXONOMY" disabled>
-                        EU Taxonomy 🔒 (Binnenkort beschikbaar)
+                        EU Taxonomy (Binnenkort beschikbaar)
                       </SelectItem>
                       <SelectItem value="WELL" disabled>
-                        WELL 🔒 (Binnenkort beschikbaar)
+                        WELL (Binnenkort beschikbaar)
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -782,7 +781,6 @@ export default function Validatie() {
                   className="gap-2"
                   style={{ background: canSend ? 'hsl(142 64% 62%)' : undefined, color: canSend ? 'hsl(186 100% 10%)' : undefined }}
                 >
-                  <Sparkles className="w-4 h-4" />
                   Start Analyse
                 </Button>
               </div>
