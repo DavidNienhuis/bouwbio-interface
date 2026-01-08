@@ -40,12 +40,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar 
-      className="border-r border-sidebar-border"
+      className="border-r border-sidebar-border bg-sidebar"
       collapsible="icon"
     >
       <SidebarHeader className="border-b border-sidebar-border p-3">
         {!collapsed && (
-          <span className="font-medium text-sidebar-foreground text-sm">
+          <span className="font-medium text-sidebar-foreground/90 text-sm tracking-wide">
             Validatie Tool
           </span>
         )}
@@ -61,6 +61,10 @@ export function AppSidebar() {
                     asChild
                     isActive={isActive(item.url)}
                     tooltip={collapsed ? item.title : undefined}
+                    className={isActive(item.url) 
+                      ? "bg-sidebar-accent text-sidebar-primary border-l-2 border-sidebar-primary" 
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                    }
                   >
                     <button
                       onClick={() => navigate(item.url)}
@@ -83,7 +87,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               onClick={handleLogout}
               tooltip={collapsed ? 'Uitloggen' : undefined}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="text-sidebar-foreground/70 hover:text-red-400 hover:bg-red-500/10"
             >
               <LogOut className="h-4 w-4 flex-shrink-0" />
               {!collapsed && <span>Uitloggen</span>}

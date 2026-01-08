@@ -9,41 +9,46 @@ Bouwbiologie Zwolle Huisstijl - Oranje/Goud accent, lichte achtergrond
 
 @layer base {
   :root {
-    /* Primary Colors - Bouwbiologie Zwolle Oranje/Goud */
-    --bg: 0 0% 98%;
+    /* Primary Colors - Bouwbiologie Zwolle Exact Match */
+    /* Goud/Oranje: #D4920A → HSL 43 91% 43% */
+    /* Donker Teal: #002D33 → HSL 188 100% 10% */
+    /* Medium Teal: #2D7575 → HSL 180 45% 32% */
+    /* Light Gray: #F5F7F7 → HSL 180 12% 96% */
+    
+    --bg: 180 12% 98%;
     --panel: 0 0% 100%;
-    --ink: 0 0% 15%;
-    --accent: 38 78% 56%;
-    --accent-dark: 38 78% 45%;
+    --ink: 0 0% 20%;
+    --accent: 43 91% 43%;
+    --accent-dark: 43 91% 35%;
     --muted: 0 0% 45%;
-    --line: 0 0% 85%;
+    --line: 180 8% 90%;
     
     /* Component colors */
-    --background: 0 0% 98%;
-    --foreground: 0 0% 15%;
+    --background: 180 12% 98%;
+    --foreground: 0 0% 20%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 15%;
+    --card-foreground: 0 0% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 15%;
-    --primary: 38 78% 56%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 43 91% 43%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 180 45% 35%;
+    --secondary: 180 45% 32%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 90%;
+    --muted: 180 8% 95%;
     --muted-foreground: 0 0% 45%;
-    --accent: 38 78% 56%;
+    --accent: 43 91% 43%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 85%;
+    --border: 180 8% 88%;
     --input: 0 0% 100%;
-    --ring: 38 78% 56%;
+    --ring: 43 91% 43%;
     --radius: 0.25rem;
     
     /* Status colors - Professional */
-    --success: 38 78% 56%;
+    --success: 43 91% 43%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 100% 50%;
+    --warning: 43 100% 50%;
     --warning-foreground: 0 0% 100%;
     --error: 0 84% 60%;
     --error-foreground: 0 0% 100%;
@@ -51,14 +56,15 @@ Bouwbiologie Zwolle Huisstijl - Oranje/Goud accent, lichte achtergrond
     /* Subtle shadows */
     --shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 15%;
-    --sidebar-primary: 38 78% 56%;
+    /* Sidebar - Donker Teal zoals hun service boxes #002D33 */
+    --sidebar-background: 188 100% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 43 91% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 95%;
-    --sidebar-accent-foreground: 0 0% 15%;
-    --sidebar-border: 0 0% 85%;
-    --sidebar-ring: 38 78% 56%;
+    --sidebar-accent: 188 50% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 188 60% 18%;
+    --sidebar-ring: 43 91% 50%;
   }
 
   .dark {
