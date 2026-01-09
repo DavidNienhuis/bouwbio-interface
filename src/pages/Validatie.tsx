@@ -561,10 +561,13 @@ export default function Validatie() {
         estimatedTime={60}
       />
       
+      {/* Top Navigation Bar - Only for non-logged-in users */}
+      {!user && <FeatureInfoBar />}
+
       <div className="flex-1 py-12 px-6" style={{ background: 'white' }}>
         <div className="container mx-auto max-w-4xl">
           {/* Hero Header */}
-          <div className="mb-6 text-center">
+          <div className="mb-8 text-center">
             <div className="mb-4">
               <h1 className="font-heading font-medium text-4xl" style={{ color: 'hsl(190 16% 12%)' }}>
                 Product Analyse Tool
@@ -577,13 +580,6 @@ export default function Validatie() {
               Powered by Bouwbioloog Zwolle
             </p>
           </div>
-
-          {/* Feature Info Bar - Only for non-logged-in users */}
-          {!user && (
-            <div className="mb-6 -mx-6">
-              <FeatureInfoBar />
-            </div>
-          )}
 
           {/* Step Indicator */}
           <StepIndicator 
