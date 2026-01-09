@@ -1,66 +1,56 @@
-import { Cpu, FileText, Zap, Gift } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
-interface FeatureInfoBarProps {
-  onDismiss?: () => void;
-}
-
-const features = [
-  {
-    icon: Cpu,
-    title: "AI-Analyse",
-    description: "Automatische compliance check",
-  },
-  {
-    icon: FileText,
-    title: "PDF Upload",
-    description: "Upload je productbladen",
-  },
-  {
-    icon: Zap,
-    title: "Snel Resultaat",
-    description: "Binnen 60 seconden klaar",
-  },
-  {
-    icon: Gift,
-    title: "Gratis Proberen",
-    description: "Start zonder account",
-  },
+const navLinks = [
+  { label: "Over", href: "#" },
+  { label: "Functies", href: "#" },
+  { label: "Prijzen", href: "#" },
+  { label: "Contact", href: "#" },
 ];
 
-export function FeatureInfoBar({ onDismiss }: FeatureInfoBarProps) {
+export function FeatureInfoBar() {
+  const navigate = useNavigate();
+
   return (
-    <div className="w-full bg-muted/50 border-b border-border py-3 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between gap-4 overflow-x-auto">
-          <div className="flex items-center gap-6 min-w-0">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="flex items-center gap-2 min-w-fit"
-              >
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <feature.icon className="w-4 h-4 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground whitespace-nowrap">
-                    {feature.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground whitespace-nowrap hidden sm:block">
-                    {feature.description}
-                  </p>
-                </div>
-              </div>
-            ))}
+    <div className="w-full bg-background border-b border-border">
+      <div className="max-w-6xl mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          {/* Left: Brand */}
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-medium text-foreground">Bouwbioloog</span>
           </div>
-          {onDismiss && (
-            <button
-              onClick={onDismiss}
-              className="text-muted-foreground hover:text-foreground text-sm flex-shrink-0"
-              aria-label="Sluiten"
+
+          {/* Center: Navigation Links */}
+          <nav className="hidden md:flex items-center gap-6">
+            {navLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          {/* Right: Auth Buttons */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/auth")}
+              className="text-sm"
             >
-              ✕
-            </button>
-          )}
+              Aanmelden
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => navigate("/auth")}
+              className="text-sm"
+            >
+              Gratis registreren
+            </Button>
+          </div>
         </div>
       </div>
     </div>
