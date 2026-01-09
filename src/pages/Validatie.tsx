@@ -20,6 +20,7 @@ import { StepIndicator } from "@/components/StepIndicator";
 import { CreateAccountModal } from "@/components/CreateAccountModal";
 import { NoCreditsModal } from "@/components/NoCreditsModal";
 import { CreditsIndicator } from "@/components/CreditsIndicator";
+import { FeatureInfoBar } from "@/components/FeatureInfoBar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -563,7 +564,7 @@ export default function Validatie() {
       <div className="flex-1 py-12 px-6" style={{ background: 'white' }}>
         <div className="container mx-auto max-w-4xl">
           {/* Hero Header */}
-          <div className="mb-8 text-center">
+          <div className="mb-6 text-center">
             <div className="mb-4">
               <h1 className="font-heading font-medium text-4xl" style={{ color: 'hsl(190 16% 12%)' }}>
                 Product Analyse Tool
@@ -576,6 +577,13 @@ export default function Validatie() {
               Powered by Bouwbioloog Zwolle
             </p>
           </div>
+
+          {/* Feature Info Bar - Only for non-logged-in users */}
+          {!user && (
+            <div className="mb-6 -mx-6">
+              <FeatureInfoBar />
+            </div>
+          )}
 
           {/* Step Indicator */}
           <StepIndicator 
