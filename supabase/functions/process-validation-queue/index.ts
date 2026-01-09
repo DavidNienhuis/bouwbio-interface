@@ -101,12 +101,13 @@ serve(async (req) => {
         status: 200,
       }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Queue processing error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: errorMessage,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -161,8 +162,9 @@ async function processQueueItem(item: QueueItem, supabaseAdmin: any) {
     } else {
       throw new Error("Simulated validation failure");
     }
-  } catch (error) {
-    const errorMessage = error.message || "Unknown error";
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : null;
     console.error(`❌ Queue item ${item.id} failed:`, errorMessage);
 
     // Log error
@@ -171,7 +173,7 @@ async function processQueueItem(item: QueueItem, supabaseAdmin: any) {
       user_id: item.user_id,
       error_step: "webhook_call",
       error_message: errorMessage,
-      error_stack: error.stack || null,
+      error_stack: errorStack,
       retry_count: item.attempts + 1,
       is_recoverable: item.attempts + 1 < item.max_attempts,
     });
@@ -193,7 +195,7 @@ async function processQueueItem(item: QueueItem, supabaseAdmin: any) {
           error_log: errorMessage,
           error_details: {
             message: errorMessage,
-            stack: error.stack,
+            stack: errorStack,
             timestamp: new Date().toISOString(),
           },
         })
@@ -210,7 +212,7 @@ async function processQueueItem(item: QueueItem, supabaseAdmin: any) {
           error_log: errorMessage,
           error_details: {
             message: errorMessage,
-            stack: error.stack,
+            stack: errorStack,
             timestamp: new Date().toISOString(),
           },
         })

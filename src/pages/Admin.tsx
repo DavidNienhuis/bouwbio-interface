@@ -35,7 +35,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [queueStats, setQueueStats] = useState<QueueStatistics | null>(null);
   const [errorStats, setErrorStats] = useState<ErrorStatistics | null>(null);
   const [recentQueue, setRecentQueue] = useState<ValidationQueueItem[]>([]);
@@ -44,11 +44,15 @@ export default function Admin() {
   const [retryingIds, setRetryingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    loadData();
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(loadData, 10000);
-    return () => clearInterval(interval);
-  }, [user]);
+    if (isAdmin) {
+      loadData();
+      // Auto-refresh every 10 seconds
+      const interval = setInterval(loadData, 10000);
+      return () => clearInterval(interval);
+    } else {
+      setIsLoading(false);
+    }
+  }, [user, isAdmin]);
 
   const loadData = async () => {
     if (!user) return;
@@ -140,7 +144,7 @@ export default function Admin() {
     });
   };
 
-  if (!user) {
+  if (!user || !isAdmin) {
     return (
       <Layout>
         <div className="flex-1 flex items-center justify-center">
@@ -148,7 +152,10 @@ export default function Admin() {
             <CardHeader>
               <CardTitle>Toegang geweigerd</CardTitle>
               <CardDescription>
-                Log in om het admin dashboard te bekijken
+                {!user 
+                  ? "Log in om het admin dashboard te bekijken"
+                  : "Deze pagina is alleen toegankelijk voor beheerders."
+                }
               </CardDescription>
             </CardHeader>
           </Card>
