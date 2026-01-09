@@ -9,6 +9,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   credits: number;
+  isAdmin: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
@@ -25,7 +26,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+
+  const fetchUserData = async (userId: string) => {
+    try {
+      // Fetch credits
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', userId)
+        .single();
+      
+      if (profileError) {
+        console.error('Error fetching credits:', profileError);
+      } else {
+        setCredits(profileData?.credits ?? 0);
+      }
+
+      // Check admin role via user_roles table
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+      
+      if (roleError) {
+        console.error('Error fetching admin role:', roleError);
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(!!roleData);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
 
   const fetchCredits = async (userId: string) => {
     try {
@@ -82,13 +118,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Fetch credits when user logs in
+        // Fetch user data when user logs in
         if (session?.user) {
           setTimeout(() => {
-            fetchCredits(session.user.id);
+            fetchUserData(session.user.id);
           }, 0);
         } else {
           setCredits(0);
+          setIsAdmin(false);
         }
       }
     );
@@ -100,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       
       if (session?.user) {
-        fetchCredits(session.user.id);
+        fetchUserData(session.user.id);
       }
     });
 
@@ -169,6 +206,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setSession(null);
     setCredits(0);
+    setIsAdmin(false);
     toast.success('Je bent uitgelogd');
     navigate('/');
   };
@@ -179,6 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session, 
       loading, 
       credits,
+      isAdmin,
       signUp, 
       signIn, 
       signInWithGoogle, 
