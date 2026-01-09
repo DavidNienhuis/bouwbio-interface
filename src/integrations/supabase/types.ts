@@ -366,15 +366,150 @@ export type Database = {
         }
         Relationships: []
       }
+      validation_errors: {
+        Row: {
+          created_at: string | null
+          error_message: string
+          error_metadata: Json | null
+          error_stack: string | null
+          error_step: string
+          http_status_code: number | null
+          id: string
+          is_recoverable: boolean | null
+          queue_id: string | null
+          retry_count: number | null
+          user_id: string | null
+          validation_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message: string
+          error_metadata?: Json | null
+          error_stack?: string | null
+          error_step: string
+          http_status_code?: number | null
+          id?: string
+          is_recoverable?: boolean | null
+          queue_id?: string | null
+          retry_count?: number | null
+          user_id?: string | null
+          validation_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string
+          error_metadata?: Json | null
+          error_stack?: string | null
+          error_step?: string
+          http_status_code?: number | null
+          id?: string
+          is_recoverable?: boolean | null
+          queue_id?: string | null
+          retry_count?: number | null
+          user_id?: string | null
+          validation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validation_errors_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "validation_queue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "validation_errors_validation_id_fkey"
+            columns: ["validation_id"]
+            isOneToOne: false
+            referencedRelation: "validations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      validation_queue: {
+        Row: {
+          attempts: number
+          completed_at: string | null
+          created_at: string | null
+          error_details: Json | null
+          error_log: string | null
+          file_refs: Json | null
+          id: string
+          input_data: Json
+          last_attempt_at: string | null
+          max_attempts: number
+          next_retry_at: string | null
+          product_id: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+          validation_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string | null
+          error_details?: Json | null
+          error_log?: string | null
+          file_refs?: Json | null
+          id?: string
+          input_data: Json
+          last_attempt_at?: string | null
+          max_attempts?: number
+          next_retry_at?: string | null
+          product_id?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+          validation_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string | null
+          error_details?: Json | null
+          error_log?: string | null
+          file_refs?: Json | null
+          id?: string
+          input_data?: Json
+          last_attempt_at?: string | null
+          max_attempts?: number
+          next_retry_at?: string | null
+          product_id?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          validation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validation_queue_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "validation_queue_validation_id_fkey"
+            columns: ["validation_id"]
+            isOneToOne: false
+            referencedRelation: "validations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       validations: {
         Row: {
           certification: string
           created_at: string | null
           file_names: string[] | null
           id: string
+          last_error: string | null
           product_id: string | null
           product_type: Json
+          queue_id: string | null
           result: Json | null
+          retry_count: number | null
           session_id: string
           source_files: Json | null
           status: string | null
@@ -385,9 +520,12 @@ export type Database = {
           created_at?: string | null
           file_names?: string[] | null
           id?: string
+          last_error?: string | null
           product_id?: string | null
           product_type: Json
+          queue_id?: string | null
           result?: Json | null
+          retry_count?: number | null
           session_id: string
           source_files?: Json | null
           status?: string | null
@@ -398,9 +536,12 @@ export type Database = {
           created_at?: string | null
           file_names?: string[] | null
           id?: string
+          last_error?: string | null
           product_id?: string | null
           product_type?: Json
+          queue_id?: string | null
           result?: Json | null
+          retry_count?: number | null
           session_id?: string
           source_files?: Json | null
           status?: string | null
@@ -412,6 +553,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "validations_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "validation_queue"
             referencedColumns: ["id"]
           },
         ]
@@ -432,6 +580,30 @@ export type Database = {
           p_validation_source: string
         }
         Returns: number
+      }
+      calculate_next_retry: {
+        Args: { attempt_count: number; base_delay_seconds?: number }
+        Returns: string
+      }
+      get_error_statistics: {
+        Args: { days_back?: number }
+        Returns: {
+          error_rate: number
+          errors_by_step: Json
+          most_common_errors: Json
+          total_errors: number
+        }[]
+      }
+      get_queue_statistics: {
+        Args: never
+        Returns: {
+          avg_retry_count: number
+          completed_count: number
+          failed_count: number
+          oldest_pending: string
+          pending_count: number
+          processing_count: number
+        }[]
       }
       has_role: {
         Args: {

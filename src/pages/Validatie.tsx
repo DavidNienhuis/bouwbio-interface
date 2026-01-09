@@ -34,12 +34,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { startValidationAuto, checkValidationStatus } from "@/lib/validation/validationOrchestrator";
 import { ProductType, ValidationError } from "@/lib/validation/types";
 
-const productTypes: ProductType[] = [
-  { id: "1", name: "Binnenverf en vernissen", description: "Binnenverf en vernissen" },
-  { id: "2", name: "Houtachtige plaatmaterialen", description: "Houtachtige plaatmaterialen, inclusief spaanplaat, houtvezelplaat, MDF, OSB, cementgebonden vezelplaat, triplex, massief houten panelen en akoestische platen. Ook houten vloeren, zoals parket vallen hieronder, alsmede houtconstructies zoals gelamineerd hout." },
-  { id: "3", name: "Vloerafwerking", description: "Vloerafwerking, inclusief vinyl, linoleum, kurk, rubber, tapijt en houten laminaatvloeren. Ook gietvloeren." },
-  { id: "4", name: "Verlaagde plafonds en tussenwanden", description: "Verlaagde plafonds, tussenwanden plus akoestisch en isolatie technische materialen." },
-  { id: "5", name: "Lijmen en kitten", description: "Lijmen en kitten, inclusief vloerlijmen." },
+const productTypes = [
+  { id: "1", name: "Binnenverf en vernissen", description: "Binnenverf en vernissen", shortDescription: "Verf en vernissen voor binnen" },
+  { id: "2", name: "Houtachtige plaatmaterialen", description: "Houtachtige plaatmaterialen, inclusief spaanplaat, houtvezelplaat, MDF, OSB, cementgebonden vezelplaat, triplex, massief houten panelen en akoestische platen. Ook houten vloeren, zoals parket vallen hieronder, alsmede houtconstructies zoals gelamineerd hout.", shortDescription: "MDF, OSB, parket, triplex, etc." },
+  { id: "3", name: "Vloerafwerking", description: "Vloerafwerking, inclusief vinyl, linoleum, kurk, rubber, tapijt en houten laminaatvloeren. Ook gietvloeren.", shortDescription: "Vinyl, linoleum, tapijt, etc." },
+  { id: "4", name: "Verlaagde plafonds en tussenwanden", description: "Verlaagde plafonds, tussenwanden plus akoestisch en isolatie technische materialen.", shortDescription: "Plafonds, wanden, isolatie" },
+  { id: "5", name: "Lijmen en kitten", description: "Lijmen en kitten, inclusief vloerlijmen.", shortDescription: "Lijmen en kitten" },
 ];
 
 const steps = [
@@ -654,7 +654,9 @@ export default function Validatie() {
                           <RadioGroupItem value={product.id} id={product.id} className="mt-1" />
                           <Label htmlFor={product.id} className="flex-1 cursor-pointer">
                             <div className="font-semibold mb-1 font-heading">{product.id}. {product.name}</div>
-                            <div className="text-sm" style={{ color: 'hsl(218 19% 27%)' }}>{product.description}</div>
+                            {/* Korte beschrijving op mobiel, volledige op desktop */}
+                            <div className="text-sm sm:hidden" style={{ color: 'hsl(218 19% 27%)' }}>{product.shortDescription}</div>
+                            <div className="text-sm hidden sm:block" style={{ color: 'hsl(218 19% 27%)' }}>{product.description}</div>
                           </Label>
                         </div>
                       ))}
