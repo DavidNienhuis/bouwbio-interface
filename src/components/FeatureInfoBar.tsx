@@ -34,12 +34,12 @@ export function FeatureInfoBar() {
           </nav>
 
           {/* Right: Auth Buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/auth")}
-              className="text-sm"
+              className="text-sm hidden sm:flex"
             >
               Aanmelden
             </Button>
@@ -48,7 +48,8 @@ export function FeatureInfoBar() {
               onClick={() => navigate("/auth")}
               className="text-sm"
             >
-              Gratis registreren
+              <span className="hidden sm:inline">Gratis registreren</span>
+              <span className="sm:hidden">Start</span>
             </Button>
           </div>
         </div>

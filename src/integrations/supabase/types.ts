@@ -37,69 +37,140 @@ export type Database = {
       }
       knowledge_bank: {
         Row: {
+          added_by_user_id: string | null
           advies_kleur: string | null
           advies_label: string | null
           advies_niveau: string | null
           certificaten_score: number | null
           certification: string
           created_at: string | null
+          data_quality_score: number | null
           ean_code: string
+          ean_format_valid: boolean | null
           emissie_score: number | null
           first_validated_at: string | null
+          has_source_files: boolean | null
           id: string
           last_validated_at: string | null
+          last_verified_at: string | null
           latest_result: Json | null
           overall_score: number | null
           product_name: string | null
           product_type: Json | null
+          reported_issues_count: number | null
           source_files: Json | null
           toxicologie_score: number | null
           updated_at: string | null
           validation_count: number | null
+          validation_source: string | null
         }
         Insert: {
+          added_by_user_id?: string | null
           advies_kleur?: string | null
           advies_label?: string | null
           advies_niveau?: string | null
           certificaten_score?: number | null
           certification: string
           created_at?: string | null
+          data_quality_score?: number | null
           ean_code: string
+          ean_format_valid?: boolean | null
           emissie_score?: number | null
           first_validated_at?: string | null
+          has_source_files?: boolean | null
           id?: string
           last_validated_at?: string | null
+          last_verified_at?: string | null
           latest_result?: Json | null
           overall_score?: number | null
           product_name?: string | null
           product_type?: Json | null
+          reported_issues_count?: number | null
           source_files?: Json | null
           toxicologie_score?: number | null
           updated_at?: string | null
           validation_count?: number | null
+          validation_source?: string | null
         }
         Update: {
+          added_by_user_id?: string | null
           advies_kleur?: string | null
           advies_label?: string | null
           advies_niveau?: string | null
           certificaten_score?: number | null
           certification?: string
           created_at?: string | null
+          data_quality_score?: number | null
           ean_code?: string
+          ean_format_valid?: boolean | null
           emissie_score?: number | null
           first_validated_at?: string | null
+          has_source_files?: boolean | null
           id?: string
           last_validated_at?: string | null
+          last_verified_at?: string | null
           latest_result?: Json | null
           overall_score?: number | null
           product_name?: string | null
           product_type?: Json | null
+          reported_issues_count?: number | null
           source_files?: Json | null
           toxicologie_score?: number | null
           updated_at?: string | null
           validation_count?: number | null
+          validation_source?: string | null
         }
         Relationships: []
+      }
+      knowledge_bank_issues: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          issue_type: string
+          knowledge_bank_id: string
+          reported_by_user_id: string | null
+          resolution_notes: string | null
+          reviewed_at: string | null
+          reviewed_by_user_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          issue_type: string
+          knowledge_bank_id: string
+          reported_by_user_id?: string | null
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by_user_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          issue_type?: string
+          knowledge_bank_id?: string
+          reported_by_user_id?: string | null
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by_user_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_bank_issues_knowledge_bank_id_fkey"
+            columns: ["knowledge_bank_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_bank"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -350,6 +421,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_kb_quality_score: {
+        Args: {
+          p_ean_code: string
+          p_latest_result: Json
+          p_product_name: string
+          p_reported_issues_count: number
+          p_source_files: Json
+          p_validation_count: number
+          p_validation_source: string
+        }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -377,6 +460,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      validate_ean_format: { Args: { ean_code: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

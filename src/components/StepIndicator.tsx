@@ -29,18 +29,18 @@ export function StepIndicator({ steps, currentStep, onStepClick }: StepIndicator
                   onClick={() => isClickable && onStepClick(step.id)}
                   disabled={!isClickable}
                   className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200",
+                    "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-200",
                     isCompleted && "bg-[hsl(142_64%_62%)] text-[hsl(186_100%_10%)] cursor-pointer hover:scale-105",
                     isCurrent && "bg-[hsl(186_100%_10%)] text-white",
                     !isCompleted && !isCurrent && "bg-[hsl(218_14%_85%)] text-[hsl(218_19%_27%)]",
                     isClickable && "cursor-pointer"
                   )}
                 >
-                  {isCompleted ? <Check className="w-5 h-5" /> : step.id}
+                  {isCompleted ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : step.id}
                 </button>
                 <span 
                   className={cn(
-                    "mt-2 text-xs font-medium text-center max-w-[80px]",
+                    "mt-2 text-xs font-medium text-center max-w-[80px] hidden sm:block",
                     isCurrent && "text-[hsl(186_100%_10%)]",
                     !isCurrent && "text-[hsl(218_19%_27%)]"
                   )}
